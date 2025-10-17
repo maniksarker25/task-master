@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Server as IOServer, Socket } from 'socket.io';
 import { Server as HTTPServer } from 'http';
-import NormalUser from '../modules/normalUser/normalUser.model';
+import { Server as IOServer, Socket } from 'socket.io';
+import Customer from '../modules/customer/customer.model';
 let io: IOServer;
 
 const initializeSocket = (server: HTTPServer) => {
@@ -20,7 +20,7 @@ const initializeSocket = (server: HTTPServer) => {
             if (!userId) {
                 return;
             }
-            const currentUser = await NormalUser.findById(userId);
+            const currentUser = await Customer.findById(userId);
             if (!currentUser) {
                 return;
             }
@@ -49,4 +49,4 @@ const getIO = () => {
 };
 ////
 
-export { initializeSocket, getIO };
+export { getIO, initializeSocket };

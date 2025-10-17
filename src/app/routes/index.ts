@@ -1,11 +1,9 @@
 import { Router } from 'express';
-import { userRoutes } from '../modules/user/user.routes';
 import { authRoutes } from '../modules/auth/auth.routes';
 import { ManageRoutes } from '../modules/manage-web/manage.routes';
-import { normalUserRoutes } from '../modules/normalUser/normalUser.routes';
 import { notificationRoutes } from '../modules/notification/notification.routes';
-import { placeRoutes } from '../modules/place/place.routes';
-import { regulationRoutes } from '../modules/regulation/regulation.routes';
+import { userRoutes } from '../modules/user/user.routes';
+
 import { categoryRoutes } from '../modules/category/category.routes';
 import { superAdminRoutes } from '../modules/superAdmin/superAdmin.routes';
 
@@ -20,10 +18,6 @@ const moduleRoutes = [
         path: '/user',
         router: userRoutes,
     },
-    {
-        path: '/normal-user',
-        router: normalUserRoutes,
-    },
 
     {
         path: '/manage',
@@ -33,14 +27,7 @@ const moduleRoutes = [
         path: '/notification',
         router: notificationRoutes,
     },
-    {
-        path: '/place',
-        router: placeRoutes,
-    },
-    {
-        path: '/regulation',
-        router: regulationRoutes,
-    },
+
     {
         path: '/category',
         router: categoryRoutes,

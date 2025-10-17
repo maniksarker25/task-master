@@ -1,16 +1,16 @@
-import validateRequest from '../../middlewares/validateRequest';
-import userControllers from './user.controller';
 import { Router } from 'express';
-import userValidations from './user.validation';
-import normalUserValidations from '../normalUser/normalUser.validation';
 import auth from '../../middlewares/auth';
+import validateRequest from '../../middlewares/validateRequest';
+import CustomerValidations from '../customer/customer.validation';
 import { USER_ROLE } from './user.constant';
+import userControllers from './user.controller';
+import userValidations from './user.validation';
 
 const router = Router();
 
 router.post(
     '/register-user',
-    validateRequest(normalUserValidations.createNormalUserSchema),
+    validateRequest(CustomerValidations.createCustomerSchema),
     userControllers.registerUser
 );
 //

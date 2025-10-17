@@ -1,7 +1,7 @@
 import { model, Schema } from 'mongoose';
-import { INormalUser } from './normalUser.interface';
+import { ICustomer } from './customer.interface';
 
-const NormalUserSchema = new Schema<INormalUser>(
+const CustomerSchema = new Schema<ICustomer>(
     {
         user: {
             type: Schema.Types.ObjectId,
@@ -32,6 +32,6 @@ const NormalUserSchema = new Schema<INormalUser>(
         timestamps: true,
     }
 );
-const NormalUser = model<INormalUser>('NormalUser', NormalUserSchema);
+const Customer = model<ICustomer>('Customer', CustomerSchema);
 
-export default NormalUser;
+export default Customer;

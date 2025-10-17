@@ -4,7 +4,7 @@
 // import AppError from '../error/appError';
 // import httpStatus from 'http-status';
 // import { USER_ROLE } from '../modules/user/user.constant';
-// import NormalUser from '../modules/normalUser/normalUser.model';
+// import Customer from '../modules/Customer/Customer.model';
 // import Player from '../modules/player/player.model';
 // import Team from '../modules/team/team.model';
 // import SuperAdmin from '../modules/superAdmin/superAdmin.model';
@@ -34,7 +34,7 @@
 
 //       let profileData;
 //       if (role === USER_ROLE.user) {
-//         profileData = await NormalUser.findOne({ user: id }).select('_id');
+//         profileData = await Customer.findOne({ user: id }).select('_id');
 //       } else if (role === USER_ROLE.player) {
 //         profileData = await Player.findOne({ user: id }).select('_id');
 //       } else if (role === USER_ROLE.team) {
@@ -55,44 +55,44 @@
 
 // export default simpleAuth;
 
-import jwt, { JwtPayload } from 'jsonwebtoken';
 import { NextFunction, Request, Response } from 'express';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import config from '../config';
 
 const simpleAuth = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const token = req.headers.authorization;
-
-    if (!token) {
-      return next(); // Continue if no token is provided
-    }
-
-    let decoded: JwtPayload | null = null;
-
     try {
-      // Verify token to check validity
-      decoded = jwt.verify(
-        token,
-        config.jwt_access_secret as string,
-      ) as JwtPayload;
-    } catch (err: any) {
-      // If token expired, decode without verifying
-      if (err.name === 'TokenExpiredError') {
-        decoded = jwt.decode(token) as JwtPayload | null;
-      } else {
-        return next(); // Ignore other errors
-      }
-    }
+        const token = req.headers.authorization;
 
-    if (decoded) {
-      req.user = decoded;
-    }
+        if (!token) {
+            return next(); // Continue if no token is provided
+        }
 
-    next(); // Proceed to the next middleware
-  } catch (error) {
-    console.log(error);
-    next(); // Ignore errors and proceed
-  }
+        let decoded: JwtPayload | null = null;
+
+        try {
+            // Verify token to check validity
+            decoded = jwt.verify(
+                token,
+                config.jwt_access_secret as string
+            ) as JwtPayload;
+        } catch (err: any) {
+            // If token expired, decode without verifying
+            if (err.name === 'TokenExpiredError') {
+                decoded = jwt.decode(token) as JwtPayload | null;
+            } else {
+                return next(); // Ignore other errors
+            }
+        }
+
+        if (decoded) {
+            req.user = decoded;
+        }
+
+        next(); // Proceed to the next middleware
+    } catch (error) {
+        console.log(error);
+        next(); // Ignore errors and proceed
+    }
 };
 
 export default simpleAuth;

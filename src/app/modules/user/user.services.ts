@@ -1,20 +1,21 @@
 /* eslint-disable no-unused-vars */
 
-import { User } from './user.model';
-import AppError from '../../error/appError';
 import httpStatus from 'http-status';
-import { INormalUser } from '../normalUser/normalUser.interface';
-import mongoose from 'mongoose';
-import { TUser, TUserRole } from './user.interface';
-import { USER_ROLE } from './user.constant';
-import NormalUser from '../normalUser/normalUser.model';
-import registrationSuccessEmailBody from '../../mailTemplate/registerSucessEmail';
-import cron from 'node-cron';
-import sendEmail from '../../utilities/sendEmail';
 import { JwtPayload } from 'jsonwebtoken';
-import { createToken } from './user.utils';
+import mongoose from 'mongoose';
+import cron from 'node-cron';
 import config from '../../config';
+import AppError from '../../error/appError';
+import registrationSuccessEmailBody from '../../mailTemplate/registerSucessEmail';
+import sendEmail from '../../utilities/sendEmail';
+
+import { ICustomer } from '../customer/customer.interface';
+import Customer from '../customer/customer.model';
 import SuperAdmin from '../superAdmin/superAdmin.model';
+import { USER_ROLE } from './user.constant';
+import { TUser, TUserRole } from './user.interface';
+import { User } from './user.model';
+import { createToken } from './user.utils';
 const generateVerifyCode = (): number => {
     return Math.floor(10000 + Math.random() * 90000);
 };
@@ -24,7 +25,7 @@ const registerUser = async (
     password: string,
     confirmPassword: string,
     playerId: string,
-    userData: INormalUser
+    userData: ICustomer
 ) => {
     if (password !== confirmPassword) {
         throw new AppError(
@@ -55,11 +56,11 @@ const registerUser = async (
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const user = await User.create([userDataPayload], { session });
 
-        const normalUserPayload = {
+        const CustomerPayload = {
             ...userData,
             user: user[0]._id,
         };
-        const result = await NormalUser.create([normalUserPayload], {
+        const result = await Customer.create([CustomerPayload], {
             session,
         });
 
@@ -169,7 +170,7 @@ const resendVerifyCode = async (email: string) => {
 const getMyProfile = async (userData: JwtPayload) => {
     let result = null;
     if (userData.role === USER_ROLE.user) {
-        result = await NormalUser.findOne({ email: userData.email });
+        result = await Customer.findOne({ email: userData.email });
     } else if (userData.role === USER_ROLE.superAdmin) {
         result = await SuperAdmin.findOne({ email: userData.email });
     }
@@ -186,7 +187,7 @@ const deleteUserAccount = async (user: JwtPayload, password: string) => {
         throw new AppError(httpStatus.FORBIDDEN, 'Password do not match');
     }
 
-    await NormalUser.findByIdAndDelete(user.profileId);
+    await Customer.findByIdAndDelete(user.profileId);
     await User.findByIdAndDelete(user.id);
 
     return null;
@@ -207,8 +208,8 @@ cron.schedule('*/2 * * * *', async () => {
         if (expiredUsers.length > 0) {
             const expiredUserIds = expiredUsers.map((user) => user._id);
 
-            // Delete corresponding NormalUser documents
-            const normalUserDeleteResult = await NormalUser.deleteMany({
+            // Delete corresponding Customer documents
+            const CustomerDeleteResult = await Customer.deleteMany({
                 user: { $in: expiredUserIds },
             });
 
@@ -221,7 +222,7 @@ cron.schedule('*/2 * * * *', async () => {
                 `Deleted ${userDeleteResult.deletedCount} expired inactive users`
             );
             console.log(
-                `Deleted ${normalUserDeleteResult.deletedCount} associated NormalUser documents`
+                `Deleted ${CustomerDeleteResult.deletedCount} associated Customer documents`
             );
         }
     } catch (error) {

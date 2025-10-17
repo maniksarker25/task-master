@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Types } from 'mongoose';
 
-export interface INormalUser {
+export interface ICustomer {
     user: Types.ObjectId;
     firstName: string;
     lastName: string;

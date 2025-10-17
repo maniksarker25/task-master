@@ -1,15 +1,15 @@
 import httpStatus from 'http-status';
-import AppError from '../../error/appError';
-import { INormalUser } from './normalUser.interface';
-import NormalUser from './normalUser.model';
 import { JwtPayload } from 'jsonwebtoken';
-import { USER_ROLE } from '../user/user.constant';
-import SuperAdmin from '../superAdmin/superAdmin.model';
+import AppError from '../../error/appError';
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
+import SuperAdmin from '../superAdmin/superAdmin.model';
+import { USER_ROLE } from '../user/user.constant';
+import { ICustomer } from './customer.interface';
+import Customer from './customer.model';
 
 const updateUserProfile = async (
     userData: JwtPayload,
-    payload: Partial<INormalUser>
+    payload: Partial<ICustomer>
 ) => {
     if (payload.email) {
         throw new AppError(
@@ -18,11 +18,11 @@ const updateUserProfile = async (
         );
     }
     if (userData.role == USER_ROLE.user) {
-        const user = await NormalUser.findById(userData.profileId);
+        const user = await Customer.findById(userData.profileId);
         if (!user) {
             throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
         }
-        const result = await NormalUser.findByIdAndUpdate(
+        const result = await Customer.findByIdAndUpdate(
             userData.profileId,
             payload,
             {
@@ -51,8 +51,8 @@ const updateUserProfile = async (
     }
 };
 
-const NormalUserServices = {
+const CustomerServices = {
     updateUserProfile,
 };
 
-export default NormalUserServices;
+export default CustomerServices;

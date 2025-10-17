@@ -10,7 +10,6 @@ import config from '../../config';
 import AppError from '../../error/appError';
 import resetPasswordEmailBody from '../../mailTemplate/resetPasswordEmailBody';
 import sendEmail from '../../utilities/sendEmail';
-import NormalUser from '../normalUser/normalUser.model';
 import { USER_ROLE } from '../user/user.constant';
 import { ILoginWithGoogle, TUser, TUserRole } from '../user/user.interface';
 import { User } from '../user/user.model';
@@ -19,6 +18,7 @@ import { TLoginUser } from './auth.interface';
 // const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // const GOOGLE_CLIENT_IDS = (process.env.GOOGLE_CLIENT_IDS || '').split(',');
 import axios from 'axios';
+import Customer from '../customer/customer.model';
 const generateVerifyCode = (): number => {
     return Math.floor(10000 + Math.random() * 90000);
 };
@@ -133,14 +133,14 @@ const loginWithGoogle = async (payload: ILoginWithGoogle) => {
 
         const createUser = await User.create([userDataPayload], { session });
 
-        const normalUserData = {
+        const CustomerData = {
             name: payload.name,
             email: payload.email,
             profile_image: payload.profile_image,
             user: createUser[0]._id,
         };
 
-        await NormalUser.create([normalUserData], {
+        await Customer.create([CustomerData], {
             session,
         });
 
@@ -559,7 +559,7 @@ const resendVerifyCode = async (email: string) => {
 
 //             const firstName = nameParts[0];
 //             const lastName = nameParts[1];
-//             const result = await NormalUser.create({
+//             const result = await Customer.create({
 //                 firstName,
 //                 lastName,
 //                 user: user._id,
@@ -723,7 +723,7 @@ const loginWithOAuth = async (
         //     const firstName = nameParts[0];
         //     const lastName = nameParts[1] || '';
 
-        //     const result = await NormalUser.create({
+        //     const result = await Customer.create({
         //         firstName,
         //         lastName,
         //         user: user._id,
@@ -758,7 +758,7 @@ const loginWithOAuth = async (
                 const firstName = nameParts[0];
                 const lastName = nameParts[1] || '';
 
-                const result = await NormalUser.create(
+                const result = await Customer.create(
                     [
                         {
                             firstName,

@@ -1,10 +1,10 @@
 import express, { NextFunction, Request, Response } from 'express';
-import auth from '../../middlewares/auth';
-import { USER_ROLE } from '../user/user.constant';
-import validateRequest from '../../middlewares/validateRequest';
-import normalUserValidations from './normalUser.validation';
-import NormalUserController from './normalUser.controller';
 import { uploadFile } from '../../helper/multer-s3-uploader';
+import auth from '../../middlewares/auth';
+import validateRequest from '../../middlewares/validateRequest';
+import { USER_ROLE } from '../user/user.constant';
+import CustomerController from './customer.controller';
+import CustomerValidations from './customer.validation';
 
 const router = express.Router();
 
@@ -18,8 +18,8 @@ router.patch(
         }
         next();
     },
-    validateRequest(normalUserValidations.updateNormalUserData),
-    NormalUserController.updateUserProfile
+    validateRequest(CustomerValidations.updateCustomerData),
+    CustomerController.updateUserProfile
 );
 
-export const normalUserRoutes = router;
+export const CustomerRoutes = router;

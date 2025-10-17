@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const createNormalUserSchema = z.object({
+export const createCustomerSchema = z.object({
     body: z.object({
         password: z
             .string({ required_error: 'Password is required' })
@@ -16,16 +16,16 @@ export const createNormalUserSchema = z.object({
         playerId: z.string().optional(),
     }),
 });
-export const updateNormalUserData = z.object({
+export const updateCustomerData = z.object({
     body: z.object({
         firstName: z.string().optional(),
         lastName: z.string().optional(),
     }),
 });
 
-const normalUserValidations = {
-    createNormalUserSchema,
-    updateNormalUserData,
+const CustomerValidations = {
+    createCustomerSchema,
+    updateCustomerData,
 };
 
-export default normalUserValidations;
+export default CustomerValidations;
