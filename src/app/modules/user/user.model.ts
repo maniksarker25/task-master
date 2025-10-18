@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { Schema, model } from 'mongoose';
 import config from '../../config';
+import { USER_ROLE } from './user.constant';
 import { TUser, UserModel } from './user.interface';
 
 const userSchema = new Schema<TUser>(
@@ -24,7 +25,7 @@ const userSchema = new Schema<TUser>(
         },
         role: {
             type: String,
-            enum: ['customer', 'provider', 'superAdmin'],
+            enum: Object.values(USER_ROLE),
             required: true,
         },
         isBlocked: {

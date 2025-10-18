@@ -29,9 +29,9 @@ router.post(
 router.get(
     '/get-my-profile',
     auth(
-        USER_ROLE.user,
-        USER_ROLE.player,
-        USER_ROLE.team,
+        USER_ROLE.customer,
+        USER_ROLE.provider,
+        USER_ROLE.admin,
         USER_ROLE.superAdmin
     ),
     userControllers.getMyProfile
@@ -45,7 +45,7 @@ router.patch(
 );
 router.post(
     '/delete-account',
-    auth(USER_ROLE.user),
+    auth(USER_ROLE.customer),
     validateRequest(userValidations.deleteUserAccountValidationSchema),
     userControllers.deleteUserAccount
 );
