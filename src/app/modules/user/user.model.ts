@@ -1,7 +1,7 @@
-import { Schema, model } from 'mongoose';
-import { TUser, UserModel } from './user.interface';
-import config from '../../config';
 import bcrypt from 'bcrypt';
+import { Schema, model } from 'mongoose';
+import config from '../../config';
+import { TUser, UserModel } from './user.interface';
 
 const userSchema = new Schema<TUser>(
     {
@@ -24,7 +24,7 @@ const userSchema = new Schema<TUser>(
         },
         role: {
             type: String,
-            enum: ['user', 'superAdmin'],
+            enum: ['customer', 'provider', 'superAdmin'],
             required: true,
         },
         isBlocked: {

@@ -21,7 +21,7 @@ const generateVerifyCode = (): number => {
 };
 //
 
-const registerUser = async (
+const registerCustomer = async (
     password: string,
     confirmPassword: string,
     playerId: string,
@@ -45,7 +45,7 @@ const registerUser = async (
         const userDataPayload: Partial<TUser> = {
             email: userData?.email,
             password: password,
-            role: USER_ROLE.user,
+            role: USER_ROLE.customer,
             verifyCode,
             codeExpireIn: new Date(Date.now() + 2 * 60000),
         };
@@ -169,7 +169,7 @@ const resendVerifyCode = async (email: string) => {
 
 const getMyProfile = async (userData: JwtPayload) => {
     let result = null;
-    if (userData.role === USER_ROLE.user) {
+    if (userData.role === USER_ROLE.customer) {
         result = await Customer.findOne({ email: userData.email });
     } else if (userData.role === USER_ROLE.superAdmin) {
         result = await SuperAdmin.findOne({ email: userData.email });
@@ -244,7 +244,7 @@ const changeUserStatus = async (id: string) => {
 };
 
 const userServices = {
-    registerUser,
+    registerCustomer,
     verifyCode,
     resendVerifyCode,
     getMyProfile,
