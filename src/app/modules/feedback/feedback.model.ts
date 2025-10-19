@@ -19,7 +19,7 @@ const feedbackSchema = new Schema<IFeedback>(
             required: true,
         },
         rating: {
-            type: String,
+            type: Number,
             required: true,
         },
         details: {
