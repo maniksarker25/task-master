@@ -9,4 +9,5 @@ export interface ICustomer {
     profile_image?: string;
     city?: string;
     street?: string;
+    address_document?: string;
 }
