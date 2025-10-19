@@ -8,7 +8,8 @@ import mongoose from 'mongoose';
 import config from '../../config';
 
 import AppError from '../../error/appError';
-import Customer from '../customer/customer.model';
+import { Customer } from '../customer/customer.model';
+import { Provider } from '../provider/provider.model';
 import { USER_ROLE } from '../user/user.constant';
 import { TUserRole } from '../user/user.interface';
 import { User } from '../user/user.model';
@@ -140,10 +141,10 @@ const loginWithOAuth = async (
                     const result = await Customer.create(
                         [
                             {
-                                bussinessName: firstName + ' ' + lastName,
+                                name: firstName + ' ' + lastName,
                                 user: user._id,
                                 email,
-                                logo: picture,
+                                profile_image: picture,
                                 username,
                             },
                         ],
@@ -159,7 +160,7 @@ const loginWithOAuth = async (
                     await session.commitTransaction();
                     session.endSession();
                 } else {
-                    const result = await Customer.create(
+                    const result = await Provider.create(
                         [
                             {
                                 name: firstName + ' ' + lastName,
