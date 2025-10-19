@@ -1,12 +1,11 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-export const updateSubscriberData = z.object({
+export const createSubscriber = z.object({
     body: z.object({
-        name: z.string().optional(),
-        phone: z.string().optional(),
-        address: z.string().optional(),
+        email: z.string({ required_error: 'Email is required' }).email(),
+        phone: z.string({ required_error: 'Phone is required' }),
     }),
 });
 
-const SubscriberValidations = { updateSubscriberData };
+const SubscriberValidations = { createSubscriber };
 export default SubscriberValidations;
