@@ -3,9 +3,10 @@ import { Types } from 'mongoose';
 
 export interface ICustomer {
     user: Types.ObjectId;
-    firstName: string;
-    lastName: string;
+    name: string;
     email: string;
-    profile_image: string;
-    playerId: string;
+    phone: string;
+    profile_image?: string;
+    city?: string;
+    street?: string;
 }
