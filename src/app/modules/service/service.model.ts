@@ -6,7 +6,7 @@ const serviceSchema = new Schema<IService>(
     {
         serviceCategory: {
             type: Schema.Types.ObjectId,
-            ref: 'ServiceCategory',
+            ref: 'Category',
             required: true,
         },
         title: { type: String, required: true },

@@ -7,9 +7,12 @@ export interface IService {
     images?: string[];
     provider: Types.ObjectId; // ref -> Provider
     description: string;
+    location: string;
+    availability: string;
     experience: string;
     onSiteSupport: boolean;
     toolsProvided: boolean;
+    languages: string[];
     priceRange: string;
     status: (typeof ENUM_SERVICE_STATUS)[keyof typeof ENUM_SERVICE_STATUS];
 }

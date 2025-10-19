@@ -1,16 +1,39 @@
-import { model, Schema } from "mongoose";
-import { IProvider } from "./provider.interface";
+import { model, Schema } from 'mongoose';
+import { IProvider } from './provider.interface';
+import { ENUM_IDENTIFICATION_DOCUMENT } from '../customer/customer.enum';
 
-const providerSchema = new Schema<IProvider>({
-    user: { type: Schema.Types.ObjectId, required: true, ref: "User" },
-    name: { type: String, required: true },
-    phone: { type: String },
-    email: { type: String, required: true, unique: true },
-    address: { type: String },
-    profile_image: { type: String, default: "" },
-    totalAmount: { type: Number, default: 0 },
-    totalPoint: { type: Number, default: 0 }
-}, { timestamps: true });
+const providerSchema = new Schema<IProvider>(
+    {
+        user: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+        },
 
-const providerModel = model<IProvider>("Provider", providerSchema);
+        name: { type: String, required: true },
+        email: { type: String, required: true },
+        number: { type: String, required: true },
+        profile_image: { type: String },
+
+        city: { type: String, required: true },
+        street: { type: String, required: true },
+        addressDocument: { type: String },
+
+        identiDocument: {
+            type: String,
+            enum: Object.values(ENUM_IDENTIFICATION_DOCUMENT),
+            required: true,
+        },
+
+        identiNumber: { type: String, required: true },
+        identiDocumentImage: { type: String },
+        bvn: { type: String },
+
+        isVerified: { type: Boolean, default: false },
+        isDeleted: { type: Boolean, default: false },
+    },
+    { timestamps: true }
+);
+
+const providerModel = model<IProvider>('Provider', providerSchema);
 export default providerModel;

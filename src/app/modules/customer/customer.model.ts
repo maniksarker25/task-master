@@ -1,37 +1,35 @@
 import { model, Schema } from 'mongoose';
 import { ICustomer } from './customer.interface';
+import { ENUM_IDENTIFICATION_DOCUMENT } from './customer.enum';
 
 const CustomerSchema = new Schema<ICustomer>(
     {
-        user: {
-            type: Schema.Types.ObjectId,
+        user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+
+        fullName: { type: String, required: true },
+        email: { type: String, required: true },
+        number: { type: String, required: true },
+        image: { type: String },
+        city: { type: String, required: true },
+        street: { type: String, required: true },
+        addressDocument: { type: String },
+
+        identiDocument: {
+            type: String,
+            enum: Object.values(ENUM_IDENTIFICATION_DOCUMENT),
             required: true,
-            ref: 'User',
         },
-        firstName: {
-            type: String,
-            required: true,
-        },
-        lastName: {
-            type: String,
-            // required: true,
-            default: '',
-        },
-        email: {
-            type: String,
-            // required: true,
-            // unique: true,
-            default: '',
-        },
-        profile_image: {
-            type: String,
-            default: '',
-        },
+
+        identiNumber: { type: String, required: true },
+        identiDocumentImage: { type: String },
+
+        bvn: { type: String },
+        isVerified: { type: Boolean, default: false },
     },
     {
         timestamps: true,
     }
 );
-const Customer = model<ICustomer>('Customer', CustomerSchema);
+const CustomerModel = model<ICustomer>('Customer', CustomerSchema);
 
-export default Customer;
+export default CustomerModel;
