@@ -16,7 +16,12 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
     cors({
-        origin: ['http://localhost:3007', 'http://localhost:3008'],
+        origin: [
+            'http://localhost:3007',
+            'http://localhost:3008',
+            'http://localhost:3000',
+            'https://taskalley-deploy.vercel.app',
+        ],
         credentials: true,
     })
 );

@@ -9,9 +9,6 @@ import {
 export interface ITask {
     title: string;
     category: Types.ObjectId; // ref -> ServiceCategory
-    deception: string;
-    attachments?: string[];
-
     budget: number;
     status: (typeof ENUM_TASK_STATUS)[keyof typeof ENUM_TASK_STATUS];
     isDeleted: boolean;
@@ -24,4 +21,6 @@ export interface ITask {
     scheduleType: (typeof ENUM_SCHEDULE_TYPE)[keyof typeof ENUM_SCHEDULE_TYPE];
     preferredDate?: Date;
     preferredTime?: string; // or `Date` if you store full datetime
+    deception: string;
+    attachments?: string[];
 }
