@@ -14,14 +14,12 @@ const taskSchema = new Schema<ITask>(
             type: Schema.Types.ObjectId,
             ref: 'Category',
         },
-        deception: { type: String, required: true },
-        attachments: [{ type: String }],
 
         budget: { type: Number, required: true },
         status: {
             type: String,
             enum: Object.values(ENUM_TASK_STATUS),
-            default: ENUM_TASK_STATUS.OPEN_FOR_BIDS,
+            default: ENUM_TASK_STATUS.OPEN_FOR_BID,
         },
 
         isDeleted: { type: Boolean, default: false },
@@ -48,6 +46,8 @@ const taskSchema = new Schema<ITask>(
         },
         preferredDate: { type: Date },
         preferredTime: { type: String },
+        deception: { type: String, required: true },
+        attachments: [{ type: String }],
     },
     { timestamps: true }
 );

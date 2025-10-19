@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Server as HTTPServer } from 'http';
 import { Server as IOServer, Socket } from 'socket.io';
-import Customer from '../modules/customer/customer.model';
+import { Customer } from '../modules/customer/customer.model';
 let io: IOServer;
 
 const initializeSocket = (server: HTTPServer) => {
@@ -10,7 +10,12 @@ const initializeSocket = (server: HTTPServer) => {
         io = new IOServer(server, {
             pingTimeout: 60000,
             cors: {
-                origin: ['http://192.168.10.25:7585'],
+                origin: [
+                    'http://localhost:3007',
+                    'http://localhost:3008',
+                    'http://localhost:3000',
+                    'https://taskalley-deploy.vercel.app',
+                ],
             },
         });
         // online user------------

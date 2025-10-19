@@ -8,7 +8,7 @@ const createSubscriber = catchAsync(async (req, res) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: 'Subscriber created successfully',
+        message: 'Thanks for subscribe!',
         data: result,
     });
 });
