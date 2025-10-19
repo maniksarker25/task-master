@@ -1,0 +1,4 @@
+export enum ENUM_SERVICE_STATUS {
+    ACTIVE = 'ACTIVE',
+    INACTIVE = 'INACTIVE',
+}
