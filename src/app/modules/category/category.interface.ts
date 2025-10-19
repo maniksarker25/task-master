@@ -1,4 +1,5 @@
 export interface ICategory {
-    name: string;
-    category_image: string;
+    title: string;
+    images?: string; // optional single image or comma-separated string
+    isDeleted: boolean;
 }

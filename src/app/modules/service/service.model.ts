@@ -4,9 +4,9 @@ import { ENUM_SERVICE_STATUS } from './service.enum';
 
 const serviceSchema = new Schema<IService>(
     {
-        serviceCategory: {
+        category: {
             type: Schema.Types.ObjectId,
-            ref: 'ServiceCategory',
+            ref: 'Category',
             required: true,
         },
         title: { type: String, required: true },
@@ -19,9 +19,12 @@ const serviceSchema = new Schema<IService>(
         },
 
         description: { type: String, required: true },
+        location: { type: String, required: true },
+        availability: { type: String, required: true },
         experience: { type: String, required: true },
-        onSiteSupport: { type: Boolean, default: false },
-        toolsProvided: { type: Boolean, default: false },
+        onSiteSupport: { type: Boolean, default: true },
+        toolsProvided: { type: Boolean, default: true },
+        languages: [{ type: String, required: true }],
         priceRange: { type: String, required: true },
 
         status: {
