@@ -17,7 +17,7 @@ const updateUserProfile = async (
             'You can not change the email'
         );
     }
-    if (userData.role == USER_ROLE.user) {
+    if (userData.role == USER_ROLE.customer) {
         const user = await Customer.findById(userData.profileId);
         if (!user) {
             throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');

@@ -22,7 +22,7 @@ app.use(
 );
 app.use('/uploads', express.static('uploads'));
 // application routers ----------------
-app.use('/', router);
+app.use('/api/v1', router);
 app.post('/contact-us', sendContactUsEmail);
 
 app.get('/', async (req, res) => {
