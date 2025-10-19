@@ -5,7 +5,7 @@ import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 import SuperAdmin from '../superAdmin/superAdmin.model';
 import { USER_ROLE } from '../user/user.constant';
 import { ICustomer } from './customer.interface';
-import Customer from './customer.model';
+import { Customer } from './customer.model';
 
 const updateUserProfile = async (
     userData: JwtPayload,

@@ -1,16 +1,62 @@
-import { model, Schema } from "mongoose";
-import { IProvider } from "./provider.interface";
+import { Schema, model } from 'mongoose';
+import { IProvider } from './provider.interface';
 
-const providerSchema = new Schema<IProvider>({
-    user: { type: Schema.Types.ObjectId, required: true, ref: "User" },
-    name: { type: String, required: true },
-    phone: { type: String },
-    email: { type: String, required: true, unique: true },
-    address: { type: String },
-    profile_image: { type: String, default: "" },
-    totalAmount: { type: Number, default: 0 },
-    totalPoint: { type: Number, default: 0 }
-}, { timestamps: true });
+const providerSchema = new Schema<IProvider>(
+    {
+        user: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+        },
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        phone: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        email: {
+            type: String,
+            required: true,
+            lowercase: true,
+            trim: true,
+        },
+        profile_image: {
+            type: String,
+        },
+        city: {
+            type: String,
+        },
+        street: {
+            type: String,
+        },
+        address_document: {
+            type: String,
+        },
+        identificationDocumentType: {
+            type: String,
+        },
+        identificationDocumentNumber: {
+            type: String,
+        },
+        identification_document: {
+            type: String,
+        },
+        bankVerificationNumber: {
+            type: String,
+        },
+        isVerified: {
+            type: Boolean,
+            default: false,
+        },
+    },
+    {
+        timestamps: true,
+        versionKey: false,
+    }
+);
 
-const providerModel = model<IProvider>("Provider", providerSchema);
-export default providerModel;
+export const Provider = model<IProvider>('Provider', providerSchema);

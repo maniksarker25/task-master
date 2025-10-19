@@ -10,7 +10,7 @@ import registrationSuccessEmailBody from '../../mailTemplate/registerSucessEmail
 import sendEmail from '../../utilities/sendEmail';
 
 import { ICustomer } from '../customer/customer.interface';
-import Customer from '../customer/customer.model';
+import { Customer } from '../customer/customer.model';
 import SuperAdmin from '../superAdmin/superAdmin.model';
 import { USER_ROLE } from './user.constant';
 import { TUser, TUserRole } from './user.interface';

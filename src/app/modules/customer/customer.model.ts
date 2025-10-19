@@ -1,37 +1,46 @@
-import { model, Schema } from 'mongoose';
+import { Schema, model } from 'mongoose';
 import { ICustomer } from './customer.interface';
 
-const CustomerSchema = new Schema<ICustomer>(
+const customerSchema = new Schema<ICustomer>(
     {
         user: {
             type: Schema.Types.ObjectId,
-            required: true,
             ref: 'User',
-        },
-        firstName: {
-            type: String,
             required: true,
         },
-        lastName: {
+        name: {
             type: String,
-            // required: true,
-            default: '',
+            required: true,
+            trim: true,
         },
         email: {
             type: String,
-            // required: true,
-            // unique: true,
-            default: '',
+            required: true,
+            lowercase: true,
+            trim: true,
+        },
+        phone: {
+            type: String,
+            required: true,
+            trim: true,
         },
         profile_image: {
             type: String,
-            default: '',
+        },
+        city: {
+            type: String,
+        },
+        street: {
+            type: String,
+        },
+        address_document: {
+            type: String,
         },
     },
     {
         timestamps: true,
+        versionKey: false,
     }
 );
-const Customer = model<ICustomer>('Customer', CustomerSchema);
 
-export default Customer;
+export const Customer = model<ICustomer>('Customer', customerSchema);
