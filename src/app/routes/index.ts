@@ -5,6 +5,7 @@ import { notificationRoutes } from '../modules/notification/notification.routes'
 import { userRoutes } from '../modules/user/user.routes';
 
 import { categoryRoutes } from '../modules/category/category.routes';
+import { subscriberRoutes } from '../modules/subscriber/subscriber.routes';
 import { superAdminRoutes } from '../modules/superAdmin/superAdmin.routes';
 
 const router = Router();
@@ -35,6 +36,10 @@ const moduleRoutes = [
     {
         path: '/super-admin',
         router: superAdminRoutes,
+    },
+    {
+        path: '/subscriber',
+        router: subscriberRoutes,
     },
 ];
 
