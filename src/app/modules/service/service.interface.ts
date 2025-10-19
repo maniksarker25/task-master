@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import { ENUM_SERVICE_STATUS } from './service.enum';
 
 export interface IService {
-    serviceCategory: Types.ObjectId; // ref -> ServiceCategory
+    category: Types.ObjectId; // ref -> ServiceCategory
     title: string;
     images?: string[];
     provider: Types.ObjectId; // ref -> Provider
