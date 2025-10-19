@@ -1,0 +1,15 @@
+import { Types } from 'mongoose';
+import { ENUM_EXTENSION_REQUEST_STATUS } from './extensionRequest.enum';
+
+export interface IExtensionRequest {
+    task: Types.ObjectId; // ref -> Task
+    requestedBy: Types.ObjectId; // ref -> Users
+    currentDate: Date;
+    requestedDate: Date;
+    requestedAt: Date;
+    reason: string;
+    status: (typeof ENUM_EXTENSION_REQUEST_STATUS)[keyof typeof ENUM_EXTENSION_REQUEST_STATUS];
+    rejectDetails?: string;
+    rejectEvidence: string; // ref -> RejectReason
+    reviewedRequestAt?: Date;
+}
