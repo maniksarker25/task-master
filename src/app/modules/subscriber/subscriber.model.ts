@@ -17,5 +17,5 @@ const subscriberSchema = new Schema<ISubscriber>(
     { timestamps: true }
 );
 
-const subscriberModel = model<ISubscriber>('Subscriber', subscriberSchema);
-export default subscriberModel;
+const Subscriber = model<ISubscriber>('Subscriber', subscriberSchema);
+export default Subscriber;
