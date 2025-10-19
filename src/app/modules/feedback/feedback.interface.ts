@@ -4,6 +4,6 @@ export interface IFeedback {
     task: Types.ObjectId; // ref -> Task
     provider: Types.ObjectId; // ref -> Provider
     customer: Types.ObjectId; // ref -> Customer
-    rating: string;
+    rating: number;
     details: string;
 }
