@@ -13,7 +13,7 @@ const testimonialSchema = new Schema<ITestimonial>(
             required: true,
         },
         rating: {
-            type: String,
+            type: Number,
             required: true,
         },
     },
