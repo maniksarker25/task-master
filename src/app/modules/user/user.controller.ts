@@ -4,12 +4,7 @@ import sendResponse from '../../utilities/sendResponse';
 import userServices from './user.services';
 
 const registerUser = catchAsync(async (req, res) => {
-    const result = await userServices.registerUser(
-        req.body.password,
-        req.body.confirmPassword,
-        req.body.playerId,
-        req.body.userData
-    );
+    const result = await userServices.registerCustomer(req.body);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,

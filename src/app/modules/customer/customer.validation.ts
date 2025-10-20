@@ -8,11 +8,11 @@ export const createCustomerSchema = z.object({
         confirmPassword: z
             .string({ required_error: 'Confirm password is required' })
             .min(6, { message: 'Password must be 6 character' }),
-        userData: z.object({
-            firstName: z.string().nonempty('Name is required'),
-            lastName: z.string().nonempty('Name is required'),
-            email: z.string().email('Invalid email format'),
-        }),
+        name: z.string({ required_error: 'Name is required' }),
+        email: z
+            .string({ required_error: 'Email is required' })
+            .email({ message: 'Invalid email address' }),
+        phone: z.string({ required_error: 'Phone is required' }),
         playerId: z.string().optional(),
     }),
 });

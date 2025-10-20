@@ -22,5 +22,5 @@ export interface ITask {
     preferredDate?: Date;
     preferredTime?: string; // or `Date` if you store full datetime
     deception: string;
-    attachments?: string[];
+    attachments?: string[]; // images file
 }

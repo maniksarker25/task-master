@@ -21,11 +21,13 @@ const generateVerifyCode = (): number => {
 };
 
 const registerCustomer = async (
-    password: string,
-    confirmPassword: string,
-    playerId: string,
-    userData: ICustomer
+    payload: ICustomer & {
+        password: string;
+        confirmPassword: string;
+        playerId?: string;
+    }
 ) => {
+    const { password, confirmPassword, playerId, ...userData } = payload;
     if (password !== confirmPassword) {
         throw new AppError(
             httpStatus.BAD_REQUEST,
@@ -69,14 +71,14 @@ const registerCustomer = async (
             { session }
         );
 
-        sendEmail({
-            email: userData.email,
-            subject: 'Activate Your Account',
-            html: registrationSuccessEmailBody(
-                result[0].name,
-                user[0].verifyCode
-            ),
-        });
+        // sendEmail({
+        //     email: userData.email,
+        //     subject: 'Activate Your Account',
+        //     html: registrationSuccessEmailBody(
+        //         result[0].name,
+        //         user[0].verifyCode
+        //     ),
+        // });
 
         await session.commitTransaction();
         session.endSession();

@@ -43,4 +43,4 @@ const customerSchema = new Schema<ICustomer>(
     }
 );
 
-export const customer = model<ICustomer>('Customer', customerSchema);
+export const Customer = model<ICustomer>('Customer', customerSchema);
