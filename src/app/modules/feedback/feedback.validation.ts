@@ -1,12 +1,35 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-export const updateFeedbackData = z.object({
+// ✅ Create Feedback Zod Schema
+export const createFeedbackZodSchema = z.object({
     body: z.object({
-        name: z.string().optional(),
-        phone: z.string().optional(),
-        address: z.string().optional(),
+        task: z.string({ required_error: 'Task ID is required' }),
+        provider: z.string({ required_error: 'Provider ID is required' }),
+        customer: z.string({ required_error: 'Customer ID is required' }),
+        rating: z
+            .number({ required_error: 'Rating is required' })
+            .min(1, 'Rating must be at least 1')
+            .max(5, 'Rating cannot exceed 5'),
+        details: z
+            .string({ required_error: 'Details are required' })
+            .min(1, 'Details cannot be empty'),
     }),
 });
 
-const FeedbackValidations = { updateFeedbackData };
+// ✅ Update Feedback Zod Schema
+export const updateFeedbackZodSchema = z.object({
+    body: z.object({
+        task: z.string().optional(),
+        provider: z.string().optional(),
+        customer: z.string().optional(),
+        rating: z.number().min(1).max(5).optional(),
+        details: z.string().optional(),
+    }),
+});
+
+const FeedbackValidations = {
+    createFeedbackZodSchema,
+    updateFeedbackZodSchema,
+};
+
 export default FeedbackValidations;

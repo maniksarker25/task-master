@@ -37,7 +37,7 @@ const cancellationRequestSchema = new Schema<ICancellationRequest>(
         rejectDetails: {
             type: String,
         },
-        rejectEvidence: {
+        reject_evidence: {
             type: String,
         },
         reviewedRequestAt: {
