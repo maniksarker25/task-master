@@ -10,6 +10,6 @@ export interface ICancellationRequest {
     evidence?: string;
     status: (typeof ENUM_CANCELLATION_REQUEST_STATUS)[keyof typeof ENUM_CANCELLATION_REQUEST_STATUS];
     rejectDetails?: string;
-    rejectEvidence?: string;
+    reject_evidence?: string;
     reviewedRequestAt?: Date;
 }

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const updateProviderData = z.object({
     body: z.object({
@@ -7,6 +7,6 @@ export const updateProviderData = z.object({
         address: z.string().optional(),
     }),
 });
-
+//
 const ProviderValidations = { updateProviderData };
 export default ProviderValidations;
