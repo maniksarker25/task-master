@@ -46,6 +46,7 @@ const registerCustomer = async (
         const verifyCode = generateVerifyCode();
         const userDataPayload: Partial<TUser> = {
             email: userData?.email,
+            phone: userData?.phone,
             password: password,
             role: USER_ROLE.customer,
             verifyCode,
