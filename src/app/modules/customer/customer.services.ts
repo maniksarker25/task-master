@@ -1,20 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
 import AppError from '../../error/appError';
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
+import { Provider } from '../provider/provider.model';
 import SuperAdmin from '../superAdmin/superAdmin.model';
 import { USER_ROLE } from '../user/user.constant';
-import { ICustomer } from './customer.interface';
 import { Customer } from './customer.model';
 
-const updateUserProfile = async (
-    userData: JwtPayload,
-    payload: Partial<ICustomer>
-) => {
-    if (payload.email) {
+const updateUserProfile = async (userData: JwtPayload, payload: any) => {
+    if (payload.email || payload.phone) {
         throw new AppError(
             httpStatus.BAD_REQUEST,
-            'You can not change the email'
+            'You can not change the email or phone number'
         );
     }
     if (userData.role == USER_ROLE.customer) {
@@ -39,7 +37,7 @@ const updateUserProfile = async (
         if (!admin) {
             throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
         }
-        const reuslt = await SuperAdmin.findByIdAndUpdate(
+        const result = await SuperAdmin.findByIdAndUpdate(
             userData.profileId,
             payload,
             { new: true, runValidators: true }
@@ -47,7 +45,21 @@ const updateUserProfile = async (
         if (payload.profile_image && admin.profile_image) {
             deleteFileFromS3(admin.profile_image);
         }
-        return reuslt;
+        return result;
+    } else if (userData.role == USER_ROLE.provider) {
+        const provider = await Provider.findById(userData.profileId);
+        if (!provider) {
+            throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
+        }
+        const result = await Provider.findByIdAndUpdate(
+            userData.profileId,
+            payload,
+            { new: true, runValidators: true }
+        );
+        if (payload.profile_image && provider.profile_image) {
+            deleteFileFromS3(provider.profile_image);
+        }
+        return result;
     }
 };
 
