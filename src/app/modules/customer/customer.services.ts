@@ -31,6 +31,9 @@ const updateUserProfile = async (userData: JwtPayload, payload: any) => {
         if (payload.profile_image && user.profile_image) {
             deleteFileFromS3(user.profile_image);
         }
+        if (payload.address_document && user.address_document) {
+            deleteFileFromS3(user.address_document);
+        }
         return result;
     } else if (userData.role == USER_ROLE.superAdmin) {
         const admin = await SuperAdmin.findById(userData.profileId);
@@ -45,6 +48,7 @@ const updateUserProfile = async (userData: JwtPayload, payload: any) => {
         if (payload.profile_image && admin.profile_image) {
             deleteFileFromS3(admin.profile_image);
         }
+
         return result;
     } else if (userData.role == USER_ROLE.provider) {
         const provider = await Provider.findById(userData.profileId);
@@ -58,6 +62,9 @@ const updateUserProfile = async (userData: JwtPayload, payload: any) => {
         );
         if (payload.profile_image && provider.profile_image) {
             deleteFileFromS3(provider.profile_image);
+        }
+        if (payload.address_document && provider.address_document) {
+            deleteFileFromS3(provider.address_document);
         }
         return result;
     }

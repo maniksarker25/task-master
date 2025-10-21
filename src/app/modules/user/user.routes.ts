@@ -36,6 +36,16 @@ router.get(
     ),
     userControllers.getMyProfile
 );
+router.patch(
+    '/update-profile',
+    auth(
+        USER_ROLE.customer,
+        USER_ROLE.provider,
+        USER_ROLE.admin,
+        USER_ROLE.superAdmin
+    ),
+    userControllers.getMyProfile
+);
 //===
 router.patch(
     '/change-status/:id',
