@@ -9,7 +9,7 @@ import userValidations from './user.validation';
 const router = Router();
 
 router.post(
-    '/register-user',
+    '/register-customer',
     validateRequest(CustomerValidations.createCustomerSchema),
     userControllers.registerUser
 );

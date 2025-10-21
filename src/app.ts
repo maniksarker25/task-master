@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { Application } from 'express';
 import sendContactUsEmail from './app/helper/sendContactUsEmail';
+import sendSMS from './app/helper/sendSms';
 import globalErrorHandler from './app/middlewares/globalErrorHandler';
 import notFound from './app/middlewares/notFound';
 import router from './app/routes';
@@ -31,6 +32,7 @@ app.use('/api/v1', router);
 app.post('/contact-us', sendContactUsEmail);
 
 app.get('/', async (req, res) => {
+    await sendSMS('+8801986250270', 'This is a test message from Task Alley');
     res.send({ message: 'nice to meet you' });
 });
 

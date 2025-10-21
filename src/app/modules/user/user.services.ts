@@ -9,6 +9,7 @@ import AppError from '../../error/appError';
 import registrationSuccessEmailBody from '../../mailTemplate/registerSucessEmail';
 import sendEmail from '../../utilities/sendEmail';
 
+import sendSMS from '../../helper/sendSms';
 import { ICustomer } from '../customer/customer.interface';
 import { Customer } from '../customer/customer.model';
 import SuperAdmin from '../superAdmin/superAdmin.model';
@@ -79,7 +80,9 @@ const registerCustomer = async (
         //         user[0].verifyCode
         //     ),
         // });
-
+        const smsMessage = `Thank you for registering with Task Alley! Please verify your phone using this code: ${verifyCode}. 
+The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
+        await sendSMS(userData?.phone, smsMessage);
         await session.commitTransaction();
         session.endSession();
 
