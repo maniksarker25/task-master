@@ -35,6 +35,7 @@ const providerSchema = new Schema<IProvider>(
         },
         address_document: {
             type: String,
+            default: '',
         },
         identificationDocumentType: {
             type: String,
