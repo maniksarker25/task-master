@@ -18,11 +18,13 @@ const customerSchema = new Schema<ICustomer>(
             required: true,
             lowercase: true,
             trim: true,
+            unique: true,
         },
         phone: {
             type: String,
             required: true,
             trim: true,
+            unique: true,
         },
         profile_image: {
             type: String,
@@ -35,6 +37,7 @@ const customerSchema = new Schema<ICustomer>(
         },
         address_document: {
             type: String,
+            default: '',
         },
     },
     {

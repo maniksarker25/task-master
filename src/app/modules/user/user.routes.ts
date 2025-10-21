@@ -9,7 +9,7 @@ import userValidations from './user.validation';
 const router = Router();
 
 router.post(
-    '/register-user',
+    '/register-customer',
     validateRequest(CustomerValidations.createCustomerSchema),
     userControllers.registerUser
 );
@@ -28,6 +28,16 @@ router.post(
 
 router.get(
     '/get-my-profile',
+    auth(
+        USER_ROLE.customer,
+        USER_ROLE.provider,
+        USER_ROLE.admin,
+        USER_ROLE.superAdmin
+    ),
+    userControllers.getMyProfile
+);
+router.patch(
+    '/update-profile',
     auth(
         USER_ROLE.customer,
         USER_ROLE.provider,
