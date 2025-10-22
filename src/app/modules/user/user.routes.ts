@@ -1,4 +1,5 @@
-import { Router } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
+import { uploadFile } from '../../helper/multer-s3-uploader';
 import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
 import CustomerValidations from '../customer/customer.validation';
@@ -44,7 +45,14 @@ router.patch(
         USER_ROLE.admin,
         USER_ROLE.superAdmin
     ),
-    userControllers.getMyProfile
+    uploadFile(),
+    (req: Request, res: Response, next: NextFunction) => {
+        if (req.body.data) {
+            req.body = JSON.parse(req.body.data);
+        }
+        next();
+    },
+    userControllers.updateUserProfile
 );
 //===
 router.patch(
