@@ -8,6 +8,7 @@ import { categoryRoutes } from '../modules/category/category.routes';
 import { subscriberRoutes } from '../modules/subscriber/subscriber.routes';
 import { superAdminRoutes } from '../modules/superAdmin/superAdmin.routes';
 import { taskRoutes } from '../modules/task/task.routes';
+import { bidRoutes } from '../modules/bid/bid.routes';
 
 const router = Router();
 
@@ -28,6 +29,10 @@ const moduleRoutes = [
     {
         path: '/task',
         router: taskRoutes,
+    },
+    {
+        path: '/bid',
+        router: bidRoutes,
     },
     {
         path: '/notification',
