@@ -13,6 +13,9 @@ export const registerUserValidationSchema = z.object({
         }),
         password: z.string().min(6, 'Password must be at least 6 characters'),
         confirmPassword: z.string().min(6, 'Confirm password is required'),
+        role: z.enum(['customer', 'provider'], {
+            required_error: 'Role is required',
+        }),
     }),
 });
 //
