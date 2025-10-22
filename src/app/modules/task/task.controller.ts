@@ -45,6 +45,18 @@ const getSingleTask = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const deleteTask = catchAsync(async (req, res) => {
+    const { id } = req.params;
 
-const TaskController = { createTask, getAllTask, getSingleTask };
+    await TaskServices.deleteTaskFromDB(id);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Task deleted successfully',
+        data: null,
+    });
+});
+
+const TaskController = { createTask, getAllTask, getSingleTask, deleteTask };
 export default TaskController;
