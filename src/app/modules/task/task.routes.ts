@@ -8,8 +8,8 @@ import taskValidations from './task.validation';
 
 const router = express.Router();
 
-router.patch(
-    '/update-profile',
+router.post(
+    '/create-task',
     auth(USER_ROLE.customer),
     uploadFile(),
     (req, res, next) => {
@@ -18,8 +18,8 @@ router.patch(
         }
         next();
     },
-    validateRequest(taskValidations.updateTaskData),
-    taskController.updateUserProfile
+    validateRequest(taskValidations.createTaskZodSchema),
+    taskController.createTask
 );
 
 export const taskRoutes = router;

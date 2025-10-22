@@ -1,24 +1,20 @@
-import httpStatus from "http-status";
-import catchAsync from "../../utilities/catchasync";
-import sendResponse from "../../utilities/sendResponse";
-import taskServices from "./task.service";
+import catchAsync from '../../utilities/catchasync';
 
-const updateUserProfile = catchAsync(async (req, res) => {
-    const { files } = req;
-    if (files && typeof files === "object" && "profile_image" in files) {
-        req.body.profile_image = files["profile_image"][0].path;
-    }
-    const result = await taskServices.updateUserProfile(
-        req.user.profileId,
-        req.body
-    );
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: "Profile updated successfully",
-        data: result,
-    });
+const createTask = catchAsync(async (req, res) => {
+    const file: any = req.files?.category_image;
+    console.log(file);
+    //   if (req.files?.category_image) {
+    //     req.body.category_image = getCloudFrontUrl(file[0].key);
+    // }
+    // const result = await categoryService.createCategoryIntoDB(req?.body);
+    // //
+    // sendResponse(res, {
+    //     statusCode: httpStatus.OK,
+    //     success: true,
+    //     message: 'Category created successfully',
+    //     data: result,
+    // });
 });
 
-const TaskController = { updateUserProfile };
+const TaskController = { createTask };
 export default TaskController;
