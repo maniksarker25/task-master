@@ -30,5 +30,5 @@ const feedbackSchema = new Schema<IFeedback>(
     { timestamps: true }
 );
 
-const feedbackModel = model<IFeedback>('Feedback', feedbackSchema);
-export default feedbackModel;
+const FeedbackModel = model<IFeedback>('Feedback', feedbackSchema);
+export default FeedbackModel;
