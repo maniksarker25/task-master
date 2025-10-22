@@ -47,10 +47,10 @@ const taskSchema = new Schema<ITask>(
         preferredDate: { type: Date },
         preferredTime: { type: String },
         deception: { type: String, required: true },
-        attachments: [{ type: String }],
+        task_attachments: [{ type: String }],
     },
     { timestamps: true }
 );
 
-const taskModel = model<ITask>('Task', taskSchema);
-export default taskModel;
+const TaskModel = model<ITask>('Task', taskSchema);
+export default TaskModel;

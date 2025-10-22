@@ -1,16 +1,17 @@
 import express from 'express';
-import { uploadFile } from '../../helper/fileUploader';
 import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
 import { USER_ROLE } from '../user/user.constant';
-import taskController from './task.controller';
+
 import taskValidations from './task.validation';
+import { uploadFile } from '../../helper/multer-s3-uploader';
+import TaskController from './task.controller';
 
 const router = express.Router();
 
 router.post(
     '/create-task',
-    auth(USER_ROLE.customer),
+    auth(USER_ROLE.customer, USER_ROLE.superAdmin),
     uploadFile(),
     (req, res, next) => {
         if (req.body.data) {
@@ -19,7 +20,7 @@ router.post(
         next();
     },
     validateRequest(taskValidations.createTaskZodSchema),
-    taskController.createTask
+    TaskController.createTask
 );
-
+router.get('/all-task', TaskController.getAllTask);
 export const taskRoutes = router;
