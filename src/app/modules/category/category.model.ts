@@ -3,8 +3,8 @@ import { ICategory } from './category.interface';
 
 const CategorySchema: Schema = new Schema<ICategory>(
     {
-        title: { type: String, required: true },
-        images: { type: String }, // optional
+        name: { type: String, required: true },
+        category_image: { type: String }, // optional
         isDeleted: { type: Boolean, default: false },
     },
     {

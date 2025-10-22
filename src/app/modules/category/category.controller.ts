@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
+import { getCloudFrontUrl } from '../../helper/multer-s3-uploader';
 import catchAsync from '../../utilities/catchasync';
 import sendResponse from '../../utilities/sendResponse';
 import categoryService from './category.services';
-import { getCloudFrontUrl } from '../../helper/multer-s3-uploader';
 
 const createCategory = catchAsync(async (req, res) => {
     const file: any = req.files?.category_image;

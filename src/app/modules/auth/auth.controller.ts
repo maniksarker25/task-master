@@ -1,8 +1,8 @@
 import httpStatus from 'http-status';
+import AppError from '../../error/appError';
 import catchAsync from '../../utilities/catchasync';
 import sendResponse from '../../utilities/sendResponse';
 import authServices from './auth.services';
-import AppError from '../../error/appError';
 
 const loginUser = catchAsync(async (req, res) => {
     const result = await authServices.loginUserIntoDB(req.body);
@@ -48,12 +48,12 @@ const refreshToken = catchAsync(async (req, res) => {
     });
 });
 const forgetPassword = catchAsync(async (req, res) => {
-    const email = req.body.email;
-    const result = await authServices.forgetPassword(email);
+    const phone = req.body.phone;
+    const result = await authServices.forgetPassword(phone);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: 'Password reset code send to the email',
+        message: 'Password reset code send to the phone number',
         data: result,
     });
 });
