@@ -34,6 +34,17 @@ const getAllTask = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const getSingleTask = catchAsync(async (req, res) => {
+    const id = req.params.id;
 
-const TaskController = { createTask, getAllTask };
+    const result = await TaskServices.getSingleTaskFromDB(id);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Task retrieved successfully 1',
+        data: result,
+    });
+});
+
+const TaskController = { createTask, getAllTask, getSingleTask };
 export default TaskController;

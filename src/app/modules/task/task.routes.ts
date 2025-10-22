@@ -23,4 +23,5 @@ router.post(
     TaskController.createTask
 );
 router.get('/all-task', TaskController.getAllTask);
+router.get('/single-task/:id', TaskController.getSingleTask);
 export const taskRoutes = router;
