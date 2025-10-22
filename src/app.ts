@@ -32,7 +32,6 @@ app.use('/api/v1', router);
 app.post('/contact-us', sendContactUsEmail);
 
 app.get('/', async (req, res) => {
-    await sendSMS('+8801986250270', 'This is a test message from Task Alley');
     res.send({ message: 'nice to meet you' });
 });
 

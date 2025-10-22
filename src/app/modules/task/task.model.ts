@@ -1,11 +1,11 @@
 import { model, Schema } from 'mongoose';
-import { ITask } from './task.interface';
 import {
     ENUM_DONE_BY,
     ENUM_PAYMENT_STATUS,
     ENUM_SCHEDULE_TYPE,
     ENUM_TASK_STATUS,
 } from './task.enum';
+import { ITask } from './task.interface';
 
 const taskSchema = new Schema<ITask>(
     {
@@ -39,7 +39,15 @@ const taskSchema = new Schema<ITask>(
         payOn: { type: String },
         doneBy: { type: String, enum: Object.values(ENUM_DONE_BY) },
 
-        location: { type: String },
+        location: {
+            type: {
+                type: String,
+                enum: ['Point'],
+                required: true,
+                default: 'Point',
+            },
+            coordinates: { type: [Number], required: true, index: '2dsphere' },
+        },
         scheduleType: {
             type: String,
             enum: Object.values(ENUM_SCHEDULE_TYPE),
@@ -47,10 +55,10 @@ const taskSchema = new Schema<ITask>(
         preferredDate: { type: Date },
         preferredTime: { type: String },
         deception: { type: String, required: true },
-        attachments: [{ type: String }],
+        task_attachments: [{ type: String }],
     },
     { timestamps: true }
 );
 
-const taskModel = model<ITask>('Task', taskSchema);
-export default taskModel;
+const TaskModel = model<ITask>('Task', taskSchema);
+export default TaskModel;

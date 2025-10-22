@@ -47,8 +47,8 @@ const cancellationRequestSchema = new Schema<ICancellationRequest>(
     { timestamps: true }
 );
 
-const cancellationRequestModel = model<ICancellationRequest>(
+const CancellationRequestModel = model<ICancellationRequest>(
     'CancellationRequest',
     cancellationRequestSchema
 );
-export default cancellationRequestModel;
+export default CancellationRequestModel;

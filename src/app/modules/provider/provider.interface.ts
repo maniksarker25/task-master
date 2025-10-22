@@ -15,4 +15,6 @@ export interface IProvider {
     identification_document?: string;
     bankVerificationNumber?: string;
     isVerified?: boolean;
+    isIdentificationDocumentApproved?: boolean;
+    isBankVerificationNumberApproved?: boolean;
 }

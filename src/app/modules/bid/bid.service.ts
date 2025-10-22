@@ -1,24 +1,16 @@
-import httpStatus from 'http-status';
-import AppError from '../../error/appError';
 import { IBid } from './bid.interface';
-import bidModel from './bid.model';
+import BidModel from './bid.model';
 
-const updateUserProfile = async (id: string, payload: Partial<IBid>) => {
-    if (payload.email || payload.username) {
-        throw new AppError(
-            httpStatus.BAD_REQUEST,
-            'You cannot change the email or username'
-        );
-    }
-    const user = await bidModel.findById(id);
-    if (!user) {
-        throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
-    }
-    return await bidModel.findByIdAndUpdate(id, payload, {
-        new: true,
-        runValidators: true,
-    });
+const createBid = async (payload: IBid) => {
+    const result = (await BidModel.create(payload)).populate('provider task');
+
+    return result;
 };
 
-const BidServices = { updateUserProfile };
+const getAllBid = async () => {
+    const result = await BidModel.find({}).populate('provider task');
+    return result;
+};
+
+const BidServices = { createBid, getAllBid };
 export default BidServices;
