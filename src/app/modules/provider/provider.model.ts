@@ -53,6 +53,14 @@ const providerSchema = new Schema<IProvider>(
             type: Boolean,
             default: false,
         },
+        isBankVerificationNumberApproved: {
+            type: Boolean,
+            default: false,
+        },
+        isIdentificationDocumentApproved: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         timestamps: true,
