@@ -22,5 +22,5 @@ const referralSchema = new Schema<IReferral>(
     { timestamps: true }
 );
 
-const referralModel = model<IReferral>('Referral', referralSchema);
-export default referralModel;
+const ReferralModel = model<IReferral>('Referral', referralSchema);
+export default ReferralModel;

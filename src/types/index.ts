@@ -14,6 +14,7 @@ declare namespace Express {
             class_banner?: File[];
             category_image?: File[];
             address_document?: File[];
+            task_attachments?: File[];
         };
     }
 }
