@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
+import { getCloudFrontUrl } from '../../helper/multer-s3-uploader';
 import catchAsync from '../../utilities/catchasync';
 import sendResponse from '../../utilities/sendResponse';
 import userServices from './user.services';
@@ -45,12 +47,24 @@ const getMyProfile = catchAsync(async (req, res) => {
         data: result,
     });
 });
+
 const updateUserProfile = catchAsync(async (req, res) => {
+    const file: any = req.files?.profile_image;
+    if (req.files?.profile_image) {
+        req.body.profile_image = getCloudFrontUrl(file[0].key);
+    }
+    const address_document_file: any = req.files?.address_document;
+    if (req.files?.address_document) {
+        req.body.address_document = getCloudFrontUrl(
+            address_document_file[0].key
+        );
+    }
+    const result = await userServices.updateUserProfile(req.user, req.body);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
         message: 'Profile updated successfully',
-        data: null,
+        data: result,
     });
 });
 const changeUserStatus = catchAsync(async (req, res) => {

@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { S3Client } from '@aws-sdk/client-s3';
 import { Request } from 'express';
 import multer from 'multer';
 import multerS3 from 'multer-s3';
-import { S3Client } from '@aws-sdk/client-s3';
 
 /**
  * Configure and setup AWS S3 client
@@ -21,7 +21,12 @@ const s3 = new S3Client({
  */
 export const uploadFile = () => {
     const fileFilter = (req: Request, file: any, cb: any) => {
-        const allowedFieldnames = ['image', 'profile_image', 'category_image'];
+        const allowedFieldnames = [
+            'image',
+            'profile_image',
+            'category_image',
+            'address_document',
+        ];
 
         if (file.fieldname === undefined) {
             // Allow requests without any files
@@ -42,7 +47,8 @@ export const uploadFile = () => {
                 file.mimetype === 'video/x-flv' ||
                 file.mimetype === 'video/3gpp' ||
                 file.mimetype === 'video/3gpp2' ||
-                file.mimetype === 'video/x-matroska'
+                file.mimetype === 'video/x-matroska' ||
+                file.mimetype === 'application/pdf'
             ) {
                 cb(null, true);
             } else {
@@ -70,6 +76,8 @@ export const uploadFile = () => {
                 uploadPath = 'uploads/videos';
             } else if (file.fieldname === 'thumbnail') {
                 uploadPath = 'uploads/images/thumbnail';
+            } else if (file.fieldname === 'address_document') {
+                uploadPath = 'uploads/documents/address_document';
             } else {
                 uploadPath = 'uploads';
             }
@@ -98,6 +106,7 @@ export const uploadFile = () => {
         { name: 'image', maxCount: 1 },
         { name: 'profile_image', maxCount: 1 },
         { name: 'category_image', maxCount: 2 },
+        { name: 'address_document', maxCount: 1 },
     ]);
 
     return upload;
