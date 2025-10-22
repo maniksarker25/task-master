@@ -1,8 +1,8 @@
 import httpStatus from 'http-status';
 import AppError from '../../error/appError';
+import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 import { ICategory } from './category.interface';
 import Category from './category.model';
-import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 
 // create category into db
 const createCategoryIntoDB = async (payload: ICategory) => {
