@@ -16,7 +16,7 @@ const getAllTaskFromDB = async () => {
     return result;
 };
 const getSingleTaskFromDB = async (id: string) => {
-    const result = await TaskModel.findById(id).populate('category');
+    const result = await TaskModel.findById(id).populate('category provider');
     return result;
 };
 
