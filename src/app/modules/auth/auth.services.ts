@@ -18,7 +18,7 @@ import { TLoginUser } from './auth.interface';
 // const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // const GOOGLE_CLIENT_IDS = (process.env.GOOGLE_CLIENT_IDS || '').split(',');
 import axios from 'axios';
-import Customer from '../customer/customer.model';
+import sendSMS from '../../helper/sendSms';
 const generateVerifyCode = (): number => {
     return Math.floor(10000 + Math.random() * 90000);
 };
@@ -265,8 +265,8 @@ const refreshToken = async (token: string) => {
 };
 
 // forgot password
-const forgetPassword = async (email: string) => {
-    const user = await User.findOne({ email: email });
+const forgetPassword = async (phone: string) => {
+    const user = await User.findOne({ phone: phone });
     if (!user) {
         throw new AppError(httpStatus.NOT_FOUND, 'This user does not exist');
     }
@@ -282,7 +282,7 @@ const forgetPassword = async (email: string) => {
 
     const resetCode = generateVerifyCode();
     await User.findOneAndUpdate(
-        { email: email },
+        { phone: phone },
         {
             resetCode: resetCode,
             isResetVerified: false,
@@ -290,16 +290,10 @@ const forgetPassword = async (email: string) => {
         }
     );
 
-    // sendEmail(
-    //   user.email,
-    //   'Reset password code',
-    //   resetPasswordEmailBody(user.username, resetCode),
-    // );
-    sendEmail({
-        email: user.email,
-        subject: 'Reset password code',
-        html: resetPasswordEmailBody('Dear', resetCode),
-    });
+    sendSMS(
+        user.phone,
+        `Task Alley: Your password reset code is ${resetCode}. This code will expire in 5 minutes. If you didn’t request a password reset, please ignore this message.`
+    );
 
     return null;
 
