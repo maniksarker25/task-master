@@ -4,6 +4,7 @@ import { ITask } from './task.interface';
 
 import TaskModel from './task.model';
 import bidModel from '../bid/bid.model';
+import QuestionModel from '../question/question.model';
 
 const createTaskIntoDB = async (payload: Partial<ITask>) => {
     const result = (await TaskModel.create(payload)).populate('category');
@@ -32,6 +33,7 @@ const deleteTaskFromDB = async (id: string) => {
         await taskData.save();
     } else {
         await bidModel.deleteMany({ task: taskData._id });
+        await QuestionModel.deleteMany({ task: taskData._id });
 
         await TaskModel.findByIdAndDelete(id);
     }

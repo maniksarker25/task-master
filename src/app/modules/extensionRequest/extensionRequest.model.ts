@@ -45,8 +45,8 @@ const extensionRequestSchema = new Schema<IExtensionRequest>(
     { timestamps: true }
 );
 
-const extensionRequestModel = model<IExtensionRequest>(
+const ExtensionRequestModel = model<IExtensionRequest>(
     'ExtensionRequest',
     extensionRequestSchema
 );
-export default extensionRequestModel;
+export default ExtensionRequestModel;

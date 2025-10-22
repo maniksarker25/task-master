@@ -1,15 +1,15 @@
-import express from "express";
-import auth from "../../middlewares/auth";
-import { USER_ROLE } from "../user/user.constant";
-import validateRequest from "../../middlewares/validateRequest";
-import questionValidations from "./question.validation";
-import questionController from "./question.controller";
-import { uploadFile } from "../../helper/fileUploader";
+import express from 'express';
+import auth from '../../middlewares/auth';
+import { USER_ROLE } from '../user/user.constant';
+import validateRequest from '../../middlewares/validateRequest';
+import questionValidations from './question.validation';
+import questionController from './question.controller';
+import { uploadFile } from '../../helper/fileUploader';
 
 const router = express.Router();
 
 router.patch(
-    "/update-profile",
+    '/update-profile',
     auth(USER_ROLE.user),
     uploadFile(),
     (req, res, next) => {

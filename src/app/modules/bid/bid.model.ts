@@ -29,5 +29,5 @@ const bidSchema = new Schema<IBid>(
     { timestamps: true }
 );
 
-const bidModel = model<IBid>('Bid', bidSchema);
-export default bidModel;
+const BidModel = model<IBid>('Bid', bidSchema);
+export default BidModel;
