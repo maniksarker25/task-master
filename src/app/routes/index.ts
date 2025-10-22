@@ -7,6 +7,7 @@ import { userRoutes } from '../modules/user/user.routes';
 import { categoryRoutes } from '../modules/category/category.routes';
 import { subscriberRoutes } from '../modules/subscriber/subscriber.routes';
 import { superAdminRoutes } from '../modules/superAdmin/superAdmin.routes';
+import { taskRoutes } from '../modules/task/task.routes';
 
 const router = Router();
 
@@ -23,6 +24,10 @@ const moduleRoutes = [
     {
         path: '/manage',
         router: ManageRoutes,
+    },
+    {
+        path: '/task',
+        router: taskRoutes,
     },
     {
         path: '/notification',
