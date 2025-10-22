@@ -1,21 +1,49 @@
-import httpStatus from "http-status";
-import AppError from "../../error/appError";
-import { ITask } from "./task.interface";
-import taskModel from "./task.model";
+import httpStatus from 'http-status';
+import AppError from '../../error/appError';
+import { ITask } from './task.interface';
 
-const updateUserProfile = async (id: string, payload: Partial<ITask>) => {
-    if (payload.email || payload.username) {
-        throw new AppError(httpStatus.BAD_REQUEST, "You cannot change the email or username");
-    }
-    const user = await taskModel.findById(id);
-    if (!user) {
-        throw new AppError(httpStatus.NOT_FOUND, "Profile not found");
-    }
-    return await taskModel.findByIdAndUpdate(id, payload, {
-        new: true,
-        runValidators: true,
-    });
+import TaskModel from './task.model';
+import bidModel from '../bid/bid.model';
+import QuestionModel from '../question/question.model';
+
+const createTaskIntoDB = async (payload: Partial<ITask>) => {
+    const result = (await TaskModel.create(payload)).populate('category');
+    return result;
 };
 
-const TaskServices = { updateUserProfile };
+const getAllTaskFromDB = async () => {
+    const result = await TaskModel.find().populate('category');
+    return result;
+};
+const getSingleTaskFromDB = async (id: string) => {
+    const result = await TaskModel.findById(id).populate('category');
+    return result;
+};
+
+const deleteTaskFromDB = async (id: string) => {
+    const taskData = await TaskModel.findById(id);
+
+    if (!taskData) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+    }
+
+    if (taskData.provider) {
+        taskData.isDeleted = true;
+
+        await taskData.save();
+    } else {
+        await bidModel.deleteMany({ task: taskData._id });
+        await QuestionModel.deleteMany({ task: taskData._id });
+
+        await TaskModel.findByIdAndDelete(id);
+    }
+
+    return { message: 'Task deleted successfully' };
+};
+const TaskServices = {
+    createTaskIntoDB,
+    getAllTaskFromDB,
+    getSingleTaskFromDB,
+    deleteTaskFromDB,
+};
 export default TaskServices;

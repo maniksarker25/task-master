@@ -22,5 +22,5 @@ const sentOfferSchema = new Schema<ISentOffer>(
     { timestamps: true }
 );
 
-const sentOfferModel = model<ISentOffer>('SentOffer', sentOfferSchema);
-export default sentOfferModel;
+const SentOfferModel = model<ISentOffer>('SentOffer', sentOfferSchema);
+export default SentOfferModel;
