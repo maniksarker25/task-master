@@ -24,4 +24,5 @@ router.post(
 );
 router.get('/all-task', TaskController.getAllTask);
 router.get('/single-task/:id', TaskController.getSingleTask);
+router.delete('/delete-task/:id', TaskController.deleteTask);
 export const taskRoutes = router;
