@@ -28,10 +28,11 @@ const registerCustomer = async (
     payload: ICustomer & {
         password: string;
         confirmPassword: string;
+        role: 'provider' | 'customer';
         playerId?: string;
     }
 ) => {
-    const { password, confirmPassword, playerId, ...userData } = payload;
+    const { password, confirmPassword, playerId, role, ...userData } = payload;
     if (password !== confirmPassword) {
         throw new AppError(
             httpStatus.BAD_REQUEST,
@@ -51,7 +52,7 @@ const registerCustomer = async (
             email: userData?.email,
             phone: userData?.phone,
             password: password,
-            role: USER_ROLE.customer,
+            role,
             verifyCode,
             codeExpireIn: new Date(Date.now() + 2 * 60000),
         };
@@ -61,36 +62,51 @@ const registerCustomer = async (
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const user = await User.create([userDataPayload], { session });
+        if (role == 'customer') {
+            const CustomerPayload = {
+                ...userData,
+                user: user[0]._id,
+            };
+            const result = await Customer.create([CustomerPayload], {
+                session,
+            });
 
-        const CustomerPayload = {
-            ...userData,
-            user: user[0]._id,
-        };
-        const result = await Customer.create([CustomerPayload], {
-            session,
-        });
+            await User.findByIdAndUpdate(
+                user[0]._id,
+                { profileId: result[0]._id },
+                { session }
+            );
 
-        await User.findByIdAndUpdate(
-            user[0]._id,
-            { profileId: result[0]._id },
-            { session }
-        );
-
-        // sendEmail({
-        //     email: userData.email,
-        //     subject: 'Activate Your Account',
-        //     html: registrationSuccessEmailBody(
-        //         result[0].name,
-        //         user[0].verifyCode
-        //     ),
-        // });
-        const smsMessage = `Thank you for registering with Task Alley! Please verify your phone using this code: ${verifyCode}. 
+            const smsMessage = `Thank you for registering with Task Alley! Please verify your phone using this code: ${verifyCode}. 
 The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
-        await sendSMS(userData?.phone, smsMessage);
-        await session.commitTransaction();
-        session.endSession();
+            await sendSMS(userData?.phone, smsMessage);
+            await session.commitTransaction();
+            session.endSession();
 
-        return result[0];
+            return result[0];
+        } else {
+            const ProviderPayload = {
+                ...userData,
+                user: user[0]._id,
+            };
+            const result = await Provider.create([ProviderPayload], {
+                session,
+            });
+
+            await User.findByIdAndUpdate(
+                user[0]._id,
+                { profileId: result[0]._id },
+                { session }
+            );
+
+            const smsMessage = `Thank you for registering with Task Alley! Please verify your phone using this code: ${verifyCode}. 
+The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
+            await sendSMS(userData?.phone, smsMessage);
+            await session.commitTransaction();
+            session.endSession();
+
+            return result[0];
+        }
     } catch (error) {
         await session.abortTransaction();
         session.endSession();
