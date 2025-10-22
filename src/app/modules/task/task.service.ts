@@ -11,6 +11,15 @@ const getAllTaskFromDB = async () => {
     const result = await TaskModel.find().populate('category');
     return result;
 };
+const getSingleTaskFromDB = async (id: string) => {
+    const result = await TaskModel.findById(id).populate('category');
+    return result;
+};
 
-const TaskServices = { createTaskIntoDB, getAllTaskFromDB };
+const deleteTaskFromDB = async (id: string) => {};
+const TaskServices = {
+    createTaskIntoDB,
+    getAllTaskFromDB,
+    getSingleTaskFromDB,
+};
 export default TaskServices;
