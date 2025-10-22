@@ -11,7 +11,7 @@ const router = express.Router();
 
 router.post(
     '/create-task',
-    auth(USER_ROLE.customer, USER_ROLE.superAdmin),
+    auth(USER_ROLE.customer),
     uploadFile(),
     (req, res, next) => {
         if (req.body.data) {
