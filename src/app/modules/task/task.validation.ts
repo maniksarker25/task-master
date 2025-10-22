@@ -5,8 +5,12 @@ import {
     ENUM_SCHEDULE_TYPE,
     ENUM_TASK_STATUS,
 } from './task.enum';
-
-// ✅ Create Task Zod Schema
+const locationSchema = z
+    .object({
+        type: z.literal('Point'),
+        coordinates: z.tuple([z.number(), z.number()]),
+    })
+    .optional();
 export const createTaskZodSchema = z.object({
     body: z.object({
         title: z
@@ -23,7 +27,7 @@ export const createTaskZodSchema = z.object({
         customer: z.string().optional(),
         payOn: z.string().optional(),
         doneBy: z.nativeEnum(ENUM_DONE_BY).optional(),
-        location: z.string().optional(),
+        location: locationSchema,
         scheduleType: z.nativeEnum(ENUM_SCHEDULE_TYPE).optional(),
         preferredDate: z.coerce.date().optional(),
         preferredTime: z.string().optional(),
@@ -47,7 +51,7 @@ export const updateTaskZodSchema = z.object({
         customer: z.string().optional(),
         payOn: z.string().optional(),
         doneBy: z.nativeEnum(ENUM_DONE_BY).optional(),
-        location: z.string().optional(),
+        location: locationSchema,
         scheduleType: z.nativeEnum(ENUM_SCHEDULE_TYPE).optional(),
         preferredDate: z.coerce.date().optional(),
         preferredTime: z.string().optional(),
