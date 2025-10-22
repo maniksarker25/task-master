@@ -17,10 +17,13 @@ export interface ITask {
     customer: Types.ObjectId; // ref -> Customer
     payOn: string;
     doneBy: (typeof ENUM_DONE_BY)[keyof typeof ENUM_DONE_BY];
-    location: string;
+    location: {
+        type: 'Point';
+        coordinates: [number, number];
+    };
     scheduleType: (typeof ENUM_SCHEDULE_TYPE)[keyof typeof ENUM_SCHEDULE_TYPE];
     preferredDate?: Date;
     preferredTime?: string; // or `Date` if you store full datetime
     deception: string;
-    attachments?: string[]; // images file
+    task_attachments?: string[]; // images file
 }

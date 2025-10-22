@@ -41,5 +41,5 @@ const disputeSchema = new Schema<IDispute>(
     { timestamps: true }
 );
 
-const disputeModel = model<IDispute>('Dispute', disputeSchema);
-export default disputeModel;
+const DisputeModel = model<IDispute>('Dispute', disputeSchema);
+export default DisputeModel;

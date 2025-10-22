@@ -20,5 +20,5 @@ const testimonialSchema = new Schema<ITestimonial>(
     { timestamps: true }
 );
 
-const testimonialModel = model<ITestimonial>('Testimonial', testimonialSchema);
-export default testimonialModel;
+const TestimonialModel = model<ITestimonial>('Testimonial', testimonialSchema);
+export default TestimonialModel;

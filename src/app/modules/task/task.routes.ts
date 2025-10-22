@@ -1,15 +1,16 @@
 import express from 'express';
-import { uploadFile } from '../../helper/fileUploader';
 import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
 import { USER_ROLE } from '../user/user.constant';
-import taskController from './task.controller';
+
 import taskValidations from './task.validation';
+import { uploadFile } from '../../helper/multer-s3-uploader';
+import TaskController from './task.controller';
 
 const router = express.Router();
 
-router.patch(
-    '/update-profile',
+router.post(
+    '/create-task',
     auth(USER_ROLE.customer),
     uploadFile(),
     (req, res, next) => {
@@ -18,8 +19,10 @@ router.patch(
         }
         next();
     },
-    validateRequest(taskValidations.updateTaskData),
-    taskController.updateUserProfile
+    validateRequest(taskValidations.createTaskZodSchema),
+    TaskController.createTask
 );
-
+router.get('/all-task', TaskController.getAllTask);
+router.get('/single-task/:id', TaskController.getSingleTask);
+router.delete('/delete-task/:id', TaskController.deleteTask);
 export const taskRoutes = router;
