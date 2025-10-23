@@ -15,6 +15,11 @@ router.post(
     BidController.createBidIntoDB
 );
 
-router.get('/all-bid', BidController.getAllBid);
+router.get('/all-bid', BidController.getAllBidFromDB);
+router.delete(
+    '/delete-bid/:id',
+    auth(USER_ROLE.provider),
+    BidController.deleteBidFromDB
+);
 
 export const bidRoutes = router;
