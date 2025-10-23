@@ -3,8 +3,8 @@ import catchAsync from '../../utilities/catchasync';
 import sendResponse from '../../utilities/sendResponse';
 import BidServices from './bid.service';
 
-const createBidIntoDB = catchAsync(async (req, res) => {
-    const result = await BidServices.createBid(req.body);
+const createBid = catchAsync(async (req, res) => {
+    const result = await BidServices.createBidIntoDB(req.body);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
@@ -13,8 +13,8 @@ const createBidIntoDB = catchAsync(async (req, res) => {
     });
 });
 
-const getAllBidFromDB = catchAsync(async (req, res) => {
-    const result = await BidServices.getAllBid();
+const getAllBid = catchAsync(async (req, res) => {
+    const result = await BidServices.getAllBidFromDB();
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
@@ -23,8 +23,8 @@ const getAllBidFromDB = catchAsync(async (req, res) => {
     });
 });
 // git chages
-const deleteBidFromDB = catchAsync(async (req, res) => {
-    const result = await BidServices.deleteBid(req.params.id);
+const deleteBid = catchAsync(async (req, res) => {
+    const result = await BidServices.deleteBidFromDB(req.params.id);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
@@ -33,5 +33,5 @@ const deleteBidFromDB = catchAsync(async (req, res) => {
     });
 });
 
-const BidController = { createBidIntoDB, getAllBidFromDB, deleteBidFromDB };
+const BidController = { createBid, getAllBid, deleteBid };
 export default BidController;
