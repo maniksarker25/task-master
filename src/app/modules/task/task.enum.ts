@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 export enum ENUM_TASK_STATUS {
-    OPEN_FOR_BIDS = 'OPEN_FOR_BIDS',
+    OPEN_FOR_BID = 'OPEN_FOR_BID',
     IN_PROGRESS = 'IN_PROGRESS',
     COMPLETED = 'COMPLETED',
     CANCELLED = 'CANCELLED',

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-unused-vars */
 
 import httpStatus from 'http-status';
@@ -9,8 +10,11 @@ import AppError from '../../error/appError';
 import registrationSuccessEmailBody from '../../mailTemplate/registerSucessEmail';
 import sendEmail from '../../utilities/sendEmail';
 
+import { deleteFileFromS3 } from '../../helper/deleteFromS3';
+import sendSMS from '../../helper/sendSms';
 import { ICustomer } from '../customer/customer.interface';
 import { Customer } from '../customer/customer.model';
+import { Provider } from '../provider/provider.model';
 import SuperAdmin from '../superAdmin/superAdmin.model';
 import { USER_ROLE } from './user.constant';
 import { TUser, TUserRole } from './user.interface';
@@ -19,14 +23,16 @@ import { createToken } from './user.utils';
 const generateVerifyCode = (): number => {
     return Math.floor(10000 + Math.random() * 90000);
 };
-//
 
 const registerCustomer = async (
-    password: string,
-    confirmPassword: string,
-    playerId: string,
-    userData: ICustomer
+    payload: ICustomer & {
+        password: string;
+        confirmPassword: string;
+        role: 'provider' | 'customer';
+        playerId?: string;
+    }
 ) => {
+    const { password, confirmPassword, playerId, role, ...userData } = payload;
     if (password !== confirmPassword) {
         throw new AppError(
             httpStatus.BAD_REQUEST,
@@ -44,8 +50,9 @@ const registerCustomer = async (
         const verifyCode = generateVerifyCode();
         const userDataPayload: Partial<TUser> = {
             email: userData?.email,
+            phone: userData?.phone,
             password: password,
-            role: USER_ROLE.customer,
+            role,
             verifyCode,
             codeExpireIn: new Date(Date.now() + 2 * 60000),
         };
@@ -55,34 +62,51 @@ const registerCustomer = async (
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const user = await User.create([userDataPayload], { session });
+        if (role == 'customer') {
+            const CustomerPayload = {
+                ...userData,
+                user: user[0]._id,
+            };
+            const result = await Customer.create([CustomerPayload], {
+                session,
+            });
 
-        const CustomerPayload = {
-            ...userData,
-            user: user[0]._id,
-        };
-        const result = await Customer.create([CustomerPayload], {
-            session,
-        });
+            await User.findByIdAndUpdate(
+                user[0]._id,
+                { profileId: result[0]._id },
+                { session }
+            );
 
-        await User.findByIdAndUpdate(
-            user[0]._id,
-            { profileId: result[0]._id },
-            { session }
-        );
+            const smsMessage = `Thank you for registering with Task Alley! Please verify your phone using this code: ${verifyCode}. 
+The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
+            await sendSMS(userData?.phone, smsMessage);
+            await session.commitTransaction();
+            session.endSession();
 
-        sendEmail({
-            email: userData.email,
-            subject: 'Activate Your Account',
-            html: registrationSuccessEmailBody(
-                result[0].firstName,
-                user[0].verifyCode
-            ),
-        });
+            return result[0];
+        } else {
+            const ProviderPayload = {
+                ...userData,
+                user: user[0]._id,
+            };
+            const result = await Provider.create([ProviderPayload], {
+                session,
+            });
 
-        await session.commitTransaction();
-        session.endSession();
+            await User.findByIdAndUpdate(
+                user[0]._id,
+                { profileId: result[0]._id },
+                { session }
+            );
 
-        return result[0];
+            const smsMessage = `Thank you for registering with Task Alley! Please verify your phone using this code: ${verifyCode}. 
+The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
+            await sendSMS(userData?.phone, smsMessage);
+            await session.commitTransaction();
+            session.endSession();
+
+            return result[0];
+        }
     } catch (error) {
         await session.abortTransaction();
         session.endSession();
@@ -193,6 +217,68 @@ const deleteUserAccount = async (user: JwtPayload, password: string) => {
     return null;
 };
 
+// update user
+const updateUserProfile = async (userData: JwtPayload, payload: any) => {
+    if (payload.email || payload.phone) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'You can not change the email or phone number'
+        );
+    }
+    if (userData.role == USER_ROLE.customer) {
+        const user = await Customer.findById(userData.profileId);
+        if (!user) {
+            throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
+        }
+        const result = await Customer.findByIdAndUpdate(
+            userData.profileId,
+            payload,
+            {
+                new: true,
+                runValidators: true,
+            }
+        );
+        if (payload.profile_image && user.profile_image) {
+            deleteFileFromS3(user.profile_image);
+        }
+        if (payload.address_document && user.address_document) {
+            deleteFileFromS3(user.address_document);
+        }
+        return result;
+    } else if (userData.role == USER_ROLE.superAdmin) {
+        const admin = await SuperAdmin.findById(userData.profileId);
+        if (!admin) {
+            throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
+        }
+        const result = await SuperAdmin.findByIdAndUpdate(
+            userData.profileId,
+            payload,
+            { new: true, runValidators: true }
+        );
+        if (payload.profile_image && admin.profile_image) {
+            deleteFileFromS3(admin.profile_image);
+        }
+
+        return result;
+    } else if (userData.role == USER_ROLE.provider) {
+        const provider = await Provider.findById(userData.profileId);
+        if (!provider) {
+            throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
+        }
+        const result = await Provider.findByIdAndUpdate(
+            userData.profileId,
+            payload,
+            { new: true, runValidators: true }
+        );
+        if (payload.profile_image && provider.profile_image) {
+            deleteFileFromS3(provider.profile_image);
+        }
+        if (payload.address_document && provider.address_document) {
+            deleteFileFromS3(provider.address_document);
+        }
+        return result;
+    }
+};
 // all cron jobs for users
 
 cron.schedule('*/2 * * * *', async () => {
@@ -250,6 +336,7 @@ const userServices = {
     getMyProfile,
     changeUserStatus,
     deleteUserAccount,
+    updateUserProfile,
 };
 
 export default userServices;

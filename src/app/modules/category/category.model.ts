@@ -3,14 +3,15 @@ import { ICategory } from './category.interface';
 
 const CategorySchema: Schema = new Schema<ICategory>(
     {
-        name: { type: String, required: true, unique: true },
-        category_image: { type: String, required: true },
+        name: { type: String, required: true },
+        category_image: { type: String }, // optional
+        isDeleted: { type: Boolean, default: false },
     },
     {
         timestamps: true,
     }
 );
 
-const Category = model<ICategory>('Category', CategorySchema);
+const CategoryModel = model<ICategory>('Category', CategorySchema);
 
-export default Category;
+export default CategoryModel;

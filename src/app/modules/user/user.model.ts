@@ -10,15 +10,24 @@ const userSchema = new Schema<TUser>(
             type: String,
             default: null,
         },
+        promo: {
+            type: Schema.Types.ObjectId,
+            ref: 'Promo',
+        },
         email: {
             type: String,
-            // required: true,
-            // unique: true,
-            default: '',
+            required: true,
+            lowercase: true,
+            trim: true,
+        },
+        phone: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true,
         },
         password: {
             type: String,
-            // required: true,
         },
         passwordChangedAt: {
             type: Date,
