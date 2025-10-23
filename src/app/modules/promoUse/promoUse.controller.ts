@@ -1,24 +1,44 @@
-import httpStatus from "http-status";
-import catchAsync from "../../utilities/catchasync";
-import sendResponse from "../../utilities/sendResponse";
-import promoUseServices from "./promoUse.service";
+import httpStatus from 'http-status';
+import catchAsync from '../../utilities/catchasync';
+import sendResponse from '../../utilities/sendResponse';
+import promoUseServices from './promoUse.service';
 
-const updateUserProfile = catchAsync(async (req, res) => {
-    const { files } = req;
-    if (files && typeof files === "object" && "profile_image" in files) {
-        req.body.profile_image = files["profile_image"][0].path;
-    }
-    const result = await promoUseServices.updateUserProfile(
-        req.user.profileId,
-        req.body
-    );
+const createPromoUse = catchAsync(async (req, res) => {
+    const payload = req.body;
+    const result = await promoUseServices.createPromoUseIntoDB(payload);
     sendResponse(res, {
-        statusCode: httpStatus.OK,
+        statusCode: httpStatus.CREATED,
         success: true,
-        message: "Profile updated successfully",
+        message: 'PromoUse created successfully',
         data: result,
     });
 });
 
-const PromoUseController = { updateUserProfile };
+const updatePromoUse = catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const payload = req.body;
+    const result = await promoUseServices.updatePromoUseByIdFromDB(id, payload);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'PromoUse updated successfully',
+        data: result,
+    });
+});
+
+const getAllPromoUses = catchAsync(async (req, res) => {
+    const result = await promoUseServices.getAllPromoUsesFromDB();
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'PromoUses fetched successfully',
+        data: result,
+    });
+});
+
+const PromoUseController = {
+    createPromoUse,
+    updatePromoUse,
+    getAllPromoUses,
+};
 export default PromoUseController;
