@@ -13,7 +13,7 @@ const createBidIntoDB = catchAsync(async (req, res) => {
     });
 });
 
-const getAllBid = catchAsync(async (req, res) => {
+const getAllBidFromDB = catchAsync(async (req, res) => {
     const result = await BidServices.getAllBid();
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -22,6 +22,16 @@ const getAllBid = catchAsync(async (req, res) => {
         data: result,
     });
 });
+// git chages
+const deleteBidFromDB = catchAsync(async (req, res) => {
+    const result = await BidServices.deleteBid(req.params.id);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Bid deleted successfully',
+        data: result,
+    });
+});
 
-const BidController = { createBidIntoDB, getAllBid };
+const BidController = { createBidIntoDB, getAllBidFromDB, deleteBidFromDB };
 export default BidController;
