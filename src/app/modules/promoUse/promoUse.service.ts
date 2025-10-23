@@ -1,21 +1,36 @@
-import httpStatus from "http-status";
-import AppError from "../../error/appError";
-import { IPromoUse } from "./promoUse.interface";
-import promoUseModel from "./promoUse.model";
+import httpStatus from 'http-status';
+import AppError from '../../error/appError';
+import { IPromoUse } from './promoUse.interface';
+import promoUseModel from './promoUse.model';
 
-const updateUserProfile = async (id: string, payload: Partial<IPromoUse>) => {
-    if (payload.email || payload.username) {
-        throw new AppError(httpStatus.BAD_REQUEST, "You cannot change the email or username");
-    }
-    const user = await promoUseModel.findById(id);
-    if (!user) {
-        throw new AppError(httpStatus.NOT_FOUND, "Profile not found");
+const createPromoUseIntoDB = async (payload: Partial<IPromoUse>) => {
+    const created = await promoUseModel.create(payload);
+    return created;
+};
+
+const updatePromoUseByIdFromDB = async (
+    id: string,
+    payload: Partial<IPromoUse>
+) => {
+    const doc = await promoUseModel.findById(id);
+    if (!doc) {
+        throw new AppError(httpStatus.NOT_FOUND, 'PromoUse not found');
     }
     return await promoUseModel.findByIdAndUpdate(id, payload, {
         new: true,
-        runValidators: true,
     });
 };
 
-const PromoUseServices = { updateUserProfile };
+const getAllPromoUsesFromDB = async () => {
+    return await promoUseModel
+        .find()
+        .populate('promo customer task service')
+        .lean();
+};
+
+const PromoUseServices = {
+    createPromoUseIntoDB,
+    updatePromoUseByIdFromDB,
+    getAllPromoUsesFromDB,
+};
 export default PromoUseServices;

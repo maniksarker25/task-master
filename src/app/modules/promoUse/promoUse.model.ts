@@ -28,5 +28,5 @@ const promoUseSchema = new Schema<IPromoUse>(
     { timestamps: true }
 );
 
-const promoUseModel = model<IPromoUse>('PromoUse', promoUseSchema);
-export default promoUseModel;
+const PromoUseModel = model<IPromoUse>('PromoUse', promoUseSchema);
+export default PromoUseModel;
