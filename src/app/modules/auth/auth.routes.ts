@@ -2,8 +2,8 @@ import { Router } from 'express';
 import validateRequest from '../../middlewares/validateRequest';
 
 import auth from '../../middlewares/auth';
-import authControllers from './auth.controller';
 import { USER_ROLE } from '../user/user.constant';
+import authControllers from './auth.controller';
 import authValidations from './auth.validation';
 
 const router = Router();
@@ -13,17 +13,13 @@ router.post(
     validateRequest(authValidations.loginValidationSchema),
     authControllers.loginUser
 );
-router.post(
-    '/google-login',
-    validateRequest(authValidations.googleSignUpValidationSchema),
-    authControllers.googleLogin
-);
+
 router.post(
     '/change-password',
     auth(
-        USER_ROLE.user,
-        USER_ROLE.player,
-        USER_ROLE.team,
+        USER_ROLE.customer,
+        USER_ROLE.provider,
+        USER_ROLE.admin,
         USER_ROLE.superAdmin
     ),
     validateRequest(authValidations.changePasswordValidationSchema),
@@ -32,9 +28,9 @@ router.post(
 router.post(
     '/refresh-token',
     auth(
-        USER_ROLE.user,
-        USER_ROLE.player,
-        USER_ROLE.team,
+        USER_ROLE.customer,
+        USER_ROLE.provider,
+        USER_ROLE.admin,
         USER_ROLE.superAdmin
     ),
     validateRequest(authValidations.refreshTokenValidationSchema),
@@ -62,13 +58,5 @@ router.post(
     validateRequest(authValidations.resendResetCodeValidationSchema),
     authControllers.resendResetCode
 );
-//
-router.post(
-    '/resend-verify-code',
-    validateRequest(authValidations.resendResetCodeValidationSchema),
-    authControllers.resendResetCode
-);
-
-router.post('/oauth-login', authControllers.oAuthLogin);
 
 export const authRoutes = router;

@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { Application } from 'express';
 import sendContactUsEmail from './app/helper/sendContactUsEmail';
+import sendSMS from './app/helper/sendSms';
 import globalErrorHandler from './app/middlewares/globalErrorHandler';
 import notFound from './app/middlewares/notFound';
 import router from './app/routes';
@@ -16,7 +17,12 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
     cors({
-        origin: ['http://localhost:3007', 'http://localhost:3008'],
+        origin: [
+            'http://localhost:3007',
+            'http://localhost:3008',
+            'http://localhost:3000',
+            'https://taskalley-deploy.vercel.app',
+        ],
         credentials: true,
     })
 );

@@ -35,6 +35,7 @@ const providerSchema = new Schema<IProvider>(
         },
         address_document: {
             type: String,
+            default: '',
         },
         identificationDocumentType: {
             type: String,
@@ -49,6 +50,14 @@ const providerSchema = new Schema<IProvider>(
             type: String,
         },
         isVerified: {
+            type: Boolean,
+            default: false,
+        },
+        isBankVerificationNumberApproved: {
+            type: Boolean,
+            default: false,
+        },
+        isIdentificationDocumentApproved: {
             type: Boolean,
             default: false,
         },
