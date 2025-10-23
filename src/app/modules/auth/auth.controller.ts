@@ -1,5 +1,4 @@
 import httpStatus from 'http-status';
-import AppError from '../../error/appError';
 import catchAsync from '../../utilities/catchasync';
 import sendResponse from '../../utilities/sendResponse';
 import authServices from './auth.services';
@@ -13,15 +12,7 @@ const loginUser = catchAsync(async (req, res) => {
         data: result,
     });
 });
-const googleLogin = catchAsync(async (req, res) => {
-    const result = await authServices.loginWithGoogle(req.body);
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: 'User login successfully',
-        data: result,
-    });
-});
+
 const changePassword = catchAsync(async (req, res) => {
     const { ...passwordData } = req.body;
     const result = await authServices.changePasswordIntoDB(
@@ -59,11 +50,6 @@ const forgetPassword = catchAsync(async (req, res) => {
 });
 
 const resetPassword = catchAsync(async (req, res) => {
-    // const token = req?.headers?.authorization;
-
-    // if (!token) {
-    //   throw new AppError(httpStatus.BAD_REQUEST, 'Your token is invalid');
-    // }
     const result = await authServices.resetPassword(req.body);
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -86,45 +72,11 @@ const verifyResetOtp = catchAsync(async (req, res) => {
 });
 
 const resendResetCode = catchAsync(async (req, res) => {
-    const result = await authServices.resendResetCode(req?.body.email);
+    const result = await authServices.resendResetCode(req?.body.phone);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
         message: 'Reset code resend successfully',
-        data: result,
-    });
-});
-const resendVerifyCode = catchAsync(async (req, res) => {
-    const result = await authServices.resendVerifyCode(req?.body.email);
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: 'Verify code resend successfully',
-        data: result,
-    });
-});
-
-const oAuthLogin = catchAsync(async (req, res) => {
-    const { provider, token, role, phoneType, playerId } = req.body;
-    if (!['google', 'apple', 'facebook'].includes(provider)) {
-        throw new AppError(httpStatus.BAD_REQUEST, 'Invalid provider');
-    }
-    const result = await authServices.loginWithOAuth(
-        provider,
-        token,
-        role,
-        phoneType,
-        playerId
-    );
-    res.cookie('refresh-token', result.refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-    });
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: 'User login successfully',
         data: result,
     });
 });
@@ -137,9 +89,6 @@ const authControllers = {
     resetPassword,
     verifyResetOtp,
     resendResetCode,
-    googleLogin,
-    resendVerifyCode,
-    oAuthLogin,
 };
 
 export default authControllers;

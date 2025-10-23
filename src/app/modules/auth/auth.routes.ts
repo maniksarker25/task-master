@@ -13,11 +13,7 @@ router.post(
     validateRequest(authValidations.loginValidationSchema),
     authControllers.loginUser
 );
-router.post(
-    '/google-login',
-    validateRequest(authValidations.googleSignUpValidationSchema),
-    authControllers.googleLogin
-);
+
 router.post(
     '/change-password',
     auth(
@@ -62,13 +58,5 @@ router.post(
     validateRequest(authValidations.resendResetCodeValidationSchema),
     authControllers.resendResetCode
 );
-//
-router.post(
-    '/resend-verify-code',
-    validateRequest(authValidations.resendResetCodeValidationSchema),
-    authControllers.resendResetCode
-);
-
-router.post('/oauth-login', authControllers.oAuthLogin);
 
 export const authRoutes = router;
