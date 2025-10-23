@@ -22,6 +22,7 @@ const getAllBidFromDB = catchAsync(async (req, res) => {
         data: result,
     });
 });
+// git chages
 const deleteBidFromDB = catchAsync(async (req, res) => {
     const result = await BidServices.deleteBid(req.params.id);
     sendResponse(res, {
