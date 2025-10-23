@@ -9,6 +9,7 @@ import { subscriberRoutes } from '../modules/subscriber/subscriber.routes';
 import { superAdminRoutes } from '../modules/superAdmin/superAdmin.routes';
 import { taskRoutes } from '../modules/task/task.routes';
 import { bidRoutes } from '../modules/bid/bid.routes';
+import { promoRoutes } from '../modules/promo/promo.routes';
 
 const router = Router();
 
@@ -33,6 +34,10 @@ const moduleRoutes = [
     {
         path: '/bid',
         router: bidRoutes,
+    },
+    {
+        path: '/promo',
+        router: promoRoutes,
     },
     {
         path: '/notification',

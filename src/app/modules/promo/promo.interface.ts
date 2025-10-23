@@ -1,4 +1,3 @@
-import { Types } from 'mongoose';
 import { ENUM_DISCOUNT_TYPE, ENUM_PROMO_STATUS } from './promo.enum';
 
 export interface IPromo {
