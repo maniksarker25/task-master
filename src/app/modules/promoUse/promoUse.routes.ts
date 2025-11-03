@@ -9,14 +9,14 @@ const router = express.Router();
 
 router.post(
     '/create-promo-use',
-    auth(USER_ROLE.customer),
+    // auth(USER_ROLE.customer),
     validateRequest(promoUseValidations.createPromoUseZodSchema),
     promoUseController.createPromoUse
 );
 
 router.patch(
     '/update-promo-use/:id',
-    auth(USER_ROLE.customer),
+    // auth(USER_ROLE.customer),
     validateRequest(promoUseValidations.updatePromoUseZodSchema),
     promoUseController.updatePromoUse
 );
