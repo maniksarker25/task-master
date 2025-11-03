@@ -12,6 +12,16 @@ const getAllProvider = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const updateProvider = catchAsync(async (req, res) => {
+    const { id, data } = req.body;
+    const result = await ProviderServices.updateProviderFromDB(id, data);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Provider Update successfully',
+        data: result,
+    });
+});
 
-const ProviderController = { getAllProvider };
+const ProviderController = { getAllProvider, updateProvider };
 export default ProviderController;
