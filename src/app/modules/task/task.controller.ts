@@ -15,7 +15,10 @@ const createTask = catchAsync(async (req, res) => {
         );
     }
 
-    const result = await TaskServices.createTaskIntoDB(req?.body);
+    const result = await TaskServices.createTaskIntoDB(
+        req.user.profileId,
+        req?.body
+    );
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -26,7 +29,7 @@ const createTask = catchAsync(async (req, res) => {
 });
 
 const getAllTask = catchAsync(async (req, res) => {
-    const result = await TaskServices.getAllTaskFromDB();
+    const result = await TaskServices.getAllTaskFromDB(req.query);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
