@@ -13,6 +13,11 @@ const subscriberSchema = new Schema<ISubscriber>(
             required: true,
             unique: true,
         },
+        role: {
+            type: String,
+            enum: ['Provider', 'Customer'],
+            required: true,
+        },
     },
     { timestamps: true }
 );
