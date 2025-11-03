@@ -11,6 +11,7 @@ import { taskRoutes } from '../modules/task/task.routes';
 import { bidRoutes } from '../modules/bid/bid.routes';
 import { promoRoutes } from '../modules/promo/promo.routes';
 import { promoUseRoutes } from '../modules/promoUse/promoUse.routes';
+import { providerRoutes } from '../modules/provider/provider.routes';
 
 const router = Router();
 
@@ -43,6 +44,10 @@ const moduleRoutes = [
     {
         path: '/promo-use',
         router: promoUseRoutes,
+    },
+    {
+        path: '/provider',
+        router: providerRoutes,
     },
     {
         path: '/notification',
