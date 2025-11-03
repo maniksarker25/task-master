@@ -214,7 +214,7 @@ const forgetPassword = async (phone: string) => {
         }
     );
 
-    sendSMS(
+    await sendSMS(
         user.phone,
         `Task Alley: Your password reset code is ${resetCode}. This code will expire in 5 minutes. If you didn’t request a password reset, please ignore this message.`
     );

@@ -11,6 +11,7 @@ const sendSMS = async (to: string, message: string) => {
             from: 'whatsapp:+14155238886',
             to: 'whatsapp:' + to,
         });
+
         return {
             invalid: false,
             message: `Message sent successfully to ${to}`,
