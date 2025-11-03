@@ -13,6 +13,7 @@ const taskSchema = new Schema<ITask>(
         category: {
             type: Schema.Types.ObjectId,
             ref: 'Category',
+            required: true,
         },
 
         budget: { type: Number, required: true },
@@ -48,13 +49,16 @@ const taskSchema = new Schema<ITask>(
             },
             coordinates: { type: [Number], required: true, index: '2dsphere' },
         },
+        address: {
+            type: String,
+        },
         scheduleType: {
             type: String,
             enum: Object.values(ENUM_SCHEDULE_TYPE),
         },
         preferredDate: { type: Date },
         preferredTime: { type: String },
-        deception: { type: String, required: true },
+        description: { type: String, required: true },
         task_attachments: [{ type: String }],
     },
     { timestamps: true }

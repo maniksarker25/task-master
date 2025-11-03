@@ -368,6 +368,11 @@ const resendResetCode = async (phone: string) => {
     return null;
 };
 
+const getAllUserFromDB = async () => {
+    const result = await User.find();
+    return result;
+};
+
 const authServices = {
     loginUserIntoDB,
     changePasswordIntoDB,
@@ -376,6 +381,7 @@ const authServices = {
     resetPassword,
     verifyResetOtp,
     resendResetCode,
+    getAllUserFromDB,
 };
 
 export default authServices;
