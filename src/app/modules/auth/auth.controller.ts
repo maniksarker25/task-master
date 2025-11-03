@@ -81,6 +81,16 @@ const resendResetCode = catchAsync(async (req, res) => {
     });
 });
 
+const getAllUser = catchAsync(async (req, res) => {
+    const result = await authServices.getAllUserFromDB();
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'All User Get Successfully',
+        data: result,
+    });
+});
+
 const authControllers = {
     loginUser,
     changePassword,
@@ -89,6 +99,7 @@ const authControllers = {
     resetPassword,
     verifyResetOtp,
     resendResetCode,
+    getAllUser,
 };
 
 export default authControllers;

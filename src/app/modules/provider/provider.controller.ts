@@ -1,15 +1,17 @@
 import httpStatus from 'http-status';
 import catchAsync from '../../utilities/catchasync';
 import sendResponse from '../../utilities/sendResponse';
+import ProviderServices from './provider.service';
 
-const updateUserProfile = catchAsync(async (req, res) => {
+const getAllProvider = catchAsync(async (req, res) => {
+    const result = await ProviderServices.getAllProviderFromDB();
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: 'Profile updated successfully',
-        data: null,
+        message: 'Provider fetched successfully',
+        data: result,
     });
 });
 
-const ProviderController = { updateUserProfile };
+const ProviderController = { getAllProvider };
 export default ProviderController;

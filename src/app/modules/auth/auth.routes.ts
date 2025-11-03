@@ -58,5 +58,10 @@ router.post(
     validateRequest(authValidations.resendResetCodeValidationSchema),
     authControllers.resendResetCode
 );
+router.get(
+    '/all-user',
+    auth(USER_ROLE.superAdmin, USER_ROLE.admin),
+    authControllers.getAllUser
+);
 
 export const authRoutes = router;
