@@ -12,6 +12,9 @@ import { TLoginUser } from './auth.interface';
 // const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // const GOOGLE_CLIENT_IDS = (process.env.GOOGLE_CLIENT_IDS || '').split(',');
 import sendSMS from '../../helper/sendSms';
+import { Customer } from '../customer/customer.model';
+import { Provider } from '../provider/provider.model';
+import { USER_ROLE } from '../user/user.constant';
 const generateVerifyCode = (): number => {
     return Math.floor(10000 + Math.random() * 90000);
 };
@@ -75,9 +78,23 @@ const loginUserIntoDB = async (payload: TLoginUser) => {
         config.jwt_refresh_secret as string,
         config.jwt_refresh_expires_in as string
     );
+
+    const obj: any = {};
+    if (user.role == USER_ROLE.provider) {
+        const provider = await Provider.findById(user.profileId);
+        obj.isBankNumberVerified = provider?.isBankVerificationNumberApproved;
+        obj.isIdentificationDocumentVerified =
+            provider?.isIdentificationDocumentApproved;
+        obj.isAddressProvided = provider?.isAddressProvided;
+    } else {
+        const customer = await Customer.findById(user.profileId);
+        obj.isAddressProvided = customer?.isAddressProvided;
+    }
+
     return {
         accessToken,
         refreshToken,
+        ...obj,
     };
 };
 

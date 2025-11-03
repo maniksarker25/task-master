@@ -39,6 +39,10 @@ const customerSchema = new Schema<ICustomer>(
             type: String,
             default: '',
         },
+        isAddressProvided: {
+            type: String,
+            default: false,
+        },
     },
     {
         timestamps: true,
