@@ -12,14 +12,14 @@ router.post(
     '/create-bid',
     auth(USER_ROLE.provider),
     validateRequest(BidValidations.createBidZodSchema),
-    BidController.createBidIntoDB
+    BidController.createBid
 );
 
-router.get('/all-bid', BidController.getAllBidFromDB);
+router.get('/all-bid', BidController.getAllBid);
 router.delete(
     '/delete-bid/:id',
     auth(USER_ROLE.provider),
-    BidController.deleteBidFromDB
+    BidController.deleteBid
 );
 
 export const bidRoutes = router;

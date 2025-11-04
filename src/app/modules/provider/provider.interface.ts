@@ -17,4 +17,5 @@ export interface IProvider {
     isVerified?: boolean;
     isIdentificationDocumentApproved?: boolean;
     isBankVerificationNumberApproved?: boolean;
+    isAddressProvided?: boolean;
 }

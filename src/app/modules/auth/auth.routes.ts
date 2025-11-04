@@ -27,12 +27,12 @@ router.post(
 );
 router.post(
     '/refresh-token',
-    auth(
-        USER_ROLE.customer,
-        USER_ROLE.provider,
-        USER_ROLE.admin,
-        USER_ROLE.superAdmin
-    ),
+    // auth(
+    //     USER_ROLE.customer,
+    //     USER_ROLE.provider,
+    //     USER_ROLE.admin,
+    //     USER_ROLE.superAdmin
+    // ),
     validateRequest(authValidations.refreshTokenValidationSchema),
     authControllers.refreshToken
 );
@@ -57,6 +57,11 @@ router.post(
     '/resend-reset-code',
     validateRequest(authValidations.resendResetCodeValidationSchema),
     authControllers.resendResetCode
+);
+router.get(
+    '/all-user',
+    auth(USER_ROLE.superAdmin, USER_ROLE.admin),
+    authControllers.getAllUser
 );
 
 export const authRoutes = router;

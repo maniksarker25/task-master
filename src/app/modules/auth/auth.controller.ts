@@ -5,6 +5,15 @@ import authServices from './auth.services';
 
 const loginUser = catchAsync(async (req, res) => {
     const result = await authServices.loginUserIntoDB(req.body);
+    const { refreshToken } = result;
+
+    // Set secure cookies
+    res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
@@ -81,6 +90,16 @@ const resendResetCode = catchAsync(async (req, res) => {
     });
 });
 
+const getAllUser = catchAsync(async (req, res) => {
+    const result = await authServices.getAllUserFromDB();
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'All User Get Successfully',
+        data: result,
+    });
+});
+
 const authControllers = {
     loginUser,
     changePassword,
@@ -89,6 +108,7 @@ const authControllers = {
     resetPassword,
     verifyResetOtp,
     resendResetCode,
+    getAllUser,
 };
 
 export default authControllers;

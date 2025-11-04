@@ -3,6 +3,10 @@ import { ISubscriber } from './subscriber.interface';
 
 const subscriberSchema = new Schema<ISubscriber>(
     {
+        name: {
+            type: String,
+            required: true,
+        },
         email: {
             type: String,
             required: true,
@@ -12,6 +16,11 @@ const subscriberSchema = new Schema<ISubscriber>(
             type: String,
             required: true,
             unique: true,
+        },
+        role: {
+            type: String,
+            enum: ['Provider', 'Customer'],
+            required: true,
         },
     },
     { timestamps: true }
