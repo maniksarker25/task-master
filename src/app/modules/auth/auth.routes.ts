@@ -27,12 +27,12 @@ router.post(
 );
 router.post(
     '/refresh-token',
-    auth(
-        USER_ROLE.customer,
-        USER_ROLE.provider,
-        USER_ROLE.admin,
-        USER_ROLE.superAdmin
-    ),
+    // auth(
+    //     USER_ROLE.customer,
+    //     USER_ROLE.provider,
+    //     USER_ROLE.admin,
+    //     USER_ROLE.superAdmin
+    // ),
     validateRequest(authValidations.refreshTokenValidationSchema),
     authControllers.refreshToken
 );

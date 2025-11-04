@@ -40,7 +40,7 @@ const customerSchema = new Schema<ICustomer>(
             default: '',
         },
         isAddressProvided: {
-            type: String,
+            type: Boolean,
             default: false,
         },
     },
