@@ -285,7 +285,6 @@ cron.schedule('*/2 * * * *', async () => {
     try {
         const now = new Date();
 
-        // Find unverified users whose expiration time has passed
         const expiredUsers = await User.find({
             isVerified: false,
             codeExpireIn: { $lte: now },
@@ -296,6 +295,9 @@ cron.schedule('*/2 * * * *', async () => {
 
             // Delete corresponding Customer documents
             const CustomerDeleteResult = await Customer.deleteMany({
+                user: { $in: expiredUserIds },
+            });
+            const ProviderDeleteResult = await Provider.deleteMany({
                 user: { $in: expiredUserIds },
             });
 
@@ -309,6 +311,9 @@ cron.schedule('*/2 * * * *', async () => {
             );
             console.log(
                 `Deleted ${CustomerDeleteResult.deletedCount} associated Customer documents`
+            );
+            console.log(
+                `Deleted ${ProviderDeleteResult.deletedCount} associated Customer documents`
             );
         }
     } catch (error) {

@@ -10,4 +10,5 @@ export interface ICustomer {
     city?: string;
     street?: string;
     address_document?: string;
+    isAddressProvided?: boolean;
 }
