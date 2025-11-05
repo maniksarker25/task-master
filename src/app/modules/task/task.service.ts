@@ -23,7 +23,11 @@ const getAllTaskFromDB = async (query: Record<string, any>) => {
 
     const filters: Record<string, any> = {};
     Object.keys(query).forEach((key) => {
-        if (!['searchTerm', 'page', 'limit'].includes(key)) {
+        if (
+            !['searchTerm', 'page', 'limit', 'sortBy', 'sortOrder'].includes(
+                key
+            )
+        ) {
             filters[key] = query[key];
         }
     });
@@ -40,6 +44,11 @@ const getAllTaskFromDB = async (query: Record<string, any>) => {
               ],
           }
         : {};
+
+    // Sorting
+    const sortBy = query.sortBy || 'createdAt'; // default sorting field
+    const sortOrder = query.sortOrder === 'asc' ? 1 : -1; // default descending
+    const sortStage = { [sortBy]: sortOrder };
 
     const pipeline: any[] = [
         { $match: { ...filters, ...searchMatchStage, isDeleted: false } },
@@ -98,7 +107,7 @@ const getAllTaskFromDB = async (query: Record<string, any>) => {
                 bids: 0,
             },
         },
-        { $sort: { createdAt: -1 } },
+        { $sort: sortStage },
         {
             $facet: {
                 result: [{ $skip: skip }, { $limit: limit }],
