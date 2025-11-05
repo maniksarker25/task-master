@@ -1,6 +1,6 @@
 import { model, Schema } from 'mongoose';
-import { IService } from './service.interface';
 import { ENUM_SERVICE_STATUS } from './service.enum';
+import { IService } from './service.interface';
 
 const serviceSchema = new Schema<IService>(
     {
@@ -25,7 +25,7 @@ const serviceSchema = new Schema<IService>(
         onSiteSupport: { type: Boolean, default: true },
         toolsProvided: { type: Boolean, default: true },
         languages: [{ type: String, required: true }],
-        priceRange: { type: String, required: true },
+        price: { type: Number, required: true },
 
         status: {
             type: String,
