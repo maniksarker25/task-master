@@ -230,6 +230,9 @@ const updateUserProfile = async (userData: JwtPayload, payload: any) => {
         if (!user) {
             throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
         }
+        if (payload.city) {
+            payload.isAddressProvided = true;
+        }
         const result = await Customer.findByIdAndUpdate(
             userData.profileId,
             payload,
@@ -264,6 +267,9 @@ const updateUserProfile = async (userData: JwtPayload, payload: any) => {
         const provider = await Provider.findById(userData.profileId);
         if (!provider) {
             throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
+        }
+        if (payload.city) {
+            payload.isAddressProvided = true;
         }
         const result = await Provider.findByIdAndUpdate(
             userData.profileId,
