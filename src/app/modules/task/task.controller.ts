@@ -95,5 +95,6 @@ const TaskController = {
     getSingleTask,
     deleteTask,
     acceptOffer,
+    getMyTask,
 };
 export default TaskController;
