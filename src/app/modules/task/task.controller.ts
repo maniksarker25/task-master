@@ -37,6 +37,19 @@ const getAllTask = catchAsync(async (req, res) => {
         data: result,
     });
 });
+// get my task
+const getMyTask = catchAsync(async (req, res) => {
+    const result = await TaskServices.getMyTaskFromDB(
+        req.user.profileId,
+        req.query
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Task retrieved successfully',
+        data: result,
+    });
+});
 const getSingleTask = catchAsync(async (req, res) => {
     const id = req.params.id;
 

@@ -22,6 +22,7 @@ export interface ITask {
         coordinates: [number, number];
     };
     address: string;
+    city: string;
     scheduleType: (typeof ENUM_SCHEDULE_TYPE)[keyof typeof ENUM_SCHEDULE_TYPE];
     preferredDate?: Date;
     preferredTime?: string;
