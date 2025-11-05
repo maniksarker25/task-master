@@ -5,12 +5,17 @@ import {
     ENUM_SCHEDULE_TYPE,
     ENUM_TASK_STATUS,
 } from './task.enum';
+
 const locationSchema = z
     .object({
         type: z.literal('Point'),
         coordinates: z.tuple([z.number(), z.number()]),
     })
     .optional();
+
+// ✅ Regex for 24-hour time format (HH:mm)
+const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
 export const createTaskZodSchema = z.object({
     body: z.object({
         title: z
@@ -30,10 +35,18 @@ export const createTaskZodSchema = z.object({
         location: locationSchema,
         scheduleType: z.nativeEnum(ENUM_SCHEDULE_TYPE).optional(),
         preferredDate: z.coerce.date().optional(),
-        preferredTime: z.string().optional(),
-        deception: z
-            .string({ required_error: 'Deception is required' })
-            .min(1, 'Deception cannot be empty'),
+
+        // ✅ 24-hour time format validation
+        preferredTime: z
+            .string()
+            .regex(timeRegex, {
+                message: 'Preferred time must be in 24-hour format (HH:mm)',
+            })
+            .optional(),
+
+        description: z
+            .string({ required_error: 'Description is required' })
+            .min(1, 'Description cannot be empty'),
         attachments: z.array(z.string()).optional(),
     }),
 });
@@ -54,8 +67,16 @@ export const updateTaskZodSchema = z.object({
         location: locationSchema,
         scheduleType: z.nativeEnum(ENUM_SCHEDULE_TYPE).optional(),
         preferredDate: z.coerce.date().optional(),
-        preferredTime: z.string().optional(),
-        deception: z.string().min(1).optional(),
+
+        // ✅ Same 24-hour validation for update
+        preferredTime: z
+            .string()
+            .regex(timeRegex, {
+                message: 'Preferred time must be in 24-hour format (HH:mm)',
+            })
+            .optional(),
+
+        description: z.string().min(1).optional(),
         attachments: z.array(z.string()).optional(),
     }),
 });

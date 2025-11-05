@@ -61,6 +61,10 @@ const providerSchema = new Schema<IProvider>(
             type: Boolean,
             default: false,
         },
+        isAddressProvided: {
+            type: String,
+            default: false,
+        },
     },
     {
         timestamps: true,

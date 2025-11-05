@@ -4,7 +4,10 @@ import sendResponse from '../../utilities/sendResponse';
 import BidServices from './bid.service';
 
 const createBid = catchAsync(async (req, res) => {
-    const result = await BidServices.createBidIntoDB(req.body);
+    const result = await BidServices.createBidIntoDB(
+        req.user.profileId,
+        req.body
+    );
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,

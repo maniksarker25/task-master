@@ -24,6 +24,7 @@ app.use(
             'https://taskalley-landing-page.vercel.app',
             'https://taskalley.com',
             'https://www.taskalley.com',
+            'http://localhost:3001',
         ],
         credentials: true,
     })

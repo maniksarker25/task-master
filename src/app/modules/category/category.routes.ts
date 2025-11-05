@@ -1,15 +1,15 @@
 import express, { NextFunction, Request, Response } from 'express';
-import auth from '../../middlewares/auth';
-import { USER_ROLE } from '../user/user.constant';
-import validateRequest from '../../middlewares/validateRequest';
-import categoryValidation from './category.validation';
-import categoryController from './category.controller';
 import { uploadFile } from '../../helper/multer-s3-uploader';
+import auth from '../../middlewares/auth';
+import validateRequest from '../../middlewares/validateRequest';
+import { USER_ROLE } from '../user/user.constant';
+import categoryController from './category.controller';
+import categoryValidation from './category.validation';
 
 const router = express.Router();
 
 router.post(
-    '/create-category',
+    '/create',
     auth(USER_ROLE.superAdmin),
     uploadFile(),
     (req: Request, res: Response, next: NextFunction) => {

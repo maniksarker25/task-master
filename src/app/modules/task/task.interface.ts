@@ -8,22 +8,23 @@ import {
 
 export interface ITask {
     title: string;
-    category: Types.ObjectId; // ref -> ServiceCategory
+    category: Types.ObjectId;
     budget: number;
     status: (typeof ENUM_TASK_STATUS)[keyof typeof ENUM_TASK_STATUS];
     isDeleted: boolean;
     paymentStatus: (typeof ENUM_PAYMENT_STATUS)[keyof typeof ENUM_PAYMENT_STATUS];
-    provider?: Types.ObjectId; // ref -> Provider (optional until assigned)
-    customer: Types.ObjectId; // ref -> Customer
+    provider?: Types.ObjectId;
+    customer: Types.ObjectId;
     payOn: string;
     doneBy: (typeof ENUM_DONE_BY)[keyof typeof ENUM_DONE_BY];
     location: {
         type: 'Point';
         coordinates: [number, number];
     };
+    address: string;
     scheduleType: (typeof ENUM_SCHEDULE_TYPE)[keyof typeof ENUM_SCHEDULE_TYPE];
     preferredDate?: Date;
-    preferredTime?: string; // or `Date` if you store full datetime
-    deception: string;
-    task_attachments?: string[]; // images file
+    preferredTime?: string;
+    description: string;
+    task_attachments?: string[];
 }
