@@ -61,5 +61,26 @@ const deleteTask = catchAsync(async (req, res) => {
     });
 });
 
-const TaskController = { createTask, getAllTask, getSingleTask, deleteTask };
+const acceptOffer = catchAsync(async (req, res) => {
+    const { taskId } = req.body;
+    const currentUserId = req.user.profileId;
+    const result = await TaskServices.acceptOfferByProvider(
+        taskId,
+        currentUserId
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Accept Offer successfully',
+        data: result,
+    });
+});
+
+const TaskController = {
+    createTask,
+    getAllTask,
+    getSingleTask,
+    deleteTask,
+    acceptOffer,
+};
 export default TaskController;
