@@ -13,6 +13,7 @@ import { promoRoutes } from '../modules/promo/promo.routes';
 import { promoUseRoutes } from '../modules/promoUse/promoUse.routes';
 import { providerRoutes } from '../modules/provider/provider.routes';
 import { serviceRoutes } from '../modules/service/service.routes';
+import { feedbackRoutes } from '../modules/feedback/feedback.routes';
 
 const router = Router();
 
@@ -70,6 +71,10 @@ const moduleRoutes = [
     {
         path: '/service',
         router: serviceRoutes,
+    },
+    {
+        path: '/feedback',
+        router: feedbackRoutes,
     },
 ];
 

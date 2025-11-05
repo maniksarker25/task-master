@@ -1,25 +1,16 @@
-import express from "express";
-import auth from "../../middlewares/auth";
-import { USER_ROLE } from "../user/user.constant";
-import validateRequest from "../../middlewares/validateRequest";
-import feedbackValidations from "./feedback.validation";
-import feedbackController from "./feedback.controller";
-import { uploadFile } from "../../helper/fileUploader";
+import express from 'express';
+import auth from '../../middlewares/auth';
+import { USER_ROLE } from '../user/user.constant';
+import validateRequest from '../../middlewares/validateRequest';
+import feedbackValidations from './feedback.validation';
+import feedbackController from './feedback.controller';
 
 const router = express.Router();
 
-router.patch(
-    "/update-profile",
-    auth(USER_ROLE.user),
-    uploadFile(),
-    (req, res, next) => {
-        if (req.body.data) {
-            req.body = JSON.parse(req.body.data);
-        }
-        next();
-    },
-    validateRequest(feedbackValidations.updateFeedbackData),
-    feedbackController.updateUserProfile
+router.post(
+    '/create-feedback',
+    auth(USER_ROLE.customer),
+    validateRequest(feedbackValidations.createFeedbackZodSchema),
+    feedbackController.createFeedback
 );
-
 export const feedbackRoutes = router;
