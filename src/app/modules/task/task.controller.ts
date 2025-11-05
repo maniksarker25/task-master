@@ -37,6 +37,18 @@ const getAllTask = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const getMyTask = catchAsync(async (req, res) => {
+    const result = await TaskServices.getMyTaskFromDB(
+        req.user.profileId,
+        req.query
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Task retrieved successfully',
+        data: result,
+    });
+});
 const getSingleTask = catchAsync(async (req, res) => {
     const id = req.params.id;
 
@@ -61,5 +73,11 @@ const deleteTask = catchAsync(async (req, res) => {
     });
 });
 
-const TaskController = { createTask, getAllTask, getSingleTask, deleteTask };
+const TaskController = {
+    createTask,
+    getAllTask,
+    getSingleTask,
+    deleteTask,
+    getMyTask,
+};
 export default TaskController;
