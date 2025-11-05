@@ -11,7 +11,6 @@ import registrationSuccessEmailBody from '../../mailTemplate/registerSucessEmail
 import sendEmail from '../../utilities/sendEmail';
 
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
-import sendSMS from '../../helper/sendSms';
 import { ICustomer } from '../customer/customer.interface';
 import { Customer } from '../customer/customer.model';
 import { Provider } from '../provider/provider.model';
@@ -139,7 +138,8 @@ const registerCustomer = async (
     session.startTransaction();
 
     try {
-        const verifyCode = generateVerifyCode();
+        const verifyCode =
+            process.env.NODE_ENV == 'production' ? generateVerifyCode() : 11111;
 
         const userDataPayload: Partial<TUser> = {
             email: userData?.email,
@@ -184,8 +184,8 @@ const registerCustomer = async (
         const smsMessage = `Thank you for registering with Task Alley! Please verify your phone using this code: ${verifyCode}. 
 The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
 
-        // Try sending SMS before committing
-        await sendSMS(userData.phone, smsMessage);
+        //!TODO: need to send sms to phone
+        // await sendSMS(userData.phone, smsMessage);
 
         // If SMS sent successfully, commit transaction
         await session.commitTransaction();
