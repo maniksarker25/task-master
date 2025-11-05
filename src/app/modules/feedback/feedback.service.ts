@@ -42,6 +42,7 @@ const createFeedbackIntoDB = async (
     const result = await FeedbackModel.create({
         ...payload,
         customer: currentUserID,
+        provider: task.provider,
     });
 
     return result;

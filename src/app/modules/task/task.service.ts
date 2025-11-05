@@ -315,6 +315,27 @@ const acceptOfferByProvider = async (taskId: string, currentUserId: string) => {
 
     return task;
 };
+const completeTaskByCustomer = async (
+    taskId: string,
+    currentUserId: string
+) => {
+    const task = await TaskModel.findById(taskId);
+    if (!task) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+    }
+
+    if (task.customer?.toString() !== currentUserId) {
+        throw new AppError(
+            httpStatus.UNAUTHORIZED,
+            'You are not authorized to complete this task'
+        );
+    }
+
+    task.status = ENUM_TASK_STATUS.COMPLETED;
+    await task.save();
+
+    return task;
+};
 
 const TaskServices = {
     createTaskIntoDB,
@@ -323,5 +344,6 @@ const TaskServices = {
     deleteTaskFromDB,
     getMyTaskFromDB,
     acceptOfferByProvider,
+    completeTaskByCustomer,
 };
 export default TaskServices;

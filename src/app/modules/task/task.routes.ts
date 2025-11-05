@@ -35,4 +35,10 @@ router.patch(
     auth(USER_ROLE.provider),
     TaskController.acceptOffer
 );
+router.patch(
+    '/complete-task',
+    auth(USER_ROLE.customer),
+    TaskController.completeTask
+);
+
 export const taskRoutes = router;
