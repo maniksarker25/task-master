@@ -147,10 +147,16 @@ const deleteTaskFromDB = async (id: string) => {
 
     return;
 };
+
+const acceptOfferByProvider = async (taskId: string, currentUserId: string) => {
+    console.log('acpt');
+};
+
 const TaskServices = {
     createTaskIntoDB,
     getAllTaskFromDB,
     getSingleTaskFromDB,
     deleteTaskFromDB,
+    acceptOfferByProvider,
 };
 export default TaskServices;
