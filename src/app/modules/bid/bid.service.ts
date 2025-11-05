@@ -3,8 +3,10 @@ import AppError from '../../error/appError';
 import { IBid } from './bid.interface';
 import BidModel from './bid.model';
 
-const createBidIntoDB = async (payload: IBid) => {
-    const result = (await BidModel.create(payload)).populate('provider task');
+const createBidIntoDB = async (userId: string, payload: IBid) => {
+    const result = (
+        await BidModel.create({ ...payload, provider: userId })
+    ).populate('provider task');
 
     return result;
 };

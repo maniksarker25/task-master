@@ -3,6 +3,10 @@ import { ISubscriber } from './subscriber.interface';
 
 const subscriberSchema = new Schema<ISubscriber>(
     {
+        name: {
+            type: String,
+            required: true,
+        },
         email: {
             type: String,
             required: true,

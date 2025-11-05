@@ -11,6 +11,8 @@ import { taskRoutes } from '../modules/task/task.routes';
 import { bidRoutes } from '../modules/bid/bid.routes';
 import { promoRoutes } from '../modules/promo/promo.routes';
 import { promoUseRoutes } from '../modules/promoUse/promoUse.routes';
+import { providerRoutes } from '../modules/provider/provider.routes';
+import { serviceRoutes } from '../modules/service/service.routes';
 
 const router = Router();
 
@@ -45,6 +47,10 @@ const moduleRoutes = [
         router: promoUseRoutes,
     },
     {
+        path: '/provider',
+        router: providerRoutes,
+    },
+    {
         path: '/notification',
         router: notificationRoutes,
     },
@@ -60,6 +66,10 @@ const moduleRoutes = [
     {
         path: '/subscriber',
         router: subscriberRoutes,
+    },
+    {
+        path: '/service',
+        router: serviceRoutes,
     },
 ];
 

@@ -1,19 +1,126 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
 import AppError from '../../error/appError';
 import { ITask } from './task.interface';
 
-import TaskModel from './task.model';
+import mongoose from 'mongoose';
 import bidModel from '../bid/bid.model';
 import QuestionModel from '../question/question.model';
+import TaskModel from './task.model';
 
-const createTaskIntoDB = async (payload: Partial<ITask>) => {
-    const result = (await TaskModel.create(payload)).populate('category');
+const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
+    const result = (
+        await TaskModel.create({ ...payload, customer: profileId })
+    ).populate('category');
     return result;
 };
 
-const getAllTaskFromDB = async () => {
-    const result = await TaskModel.find().populate('category');
-    return result;
+const getAllTaskFromDB = async (query: Record<string, any>) => {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const searchTerm = query.searchTerm || '';
+
+    const filters: Record<string, any> = {};
+    Object.keys(query).forEach((key) => {
+        if (!['searchTerm', 'page', 'limit'].includes(key)) {
+            filters[key] = query[key];
+        }
+    });
+
+    if (query.category) {
+        filters.category = new mongoose.Types.ObjectId(query.category);
+    }
+
+    const searchMatchStage = searchTerm
+        ? {
+              $or: [
+                  { title: { $regex: searchTerm, $options: 'i' } },
+                  { description: { $regex: searchTerm, $options: 'i' } },
+              ],
+          }
+        : {};
+
+    const pipeline: any[] = [
+        { $match: { ...filters, ...searchMatchStage, isDeleted: false } },
+        {
+            $lookup: {
+                from: 'bids',
+                localField: '_id',
+                foreignField: 'task',
+                as: 'bids',
+            },
+        },
+        {
+            $addFields: {
+                totalOffer: { $size: '$bids' },
+            },
+        },
+        {
+            $lookup: {
+                from: 'customers',
+                localField: 'customer',
+                foreignField: '_id',
+                as: 'customer',
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            name: 1,
+                            profile_image: 1,
+                        },
+                    },
+                ],
+            },
+        },
+        { $unwind: { path: '$customer', preserveNullAndEmptyArrays: true } },
+        {
+            $lookup: {
+                from: 'categories',
+                localField: 'category',
+                foreignField: '_id',
+                as: 'category',
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            name: 1,
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $unwind: { path: '$category', preserveNullAndEmptyArrays: true },
+        },
+        {
+            $project: {
+                bids: 0,
+            },
+        },
+        { $sort: { createdAt: -1 } },
+        {
+            $facet: {
+                result: [{ $skip: skip }, { $limit: limit }],
+                totalCount: [{ $count: 'total' }],
+            },
+        },
+    ];
+
+    const aggResult = await TaskModel.aggregate(pipeline);
+    const result = aggResult[0]?.result || [];
+    const total = aggResult[0]?.totalCount[0]?.total || 0;
+    const totalPage = Math.ceil(total / limit);
+
+    return {
+        meta: {
+            page,
+            limit,
+            total,
+            totalPage,
+        },
+        result,
+    };
 };
 const getSingleTaskFromDB = async (id: string) => {
     const result = await TaskModel.findById(id).populate('category provider');
@@ -38,7 +145,7 @@ const deleteTaskFromDB = async (id: string) => {
         await TaskModel.findByIdAndDelete(id);
     }
 
-    return { message: 'Task deleted successfully' };
+    return;
 };
 const TaskServices = {
     createTaskIntoDB,
