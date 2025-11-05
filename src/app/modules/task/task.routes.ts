@@ -25,7 +25,11 @@ router.post(
 router.get('/all-task', TaskController.getAllTask);
 router.get('/my-task', TaskController.getMyTask);
 router.get('/single-task/:id', TaskController.getSingleTask);
-router.delete('/delete-task/:id', TaskController.deleteTask);
+router.delete(
+    '/delete-task/:id',
+    auth(USER_ROLE.provider, USER_ROLE.customer),
+    TaskController.deleteTask
+);
 router.patch(
     '/acceptOffer',
     auth(USER_ROLE.provider),

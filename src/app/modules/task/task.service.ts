@@ -260,11 +260,17 @@ const getSingleTaskFromDB = async (id: string) => {
     return result;
 };
 
-const deleteTaskFromDB = async (id: string) => {
+const deleteTaskFromDB = async (id: string, currentUserId: string) => {
     const taskData = await TaskModel.findById(id);
 
     if (!taskData) {
         throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+    }
+    if (taskData.provider?.toString() !== currentUserId) {
+        throw new AppError(
+            httpStatus.UNAUTHORIZED,
+            'You are not authorized to accept this task'
+        );
     }
 
     if (taskData.provider) {

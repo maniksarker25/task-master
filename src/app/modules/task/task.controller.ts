@@ -63,8 +63,8 @@ const getSingleTask = catchAsync(async (req, res) => {
 });
 const deleteTask = catchAsync(async (req, res) => {
     const { id } = req.params;
-
-    await TaskServices.deleteTaskFromDB(id);
+    const currentUserId = req.user.profileId;
+    await TaskServices.deleteTaskFromDB(id, currentUserId);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
