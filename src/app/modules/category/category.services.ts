@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
 import AppError from '../../error/appError';
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
@@ -20,9 +21,66 @@ const updateCategoryIntoDB = async (
     return result;
 };
 
-const getAllCategories = async () => {
-    const result = await Category.find();
-    return result;
+const getAllCategories = async (query: Record<string, unknown>) => {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const searchTerm = query.searchTerm || '';
+
+    const searchMatchStage = searchTerm
+        ? {
+              $or: [
+                  { title: { $regex: searchTerm, $options: 'i' } },
+                  { description: { $regex: searchTerm, $options: 'i' } },
+              ],
+          }
+        : {};
+
+    const pipeline: any[] = [
+        {
+            $match: { ...searchMatchStage, isDeleted: false },
+        },
+        {
+            $lookup: {
+                from: 'tasks',
+                localField: '_id',
+                foreignField: 'category',
+                as: 'tasks',
+            },
+        },
+        {
+            $addFields: {
+                totalTask: { $size: '$tasks' },
+            },
+        },
+        {
+            $project: {
+                tasks: 0,
+            },
+        },
+        { $sort: { createdAt: -1 } },
+        {
+            $facet: {
+                result: [{ $skip: skip }, { $limit: limit }],
+                totalCount: [{ $count: 'total' }],
+            },
+        },
+    ];
+
+    const aggResult = await Category.aggregate(pipeline);
+    const result = aggResult[0]?.result || [];
+    const total = aggResult[0]?.totalCount[0]?.total || 0;
+    const totalPage = Math.ceil(total / limit);
+
+    return {
+        meta: {
+            page,
+            limit,
+            total,
+            totalPage,
+        },
+        result,
+    };
 };
 
 const getSingleCategory = async (id: string) => {
