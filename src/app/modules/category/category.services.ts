@@ -54,8 +54,22 @@ const getAllCategories = async (query: Record<string, unknown>) => {
             },
         },
         {
+            $lookup: {
+                from: 'services',
+                localField: '_id',
+                foreignField: 'category',
+                as: 'services',
+            },
+        },
+        {
+            $addFields: {
+                totalServices: { $size: '$services' },
+            },
+        },
+        {
             $project: {
                 tasks: 0,
+                services: 0,
             },
         },
         { $sort: { createdAt: -1 } },
