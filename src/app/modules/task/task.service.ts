@@ -3,9 +3,11 @@ import httpStatus from 'http-status';
 import AppError from '../../error/appError';
 import { ITask } from './task.interface';
 
+import { JwtPayload } from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import bidModel from '../bid/bid.model';
 import QuestionModel from '../question/question.model';
+import { USER_ROLE } from '../user/user.constant';
 import TaskModel from './task.model';
 
 const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
@@ -131,11 +133,21 @@ const getAllTaskFromDB = async (query: Record<string, any>) => {
         result,
     };
 };
-const getMyTaskFromDB = async (userId: string, query: Record<string, any>) => {
+const getMyTaskFromDB = async (
+    userData: JwtPayload,
+    query: Record<string, any>
+) => {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
     const searchTerm = query.searchTerm || '';
+
+    const matchStage: any = {};
+    if (userData.role == USER_ROLE.customer) {
+        matchStage.customer = new mongoose.Types.ObjectId(userData.profileId);
+    } else {
+        matchStage.provider = new mongoose.Types.ObjectId(userData.profileId);
+    }
 
     const filters: Record<string, any> = {};
     Object.keys(query).forEach((key) => {
@@ -169,10 +181,10 @@ const getMyTaskFromDB = async (userId: string, query: Record<string, any>) => {
     const pipeline: any[] = [
         {
             $match: {
+                ...matchStage,
                 ...filters,
                 ...searchMatchStage,
                 isDeleted: false,
-                customer: userId,
             },
         },
         {
