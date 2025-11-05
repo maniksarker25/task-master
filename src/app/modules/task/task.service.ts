@@ -7,6 +7,7 @@ import mongoose from 'mongoose';
 import bidModel from '../bid/bid.model';
 import QuestionModel from '../question/question.model';
 import TaskModel from './task.model';
+import { ENUM_TASK_STATUS } from './task.enum';
 
 const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
     const result = (
@@ -281,7 +282,32 @@ const deleteTaskFromDB = async (id: string) => {
 };
 
 const acceptOfferByProvider = async (taskId: string, currentUserId: string) => {
-    console.log('acpt');
+    const task = await TaskModel.findById(taskId);
+
+    if (!task) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+    }
+
+    if (task.provider?.toString() !== currentUserId) {
+        throw new AppError(
+            httpStatus.UNAUTHORIZED,
+            'You are not authorized to accept this task'
+        );
+    }
+    if (
+        task.status === ENUM_TASK_STATUS.IN_PROGRESS ||
+        task.status === ENUM_TASK_STATUS.COMPLETED
+    ) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            `Task is already ${task.status.toLowerCase()}`
+        );
+    }
+
+    task.status = ENUM_TASK_STATUS.IN_PROGRESS;
+    await task.save();
+
+    return task;
 };
 
 const TaskServices = {
@@ -290,5 +316,6 @@ const TaskServices = {
     getSingleTaskFromDB,
     deleteTaskFromDB,
     getMyTaskFromDB,
+    acceptOfferByProvider,
 };
 export default TaskServices;
