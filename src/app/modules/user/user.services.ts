@@ -11,7 +11,6 @@ import registrationSuccessEmailBody from '../../mailTemplate/registerSucessEmail
 import sendEmail from '../../utilities/sendEmail';
 
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
-import sendSMS from '../../helper/sendSms';
 import { ICustomer } from '../customer/customer.interface';
 import { Customer } from '../customer/customer.model';
 import { Provider } from '../provider/provider.model';
@@ -24,6 +23,95 @@ const generateVerifyCode = (): number => {
     return Math.floor(10000 + Math.random() * 90000);
 };
 
+// const registerCustomer = async (
+//     payload: ICustomer & {
+//         password: string;
+//         confirmPassword: string;
+//         role: 'provider' | 'customer';
+//         playerId?: string;
+//     }
+// ) => {
+//     const { password, confirmPassword, playerId, role, ...userData } = payload;
+//     if (password !== confirmPassword) {
+//         throw new AppError(
+//             httpStatus.BAD_REQUEST,
+//             "Password and confirm password doesn't match"
+//         );
+//     }
+
+//     const emailExist = await User.findOne({ email: userData.email });
+//     if (emailExist) {
+//         throw new AppError(httpStatus.BAD_REQUEST, 'This email already exist');
+//     }
+//     const session = await mongoose.startSession();
+//     session.startTransaction();
+//     try {
+//         const verifyCode = generateVerifyCode();
+//         const userDataPayload: Partial<TUser> = {
+//             email: userData?.email,
+//             phone: userData?.phone,
+//             password: password,
+//             role,
+//             verifyCode,
+//             codeExpireIn: new Date(Date.now() + 2 * 60000),
+//         };
+//         if (playerId) {
+//             userDataPayload.playerIds = [playerId];
+//         }
+
+//         // eslint-disable-next-line @typescript-eslint/no-unused-vars
+//         const user = await User.create([userDataPayload], { session });
+//         if (role == 'customer') {
+//             const CustomerPayload = {
+//                 ...userData,
+//                 user: user[0]._id,
+//             };
+//             const result = await Customer.create([CustomerPayload], {
+//                 session,
+//             });
+
+//             await User.findByIdAndUpdate(
+//                 user[0]._id,
+//                 { profileId: result[0]._id },
+//                 { session }
+//             );
+
+//             const smsMessage = `Thank you for registering with Task Alley! Please verify your phone using this code: ${verifyCode}.
+// The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
+//             await sendSMS(userData?.phone, smsMessage);
+//             await session.commitTransaction();
+//             session.endSession();
+
+//             return result[0];
+//         } else {
+//             const ProviderPayload = {
+//                 ...userData,
+//                 user: user[0]._id,
+//             };
+//             const result = await Provider.create([ProviderPayload], {
+//                 session,
+//             });
+
+//             await User.findByIdAndUpdate(
+//                 user[0]._id,
+//                 { profileId: result[0]._id },
+//                 { session }
+//             );
+
+//             const smsMessage = `Thank you for registering with Task Alley! Please verify your phone using this code: ${verifyCode}.
+// The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
+//             await sendSMS(userData?.phone, smsMessage);
+//             await session.commitTransaction();
+//             session.endSession();
+
+//             return result[0];
+//         }
+//     } catch (error) {
+//         await session.abortTransaction();
+//         session.endSession();
+//         throw error;
+//     }
+// };
 const registerCustomer = async (
     payload: ICustomer & {
         password: string;
@@ -33,6 +121,7 @@ const registerCustomer = async (
     }
 ) => {
     const { password, confirmPassword, playerId, role, ...userData } = payload;
+
     if (password !== confirmPassword) {
         throw new AppError(
             httpStatus.BAD_REQUEST,
@@ -42,71 +131,67 @@ const registerCustomer = async (
 
     const emailExist = await User.findOne({ email: userData.email });
     if (emailExist) {
-        throw new AppError(httpStatus.BAD_REQUEST, 'This email already exist');
+        throw new AppError(httpStatus.BAD_REQUEST, 'This email already exists');
     }
+
     const session = await mongoose.startSession();
     session.startTransaction();
+
     try {
-        const verifyCode = generateVerifyCode();
+        const verifyCode =
+            process.env.NODE_ENV == 'production' ? generateVerifyCode() : 11111;
+
         const userDataPayload: Partial<TUser> = {
             email: userData?.email,
             phone: userData?.phone,
-            password: password,
+            password,
             role,
             verifyCode,
-            codeExpireIn: new Date(Date.now() + 2 * 60000),
+            codeExpireIn: new Date(Date.now() + 5 * 60000), // 5 minutes expiry
         };
+
         if (playerId) {
             userDataPayload.playerIds = [playerId];
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const user = await User.create([userDataPayload], { session });
-        if (role == 'customer') {
-            const CustomerPayload = {
+        // Create user
+        const [user] = await User.create([userDataPayload], { session });
+
+        // Create profile (customer or provider)
+        let profile;
+        if (role === 'customer') {
+            const customerPayload = {
                 ...userData,
-                user: user[0]._id,
+                user: user._id,
             };
-            const result = await Customer.create([CustomerPayload], {
-                session,
-            });
-
-            await User.findByIdAndUpdate(
-                user[0]._id,
-                { profileId: result[0]._id },
-                { session }
-            );
-
-            const smsMessage = `Thank you for registering with Task Alley! Please verify your phone using this code: ${verifyCode}. 
-The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
-            await sendSMS(userData?.phone, smsMessage);
-            await session.commitTransaction();
-            session.endSession();
-
-            return result[0];
+            [profile] = await Customer.create([customerPayload], { session });
         } else {
-            const ProviderPayload = {
+            const providerPayload = {
                 ...userData,
-                user: user[0]._id,
+                user: user._id,
             };
-            const result = await Provider.create([ProviderPayload], {
-                session,
-            });
-
-            await User.findByIdAndUpdate(
-                user[0]._id,
-                { profileId: result[0]._id },
-                { session }
-            );
-
-            const smsMessage = `Thank you for registering with Task Alley! Please verify your phone using this code: ${verifyCode}. 
-The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
-            await sendSMS(userData?.phone, smsMessage);
-            await session.commitTransaction();
-            session.endSession();
-
-            return result[0];
+            [profile] = await Provider.create([providerPayload], { session });
         }
+
+        // Link profile to user
+        await User.findByIdAndUpdate(
+            user._id,
+            { profileId: profile._id },
+            { session }
+        );
+
+        // Prepare SMS
+        const smsMessage = `Thank you for registering with Task Alley! Please verify your phone using this code: ${verifyCode}. 
+The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
+
+        //!TODO: need to send sms to phone
+        // await sendSMS(userData.phone, smsMessage);
+
+        // If SMS sent successfully, commit transaction
+        await session.commitTransaction();
+        session.endSession();
+
+        return profile;
     } catch (error) {
         await session.abortTransaction();
         session.endSession();

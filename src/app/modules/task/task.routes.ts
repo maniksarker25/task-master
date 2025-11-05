@@ -3,9 +3,9 @@ import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
 import { USER_ROLE } from '../user/user.constant';
 
-import taskValidations from './task.validation';
 import { uploadFile } from '../../helper/multer-s3-uploader';
 import TaskController from './task.controller';
+import taskValidations from './task.validation';
 
 const router = express.Router();
 
@@ -23,6 +23,7 @@ router.post(
     TaskController.createTask
 );
 router.get('/all-task', TaskController.getAllTask);
+router.get('/my-task', TaskController.getMyTask);
 router.get('/single-task/:id', TaskController.getSingleTask);
 router.delete('/delete-task/:id', TaskController.deleteTask);
 router.patch('/acceptOffer', TaskController.acceptOffer);

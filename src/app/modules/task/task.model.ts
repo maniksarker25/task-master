@@ -51,6 +51,11 @@ const taskSchema = new Schema<ITask>(
         },
         address: {
             type: String,
+            default: '',
+        },
+        city: {
+            type: String,
+            default: '',
         },
         scheduleType: {
             type: String,
