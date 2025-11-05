@@ -7,7 +7,12 @@ export interface IService {
     images?: string[];
     provider: Types.ObjectId;
     description: string;
-    location: string;
+    location: {
+        type: 'Point';
+        coordinates: [number, number];
+    };
+    address: string;
+    city: string;
     availability: string;
     experience: string;
     onSiteSupport: boolean;
