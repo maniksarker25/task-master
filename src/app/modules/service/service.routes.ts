@@ -32,5 +32,9 @@ router.get(
     auth(USER_ROLE.customer, USER_ROLE.provider),
     serviceController.getSingleService
 );
-
+router.get(
+    '/update-service',
+    auth(USER_ROLE.provider),
+    serviceController.updateService
+);
 export const serviceRoutes = router;

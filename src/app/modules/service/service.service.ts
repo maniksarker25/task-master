@@ -100,10 +100,20 @@ const deleteServiceFromDB = async (profileId: string, serviceId: string) => {
     if (!service) {
         throw new AppError(httpStatus.NOT_FOUND, 'Service Not Found');
     }
-
     return service;
 };
 const getSingleServiceFromDB = async (serviceId: string) => {
+    const service = await serviceModel.findById(serviceId);
+    if (!service) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Service Not Found');
+    }
+
+    return service;
+};
+const updateServiceFromDB = async (
+    serviceId: string,
+    updateData: Partial<IService>
+) => {
     const service = await serviceModel.findById(serviceId);
     if (!service) {
         throw new AppError(httpStatus.NOT_FOUND, 'Service Not Found');
@@ -117,5 +127,6 @@ const ServiceServices = {
     getAllServiceFromDB,
     deleteServiceFromDB,
     getSingleServiceFromDB,
+    updateServiceFromDB,
 };
 export default ServiceServices;
