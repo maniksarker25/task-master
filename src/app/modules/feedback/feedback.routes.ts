@@ -13,4 +13,14 @@ router.post(
     validateRequest(feedbackValidations.createFeedbackZodSchema),
     feedbackController.createFeedback
 );
+router.get(
+    '/my-feedback',
+    auth(USER_ROLE.provider),
+    feedbackController.getMyFeedBack
+);
+router.get(
+    '/task-feedback',
+    auth(USER_ROLE.provider, USER_ROLE.customer),
+    feedbackController.getFeedBackByTask
+);
 export const feedbackRoutes = router;

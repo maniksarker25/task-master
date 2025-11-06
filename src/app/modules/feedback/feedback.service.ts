@@ -47,6 +47,27 @@ const createFeedbackIntoDB = async (
 
     return result;
 };
+const getMyFeedBackFromDB = async (currentUserID: string) => {
+    const feedBack = await FeedbackModel.find({
+        provider: currentUserID,
+    });
 
-const FeedbackServices = { createFeedbackIntoDB };
+    return feedBack;
+};
+const getFeedBackByTaskFromDB = async (taskId: string) => {
+    const task = await TaskModel.findById(taskId);
+    if (!task) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+    }
+
+    const feedBack = await FeedbackModel.find({
+        task: task._id,
+    });
+    return feedBack;
+};
+const FeedbackServices = {
+    createFeedbackIntoDB,
+    getMyFeedBackFromDB,
+    getFeedBackByTaskFromDB,
+};
 export default FeedbackServices;
