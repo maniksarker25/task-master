@@ -118,6 +118,7 @@ const updateServiceFromDB = async (
     // if (!service) {
     //     throw new AppError(httpStatus.NOT_FOUND, 'Service Not Found');
     // }
+    //TODO - update service
 
     // return service;
     console.log(profileId, updateData);
