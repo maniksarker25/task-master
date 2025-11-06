@@ -59,10 +59,11 @@ const getSingleService = catchAsync(async (req, res) => {
     });
 });
 const updateService = catchAsync(async (req, res) => {
-    const serviceId = req.body.serviceId;
+    const profileId = req.user?.profileId;
+
     const updateData = req.body;
     const result = await serviceServices.updateServiceFromDB(
-        serviceId,
+        profileId,
         updateData
     );
     sendResponse(res, {

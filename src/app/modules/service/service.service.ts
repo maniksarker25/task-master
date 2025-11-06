@@ -111,15 +111,17 @@ const getSingleServiceFromDB = async (serviceId: string) => {
     return service;
 };
 const updateServiceFromDB = async (
-    serviceId: string,
+    profileId: string,
     updateData: Partial<IService>
 ) => {
-    const service = await serviceModel.findById(serviceId);
-    if (!service) {
-        throw new AppError(httpStatus.NOT_FOUND, 'Service Not Found');
-    }
+    // const service = await serviceModel.findById(serviceId);
+    // if (!service) {
+    //     throw new AppError(httpStatus.NOT_FOUND, 'Service Not Found');
+    // }
 
-    return service;
+    // return service;
+    console.log(profileId, updateData);
+    return { profileId, updateData };
 };
 
 const ServiceServices = {
