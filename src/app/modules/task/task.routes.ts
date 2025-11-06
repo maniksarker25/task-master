@@ -29,5 +29,20 @@ router.get(
     TaskController.getMyTask
 );
 router.get('/single-task/:id', TaskController.getSingleTask);
-router.delete('/delete-task/:id', TaskController.deleteTask);
+router.delete(
+    '/delete-task/:id',
+    auth(USER_ROLE.provider, USER_ROLE.customer),
+    TaskController.deleteTask
+);
+router.patch(
+    '/acceptOffer',
+    auth(USER_ROLE.provider),
+    TaskController.acceptOffer
+);
+router.patch(
+    '/complete-task',
+    auth(USER_ROLE.customer),
+    TaskController.completeTask
+);
+
 export const taskRoutes = router;

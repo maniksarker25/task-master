@@ -4,15 +4,12 @@ import { z } from 'zod';
 export const createFeedbackZodSchema = z.object({
     body: z.object({
         task: z.string({ required_error: 'Task ID is required' }),
-        provider: z.string({ required_error: 'Provider ID is required' }),
-        customer: z.string({ required_error: 'Customer ID is required' }),
+
         rating: z
             .number({ required_error: 'Rating is required' })
             .min(1, 'Rating must be at least 1')
             .max(5, 'Rating cannot exceed 5'),
-        details: z
-            .string({ required_error: 'Details are required' })
-            .min(1, 'Details cannot be empty'),
+        details: z.string().optional(),
     }),
 });
 

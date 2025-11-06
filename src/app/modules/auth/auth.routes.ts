@@ -60,7 +60,7 @@ router.post(
 );
 router.get(
     '/all-user',
-    auth(USER_ROLE.superAdmin, USER_ROLE.admin),
+
     authControllers.getAllUser
 );
 
