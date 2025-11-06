@@ -3,10 +3,13 @@ import httpStatus from 'http-status';
 import AppError from '../../error/appError';
 import { ITask } from './task.interface';
 
+import { JwtPayload } from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import bidModel from '../bid/bid.model';
 import QuestionModel from '../question/question.model';
+import { USER_ROLE } from '../user/user.constant';
 import TaskModel from './task.model';
+import { ENUM_TASK_STATUS } from './task.enum';
 
 const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
     const result = (
@@ -131,11 +134,21 @@ const getAllTaskFromDB = async (query: Record<string, any>) => {
         result,
     };
 };
-const getMyTaskFromDB = async (userId: string, query: Record<string, any>) => {
+const getMyTaskFromDB = async (
+    userData: JwtPayload,
+    query: Record<string, any>
+) => {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
     const searchTerm = query.searchTerm || '';
+
+    const matchStage: any = {};
+    if (userData.role == USER_ROLE.customer) {
+        matchStage.customer = new mongoose.Types.ObjectId(userData.profileId);
+    } else {
+        matchStage.provider = new mongoose.Types.ObjectId(userData.profileId);
+    }
 
     const filters: Record<string, any> = {};
     Object.keys(query).forEach((key) => {
@@ -169,10 +182,10 @@ const getMyTaskFromDB = async (userId: string, query: Record<string, any>) => {
     const pipeline: any[] = [
         {
             $match: {
+                ...matchStage,
                 ...filters,
                 ...searchMatchStage,
                 isDeleted: false,
-                customer: userId,
             },
         },
         {
@@ -259,11 +272,17 @@ const getSingleTaskFromDB = async (id: string) => {
     return result;
 };
 
-const deleteTaskFromDB = async (id: string) => {
+const deleteTaskFromDB = async (id: string, currentUserId: string) => {
     const taskData = await TaskModel.findById(id);
 
     if (!taskData) {
         throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+    }
+    if (taskData.provider?.toString() !== currentUserId) {
+        throw new AppError(
+            httpStatus.UNAUTHORIZED,
+            'You are not authorized to accept this task'
+        );
     }
 
     if (taskData.provider) {
@@ -279,11 +298,64 @@ const deleteTaskFromDB = async (id: string) => {
 
     return;
 };
+
+const acceptOfferByProvider = async (taskId: string, currentUserId: string) => {
+    const task = await TaskModel.findById(taskId);
+
+    if (!task) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+    }
+
+    if (task.provider?.toString() !== currentUserId) {
+        throw new AppError(
+            httpStatus.UNAUTHORIZED,
+            'You are not authorized to accept this task'
+        );
+    }
+    if (
+        task.status === ENUM_TASK_STATUS.IN_PROGRESS ||
+        task.status === ENUM_TASK_STATUS.COMPLETED
+    ) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            `Task is already ${task.status.toLowerCase()}`
+        );
+    }
+
+    task.status = ENUM_TASK_STATUS.IN_PROGRESS;
+    await task.save();
+
+    return task;
+};
+const completeTaskByCustomer = async (
+    taskId: string,
+    currentUserId: string
+) => {
+    const task = await TaskModel.findById(taskId);
+    if (!task) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+    }
+
+    if (task.customer?.toString() !== currentUserId) {
+        throw new AppError(
+            httpStatus.UNAUTHORIZED,
+            'You are not authorized to complete this task'
+        );
+    }
+
+    task.status = ENUM_TASK_STATUS.COMPLETED;
+    await task.save();
+
+    return task;
+};
+
 const TaskServices = {
     createTaskIntoDB,
     getAllTaskFromDB,
     getSingleTaskFromDB,
     deleteTaskFromDB,
     getMyTaskFromDB,
+    acceptOfferByProvider,
+    completeTaskByCustomer,
 };
 export default TaskServices;

@@ -2,17 +2,22 @@ import { Types } from 'mongoose';
 import { ENUM_SERVICE_STATUS } from './service.enum';
 
 export interface IService {
-    category: Types.ObjectId; // ref -> ServiceCategory
+    category: Types.ObjectId;
     title: string;
     images?: string[];
-    provider: Types.ObjectId; // ref -> Provider
+    provider: Types.ObjectId;
     description: string;
-    location: string;
+    location: {
+        type: 'Point';
+        coordinates: [number, number];
+    };
+    address: string;
+    city: string;
     availability: string;
     experience: string;
     onSiteSupport: boolean;
     toolsProvided: boolean;
     languages: string[];
-    priceRange: string;
+    price: number;
     status: (typeof ENUM_SERVICE_STATUS)[keyof typeof ENUM_SERVICE_STATUS];
 }

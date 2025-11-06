@@ -37,11 +37,9 @@ const getAllTask = catchAsync(async (req, res) => {
         data: result,
     });
 });
+// get my task
 const getMyTask = catchAsync(async (req, res) => {
-    const result = await TaskServices.getMyTaskFromDB(
-        req.user.profileId,
-        req.query
-    );
+    const result = await TaskServices.getMyTaskFromDB(req.user, req.query);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
@@ -62,8 +60,8 @@ const getSingleTask = catchAsync(async (req, res) => {
 });
 const deleteTask = catchAsync(async (req, res) => {
     const { id } = req.params;
-
-    await TaskServices.deleteTaskFromDB(id);
+    const currentUserId = req.user.profileId;
+    await TaskServices.deleteTaskFromDB(id, currentUserId);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -73,11 +71,42 @@ const deleteTask = catchAsync(async (req, res) => {
     });
 });
 
+const acceptOffer = catchAsync(async (req, res) => {
+    const { taskId } = req.body;
+    const currentUserId = req.user.profileId;
+    const result = await TaskServices.acceptOfferByProvider(
+        taskId,
+        currentUserId
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Accept Offer successfully',
+        data: result,
+    });
+});
+const completeTask = catchAsync(async (req, res) => {
+    const { taskId } = req.body;
+    const currentUserId = req.user.profileId;
+    const result = await TaskServices.completeTaskByCustomer(
+        taskId,
+        currentUserId
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Complete Task Successfully',
+        data: result,
+    });
+});
+
 const TaskController = {
     createTask,
     getAllTask,
     getSingleTask,
     deleteTask,
+    acceptOffer,
     getMyTask,
+    completeTask,
 };
 export default TaskController;
