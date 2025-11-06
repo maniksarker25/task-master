@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import httpStatus from 'http-status';
+import AppError from '../../error/appError';
 import { IService } from './service.interface';
 import {
     default as ServiceModel,
@@ -6,7 +8,7 @@ import {
 } from './service.model';
 
 const createServiceIntoDB = async (userId: string, payload: IService) => {
-    const result = serviceModel.create({ ...payload, provider: userId });
+    const result = await serviceModel.create({ ...payload, provider: userId });
     return result;
 };
 
@@ -90,6 +92,30 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
         result,
     };
 };
+const deleteServiceFromDB = async (profileId: string, serviceId: string) => {
+    const service = await serviceModel.findOneAndDelete({
+        _id: serviceId,
+        provider: profileId,
+    });
+    if (!service) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Service Not Found');
+    }
 
-const ServiceServices = { createServiceIntoDB, getAllServiceFromDB };
+    return service;
+};
+const getSingleServiceFromDB = async (serviceId: string) => {
+    const service = await serviceModel.findById(serviceId);
+    if (!service) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Service Not Found');
+    }
+
+    return service;
+};
+
+const ServiceServices = {
+    createServiceIntoDB,
+    getAllServiceFromDB,
+    deleteServiceFromDB,
+    getSingleServiceFromDB,
+};
 export default ServiceServices;

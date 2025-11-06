@@ -12,10 +12,9 @@ const createService = catchAsync(async (req, res) => {
         });
     }
     const result = await serviceServices.createServiceIntoDB(
-        req.user.profileId,
+        req.user?.profileId,
         req.body
     );
-
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
@@ -33,6 +32,37 @@ const getAllService = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const deleteService = catchAsync(async (req, res) => {
+    const profileId = req.user?.profileId;
+    const serviceId = req.body.serviceId;
+    const result = await serviceServices.deleteServiceFromDB(
+        profileId,
+        serviceId
+    );
 
-const ServiceController = { createService, getAllService };
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Delete Service  Successfully',
+        data: result,
+    });
+});
+const getSingleService = catchAsync(async (req, res) => {
+    const serviceId = req.body.serviceId;
+    const result = await serviceServices.getSingleServiceFromDB(serviceId);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Single Service get Successfully',
+        data: result,
+    });
+});
+
+const ServiceController = {
+    createService,
+    getAllService,
+    deleteService,
+    getSingleService,
+};
 export default ServiceController;
