@@ -16,6 +16,7 @@ declare namespace Express {
             address_document?: File[];
             task_attachments?: File[];
             service_image?: File[];
+            question_image?: File[];
         };
     }
 }

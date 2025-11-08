@@ -28,6 +28,7 @@ export const uploadFile = () => {
             'address_document',
             'task_attachments',
             'service_image',
+            'question_image',
         ];
 
         if (file.fieldname === undefined) {
@@ -84,6 +85,8 @@ export const uploadFile = () => {
                 uploadPath = 'uploads/images/task_attachments';
             } else if (file.fieldname === 'service_image') {
                 uploadPath = 'uploads/images/service_image';
+            } else if (file.fieldname === 'question_image') {
+                uploadPath = 'uploads/images/question_image';
             } else {
                 uploadPath = 'uploads';
             }
@@ -112,6 +115,7 @@ export const uploadFile = () => {
         { name: 'image', maxCount: 1 },
         { name: 'profile_image', maxCount: 1 },
         { name: 'category_image', maxCount: 2 },
+        { name: 'question_image', maxCount: 2 },
         { name: 'address_document', maxCount: 1 },
         { name: 'task_attachments', maxCount: 5 },
         { name: 'service_image', maxCount: 5 },
