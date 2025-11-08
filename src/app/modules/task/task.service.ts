@@ -8,8 +8,8 @@ import mongoose from 'mongoose';
 import bidModel from '../bid/bid.model';
 import QuestionModel from '../question/question.model';
 import { USER_ROLE } from '../user/user.constant';
-import TaskModel from './task.model';
 import { ENUM_TASK_STATUS } from './task.enum';
+import TaskModel from './task.model';
 
 const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
     const result = (
@@ -23,13 +23,21 @@ const getAllTaskFromDB = async (query: Record<string, any>) => {
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
     const searchTerm = query.searchTerm || '';
-
+    const maxDistance = Number(query.maxDistance) * 1000 || 5000;
+    const minPrice = Number(query.minPrice) || null;
+    const maxPrice = Number(query.maxPrice) || null;
     const filters: Record<string, any> = {};
     Object.keys(query).forEach((key) => {
         if (
-            !['searchTerm', 'page', 'limit', 'sortBy', 'sortOrder'].includes(
-                key
-            )
+            ![
+                'searchTerm',
+                'page',
+                'limit',
+                'sortBy',
+                'sortOrder',
+                'minPrice',
+                'maxPrice',
+            ].includes(key)
         ) {
             filters[key] = query[key];
         }
@@ -48,9 +56,15 @@ const getAllTaskFromDB = async (query: Record<string, any>) => {
           }
         : {};
 
+    if (minPrice !== null || maxPrice !== null) {
+        filters.price = {};
+        if (minPrice !== null) filters.budget.$gte = minPrice;
+        if (maxPrice !== null) filters.budget.$lte = maxPrice;
+    }
+
     // Sorting
-    const sortBy = query.sortBy || 'createdAt'; // default sorting field
-    const sortOrder = query.sortOrder === 'asc' ? 1 : -1; // default descending
+    const sortBy = query.sortBy || 'createdAt';
+    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
     const sortStage = { [sortBy]: sortOrder };
 
     const pipeline: any[] = [
@@ -118,6 +132,27 @@ const getAllTaskFromDB = async (query: Record<string, any>) => {
             },
         },
     ];
+
+    // 🗺️ Geo filter (if user sends coordinates)
+    if (query.latitude && query.longitude) {
+        pipeline.unshift({
+            $geoNear: {
+                near: {
+                    type: 'Point',
+                    coordinates: [
+                        parseFloat(query.longitude as string),
+                        parseFloat(query.latitude as string),
+                    ],
+                },
+                distanceField: 'distance',
+                maxDistance: maxDistance,
+                spherical: true,
+            },
+        });
+        pipeline.push({
+            $sort: { distance: 1 },
+        });
+    }
 
     const aggResult = await TaskModel.aggregate(pipeline);
     const result = aggResult[0]?.result || [];
