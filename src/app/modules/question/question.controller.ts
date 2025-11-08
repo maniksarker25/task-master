@@ -6,6 +6,7 @@ import { getCloudFrontUrl } from '../../helper/multer-s3-uploader';
 import QuestionServices from './question.service';
 
 const createQuestion = catchAsync(async (req, res) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const file: any = req.files?.question_image;
 
     if (req.files?.question_image) {
