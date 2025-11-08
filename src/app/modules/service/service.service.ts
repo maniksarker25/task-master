@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
+import mongoose from 'mongoose';
 import AppError from '../../error/appError';
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 import { IService } from './service.interface';
@@ -30,6 +31,11 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
             filters[key] = query[key];
         }
     });
+    if (query.category) {
+        filters.category = new mongoose.Types.ObjectId(
+            query.category as string
+        );
+    }
 
     const searchMatchStage = searchTerm
         ? {

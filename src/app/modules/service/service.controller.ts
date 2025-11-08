@@ -34,7 +34,7 @@ const getAllService = catchAsync(async (req, res) => {
 });
 const deleteService = catchAsync(async (req, res) => {
     const profileId = req.user?.profileId;
-    const serviceId = req.body.serviceId;
+    const serviceId = req.params.id;
     const result = await serviceServices.deleteServiceFromDB(
         profileId,
         serviceId
