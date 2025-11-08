@@ -28,7 +28,7 @@ router.delete(
     serviceController.deleteService
 );
 router.get(
-    '/get-single-service',
+    '/get-single-service/:id',
     auth(USER_ROLE.customer, USER_ROLE.provider),
     serviceController.getSingleService
 );
