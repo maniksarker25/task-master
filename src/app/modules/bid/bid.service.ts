@@ -2,8 +2,13 @@ import httpStatus from 'http-status';
 import AppError from '../../error/appError';
 import { IBid } from './bid.interface';
 import BidModel from './bid.model';
+import TaskModel from '../task/task.model';
 
 const createBidIntoDB = async (userId: string, payload: IBid) => {
+    const task = await TaskModel.findById(payload.task);
+    if (!task) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+    }
     const result = (
         await BidModel.create({ ...payload, provider: userId })
     ).populate('provider task');
