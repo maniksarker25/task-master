@@ -16,6 +16,7 @@ router.post(
 );
 
 router.get('/all-bid', BidController.getAllBid);
+router.get('/bid-byTaskID', BidController.getBidsByTask);
 router.delete(
     '/delete-bid/:id',
     auth(USER_ROLE.provider),
