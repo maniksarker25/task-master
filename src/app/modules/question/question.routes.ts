@@ -21,5 +21,15 @@ router.post(
     validateRequest(questionValidations.createQuestionZodSchema),
     questionController.createQuestion
 );
-
+router.get(
+    '/my-questions',
+    auth(USER_ROLE.provider),
+    questionController.getMyQuestions
+);
+router.get('/by-taskID/:taskId', questionController.getQuestionsByTaskId);
+router.delete(
+    'delete/:id',
+    auth(USER_ROLE.provider),
+    questionController.deleteQuestion
+);
 export const questionRoutes = router;
