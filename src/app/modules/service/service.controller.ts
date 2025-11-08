@@ -48,8 +48,7 @@ const deleteService = catchAsync(async (req, res) => {
     });
 });
 const getSingleService = catchAsync(async (req, res) => {
-    const serviceId = req.body.serviceId;
-    const result = await serviceServices.getSingleServiceFromDB(serviceId);
+    const result = await serviceServices.getSingleServiceFromDB(req.params.id);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
