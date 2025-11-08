@@ -32,7 +32,7 @@ router.get(
     auth(USER_ROLE.customer, USER_ROLE.provider),
     serviceController.getSingleService
 );
-router.get(
+router.patch(
     '/update-service',
     uploadFile(),
     (req, res, next) => {

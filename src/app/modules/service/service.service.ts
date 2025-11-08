@@ -112,7 +112,7 @@ const getSingleServiceFromDB = async (serviceId: string) => {
     return service;
 };
 const updateServiceFromDB = async (profileId: string, payload: any) => {
-    const service = await serviceModel.findById({ provider: profileId });
+    const service = await serviceModel.findOne({ provider: profileId });
     if (!service) {
         throw new AppError(httpStatus.NOT_FOUND, 'Service Not Found');
     }
