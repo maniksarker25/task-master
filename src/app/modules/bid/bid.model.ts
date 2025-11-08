@@ -21,10 +21,6 @@ const bidSchema = new Schema<IBid>(
             type: String,
             required: true,
         },
-        time: {
-            type: Date,
-            required: true,
-        },
     },
     { timestamps: true }
 );

@@ -14,6 +14,7 @@ import { promoUseRoutes } from '../modules/promoUse/promoUse.routes';
 import { providerRoutes } from '../modules/provider/provider.routes';
 import { serviceRoutes } from '../modules/service/service.routes';
 import { feedbackRoutes } from '../modules/feedback/feedback.routes';
+import { questionRoutes } from '../modules/question/question.routes';
 
 const router = Router();
 
@@ -75,6 +76,10 @@ const moduleRoutes = [
     {
         path: '/feedback',
         router: feedbackRoutes,
+    },
+    {
+        path: '/question',
+        router: questionRoutes,
     },
 ];
 

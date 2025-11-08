@@ -2,8 +2,13 @@ import httpStatus from 'http-status';
 import AppError from '../../error/appError';
 import { IBid } from './bid.interface';
 import BidModel from './bid.model';
+import TaskModel from '../task/task.model';
 
 const createBidIntoDB = async (userId: string, payload: IBid) => {
+    const task = await TaskModel.findById(payload.task);
+    if (!task) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+    }
     const result = (
         await BidModel.create({ ...payload, provider: userId })
     ).populate('provider task');
@@ -16,6 +21,11 @@ const getAllBidFromDB = async () => {
     return result;
 };
 
+const getBidsByTaskIDFromDB = async (taskId: string) => {
+    const result = await BidModel.find({ task: taskId });
+    return result;
+};
+
 const deleteBidFromDB = async (id: string) => {
     const result = await BidModel.findByIdAndDelete(id);
     if (!result) {
@@ -23,5 +33,10 @@ const deleteBidFromDB = async (id: string) => {
     }
     return result;
 };
-const BidServices = { createBidIntoDB, getAllBidFromDB, deleteBidFromDB };
+const BidServices = {
+    createBidIntoDB,
+    getAllBidFromDB,
+    deleteBidFromDB,
+    getBidsByTaskIDFromDB,
+};
 export default BidServices;
