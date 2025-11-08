@@ -28,7 +28,7 @@ router.get(
 );
 router.get('/by-taskID/:taskId', questionController.getQuestionsByTaskId);
 router.delete(
-    'delete/:id',
+    '/delete/:id',
     auth(USER_ROLE.provider),
     questionController.deleteQuestion
 );
