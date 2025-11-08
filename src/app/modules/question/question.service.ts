@@ -15,5 +15,41 @@ const createQuestionIntoDB = async (providerId: string, payload: IQuestion) => {
     });
     return result;
 };
-const QuestionServices = { createQuestionIntoDB };
+
+const getMyQuestionsFromDB = async (providerId: string) => {
+    const result = await QuestionModel.find({ provider: providerId }).populate(
+        'task'
+    );
+    return result;
+};
+const getQuestionsByTaskIDFromDB = async (taskId: string) => {
+    const result = await QuestionModel.find({ task: taskId }).populate(
+        'provider'
+    );
+    return result;
+};
+
+const deleteQuestionFromDB = async (providerId: string, questionId: string) => {
+    const question = await QuestionModel.findOne({
+        _id: questionId,
+        provider: providerId,
+    });
+
+    if (!question) {
+        throw new AppError(
+            httpStatus.FORBIDDEN,
+            'You are not allowed to delete this question or it does not exist'
+        );
+    }
+
+    await QuestionModel.findByIdAndDelete(questionId);
+    return { message: 'Question deleted successfully' };
+};
+
+const QuestionServices = {
+    createQuestionIntoDB,
+    getMyQuestionsFromDB,
+    getQuestionsByTaskIDFromDB,
+    deleteQuestionFromDB,
+};
 export default QuestionServices;
