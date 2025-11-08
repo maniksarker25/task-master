@@ -1,12 +1,12 @@
-import httpStatus from 'http-status';
-import AppError from '../../error/appError';
 import { IQuestion } from './question.interface';
-import questionModel from './question.model';
 import QuestionModel from './question.model';
 
-const createQusctionIntoDB = async (payload: ICategory) => {
-    const result = await QuestionModel.create(payload);
+const createQuestionIntoDB = async (providerId: string, payload: IQuestion) => {
+    const result = await QuestionModel.create({
+        ...payload,
+        provider: providerId,
+    });
     return result;
 };
-const QuestionServices = { updateUserProfile };
+const QuestionServices = { createQuestionIntoDB };
 export default QuestionServices;

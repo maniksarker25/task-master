@@ -19,7 +19,7 @@ router.post(
         next();
     },
     validateRequest(questionValidations.createQuestionZodSchema),
-    questionController.updateUserProfile
+    questionController.createQuestion
 );
 
 export const questionRoutes = router;
