@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
 import AppError from '../../error/appError';
+import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 import { IService } from './service.interface';
 import {
     default as ServiceModel,
@@ -110,19 +111,33 @@ const getSingleServiceFromDB = async (serviceId: string) => {
 
     return service;
 };
-const updateServiceFromDB = async (
-    profileId: string,
-    updateData: Partial<IService>
-) => {
-    // const service = await serviceModel.findById(serviceId);
-    // if (!service) {
-    //     throw new AppError(httpStatus.NOT_FOUND, 'Service Not Found');
-    // }
-    //TODO - update service
+const updateServiceFromDB = async (profileId: string, payload: any) => {
+    const service = await serviceModel.findById({ provider: profileId });
+    if (!service) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Service Not Found');
+    }
 
-    // return service;
-    console.log(profileId, updateData);
-    return { profileId, updateData };
+    if (payload.newImages && payload.newImages.length > 0) {
+        payload.images = [...service.images, ...payload.newImages];
+    } else {
+        payload.images = [...service.images];
+    }
+    if (payload?.deletedImages) {
+        payload.images = payload.images.filter(
+            (url: any) => !payload?.deletedImages?.includes(url)
+        );
+    }
+    const result = await ServiceModel.findOneAndUpdate(
+        { provider: profileId },
+        payload,
+        { new: true, runValidators: true }
+    );
+    if (payload.deletedImages) {
+        for (const image of payload.deletedImages) {
+            deleteFileFromS3(image);
+        }
+    }
+    return result;
 };
 
 const ServiceServices = {

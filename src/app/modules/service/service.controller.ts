@@ -59,17 +59,19 @@ const getSingleService = catchAsync(async (req, res) => {
     });
 });
 const updateService = catchAsync(async (req, res) => {
-    const profileId = req.user?.profileId;
-
-    const updateData = req.body;
+    if (req.files?.service_image) {
+        req.body.newImages = req.files.service_image.map((file: any) => {
+            return getCloudFrontUrl(file.key);
+        });
+    }
     const result = await serviceServices.updateServiceFromDB(
-        profileId,
-        updateData
+        req.user?.profileId,
+        req.body
     );
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: 'Single Service get Successfully',
+        message: 'Service updated Successfully',
         data: result,
     });
 });
