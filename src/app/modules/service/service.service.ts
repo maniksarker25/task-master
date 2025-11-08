@@ -94,13 +94,51 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
     };
 };
 const deleteServiceFromDB = async (profileId: string, serviceId: string) => {
-    const service = await serviceModel.findOneAndDelete({
+    const service = await serviceModel.findOne({
         _id: serviceId,
         provider: profileId,
     });
+
     if (!service) {
-        throw new AppError(httpStatus.NOT_FOUND, 'Service Not Found');
+        throw new AppError(httpStatus.NOT_FOUND, 'Service not found');
     }
+
+    if (service.images && service.images.length > 0) {
+        for (const imageUrl of service.images) {
+            try {
+                await deleteFileFromS3(imageUrl);
+            } catch (error) {
+                console.error(
+                    `Failed to delete image from S3: ${imageUrl}`,
+                    error
+                );
+            }
+        }
+    }
+
+    await serviceModel.findByIdAndDelete(serviceId);
+
+    return {
+        message: 'Service and associated images deleted successfully',
+        deletedServiceId: serviceId,
+    };
+};
+const toggleServiceActiveStatusFromDB = async (
+    profileId: string,
+    serviceId: string
+) => {
+    const service = await serviceModel.findOne({
+        _id: serviceId,
+        provider: profileId,
+    });
+
+    if (!service) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Service not found');
+    }
+
+    service.isActive = !service.isActive;
+    await service.save();
+
     return service;
 };
 const getSingleServiceFromDB = async (serviceId: string) => {
@@ -146,5 +184,6 @@ const ServiceServices = {
     deleteServiceFromDB,
     getSingleServiceFromDB,
     updateServiceFromDB,
+    toggleServiceActiveStatusFromDB,
 };
 export default ServiceServices;
