@@ -7,7 +7,7 @@ export const createQuestionZodSchema = z.object({
         details: z
             .string({ required_error: 'Details are required' })
             .min(1, 'Details cannot be empty'),
-        images: z.string().optional(),
+        question_image: z.string().optional(),
     }),
 });
 
@@ -17,7 +17,7 @@ export const updateQuestionZodSchema = z.object({
         provider: z.string().optional(),
         task: z.string().optional(),
         details: z.string().min(1, 'Details cannot be empty').optional(),
-        images: z.string().optional(),
+        question_image: z.string().optional(),
     }),
 });
 
