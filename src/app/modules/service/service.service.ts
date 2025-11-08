@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import httpStatus from 'http-status';
+import AppError from '../../error/appError';
+import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 import { IService } from './service.interface';
 import {
     default as ServiceModel,
@@ -6,7 +9,7 @@ import {
 } from './service.model';
 
 const createServiceIntoDB = async (userId: string, payload: IService) => {
-    const result = serviceModel.create({ ...payload, provider: userId });
+    const result = await serviceModel.create({ ...payload, provider: userId });
     return result;
 };
 
@@ -90,6 +93,58 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
         result,
     };
 };
+const deleteServiceFromDB = async (profileId: string, serviceId: string) => {
+    const service = await serviceModel.findOneAndDelete({
+        _id: serviceId,
+        provider: profileId,
+    });
+    if (!service) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Service Not Found');
+    }
+    return service;
+};
+const getSingleServiceFromDB = async (serviceId: string) => {
+    const service = await serviceModel.findById(serviceId);
+    if (!service) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Service Not Found');
+    }
 
-const ServiceServices = { createServiceIntoDB, getAllServiceFromDB };
+    return service;
+};
+const updateServiceFromDB = async (profileId: string, payload: any) => {
+    const service = await serviceModel.findById({ provider: profileId });
+    if (!service) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Service Not Found');
+    }
+
+    if (payload.newImages && payload.newImages.length > 0) {
+        payload.images = [...service.images, ...payload.newImages];
+    } else {
+        payload.images = [...service.images];
+    }
+    if (payload?.deletedImages) {
+        payload.images = payload.images.filter(
+            (url: any) => !payload?.deletedImages?.includes(url)
+        );
+    }
+    const result = await ServiceModel.findOneAndUpdate(
+        { provider: profileId },
+        payload,
+        { new: true, runValidators: true }
+    );
+    if (payload.deletedImages) {
+        for (const image of payload.deletedImages) {
+            deleteFileFromS3(image);
+        }
+    }
+    return result;
+};
+
+const ServiceServices = {
+    createServiceIntoDB,
+    getAllServiceFromDB,
+    deleteServiceFromDB,
+    getSingleServiceFromDB,
+    updateServiceFromDB,
+};
 export default ServiceServices;

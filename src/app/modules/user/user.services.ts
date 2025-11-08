@@ -191,6 +191,9 @@ const getMyProfile = async (userData: JwtPayload) => {
     let result = null;
     if (userData.role === USER_ROLE.customer) {
         result = await Customer.findOne({ email: userData.email });
+    }
+    if (userData.role === USER_ROLE.provider) {
+        result = await Provider.findOne({ email: userData.email });
     } else if (userData.role === USER_ROLE.superAdmin) {
         result = await SuperAdmin.findOne({ email: userData.email });
     }
