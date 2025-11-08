@@ -21,6 +21,11 @@ const getAllBidFromDB = async () => {
     return result;
 };
 
+const getBidsByTaskIDFromDB = async (taskId: string) => {
+    const result = await BidModel.find({ task: taskId });
+    return result;
+};
+
 const deleteBidFromDB = async (id: string) => {
     const result = await BidModel.findByIdAndDelete(id);
     if (!result) {
@@ -28,5 +33,10 @@ const deleteBidFromDB = async (id: string) => {
     }
     return result;
 };
-const BidServices = { createBidIntoDB, getAllBidFromDB, deleteBidFromDB };
+const BidServices = {
+    createBidIntoDB,
+    getAllBidFromDB,
+    deleteBidFromDB,
+    getBidsByTaskIDFromDB,
+};
 export default BidServices;
