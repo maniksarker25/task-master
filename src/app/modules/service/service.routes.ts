@@ -27,6 +27,12 @@ router.delete(
     auth(USER_ROLE.provider),
     serviceController.deleteService
 );
+router.patch(
+    '/active-inactive/:id',
+    auth(USER_ROLE.provider),
+    serviceController.inactiveService
+);
+
 router.get(
     '/get-single-service/:id',
     auth(USER_ROLE.customer, USER_ROLE.provider),

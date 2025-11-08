@@ -20,4 +20,5 @@ export interface IService {
     languages: string[];
     price: number;
     status: (typeof ENUM_SERVICE_STATUS)[keyof typeof ENUM_SERVICE_STATUS];
+    isActive?: boolean;
 }

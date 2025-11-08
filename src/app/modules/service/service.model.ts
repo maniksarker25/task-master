@@ -39,6 +39,7 @@ const serviceSchema = new Schema<IService>(
         onSiteSupport: { type: Boolean, default: true },
         toolsProvided: { type: Boolean, default: true },
         languages: [{ type: String, required: true }],
+        isActive: { type: Boolean, default: true },
         price: { type: Number, required: true },
 
         status: {
