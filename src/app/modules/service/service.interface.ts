@@ -4,7 +4,7 @@ import { ENUM_SERVICE_STATUS } from './service.enum';
 export interface IService {
     category: Types.ObjectId;
     title: string;
-    images?: string[];
+    images: string[];
     provider: Types.ObjectId;
     description: string;
     location: {

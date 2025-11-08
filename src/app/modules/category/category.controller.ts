@@ -10,9 +10,7 @@ const createCategory = catchAsync(async (req, res) => {
     if (req.files?.category_image) {
         req.body.category_image = getCloudFrontUrl(file[0].key);
     }
-    console.log(req.body);
     const result = await categoryService.createCategoryIntoDB(req?.body);
-    //
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
