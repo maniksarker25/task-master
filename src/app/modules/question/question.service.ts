@@ -17,15 +17,11 @@ const createQuestionIntoDB = async (providerId: string, payload: IQuestion) => {
 };
 
 const getMyQuestionsFromDB = async (providerId: string) => {
-    const result = await QuestionModel.find({ provider: providerId }).populate(
-        'task'
-    );
+    const result = await QuestionModel.find({ provider: providerId });
     return result;
 };
 const getQuestionsByTaskIDFromDB = async (taskId: string) => {
-    const result = await QuestionModel.find({ task: taskId }).populate(
-        'provider'
-    );
+    const result = await QuestionModel.find({ task: taskId });
     return result;
 };
 
