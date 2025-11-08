@@ -8,9 +8,9 @@ import { uploadFile } from '../../helper/fileUploader';
 
 const router = express.Router();
 
-router.patch(
-    '/update-profile',
-    auth(USER_ROLE.user),
+router.post(
+    '/create',
+    auth(USER_ROLE.provider),
     uploadFile(),
     (req, res, next) => {
         if (req.body.data) {
@@ -18,7 +18,7 @@ router.patch(
         }
         next();
     },
-    validateRequest(questionValidations.updateQuestionData),
+    validateRequest(questionValidations.createQuestionZodSchema),
     questionController.updateUserProfile
 );
 
