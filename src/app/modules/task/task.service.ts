@@ -57,7 +57,7 @@ const getAllTaskFromDB = async (query: Record<string, any>) => {
         : {};
 
     if (minPrice !== null || maxPrice !== null) {
-        filters.price = {};
+        filters.budget = {};
         if (minPrice !== null) filters.budget.$gte = minPrice;
         if (maxPrice !== null) filters.budget.$lte = maxPrice;
     }
