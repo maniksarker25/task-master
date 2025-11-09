@@ -177,7 +177,8 @@ const getMyTaskFromDB = async (
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
     const searchTerm = query.searchTerm || '';
-
+    const minPrice = Number(query.minPrice) || null;
+    const maxPrice = Number(query.maxPrice) || null;
     const matchStage: any = {};
     if (userData.role == USER_ROLE.customer) {
         matchStage.customer = new mongoose.Types.ObjectId(userData.profileId);
@@ -209,6 +210,11 @@ const getMyTaskFromDB = async (
           }
         : {};
 
+    if (minPrice !== null || maxPrice !== null) {
+        filters.budget = {};
+        if (minPrice !== null) filters.budget.$gte = minPrice;
+        if (maxPrice !== null) filters.budget.$lte = maxPrice;
+    }
     // Sorting
     const sortBy = query.sortBy || 'createdAt'; // default sorting field
     const sortOrder = query.sortOrder === 'asc' ? 1 : -1; // default descending
