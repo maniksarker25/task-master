@@ -2,6 +2,7 @@ import httpStatus from 'http-status';
 import catchAsync from '../../utilities/catchasync';
 import sendResponse from '../../utilities/sendResponse';
 import extensionRequestServices from './extensionRequest.service';
+import { getCloudFrontUrl } from '../../helper/multer-s3-uploader';
 
 const createExtensionRequest = catchAsync(async (req, res) => {
     const result = await extensionRequestServices.extensionRequestIntoDb(
@@ -54,10 +55,31 @@ const acceptRequest = catchAsync(async (req, res) => {
     });
 });
 
+const rejectRequest = catchAsync(async (req, res) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const file: any = req.files?.reject_evidence;
+    if (req.files?.reject_evidence) {
+        req.body.reject_evidence = getCloudFrontUrl(file[0].key);
+    }
+    const result = await extensionRequestServices.rejectRequestFromDB(
+        req.user.profileId,
+        req.params.id as string,
+        req.body
+    );
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Reject Request successfully',
+        data: result,
+    });
+});
+
 const ExtensionRequestController = {
     createExtensionRequest,
     extensionRequestByTask,
     cancelExtensionRequestByTask,
     acceptRequest,
+    rejectRequest,
 };
 export default ExtensionRequestController;
