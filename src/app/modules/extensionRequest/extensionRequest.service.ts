@@ -134,11 +134,60 @@ const acceptRequestFromDB = async (profileId: string, extensionID: string) => {
     }
     return result;
 };
+const rejectRequestFromDB = async (
+    profileId: string,
+    extensionID: string,
+    payload: Partial<IExtensionRequest>
+) => {
+    // 1️⃣ Find the extension request
+    const extensionRequest = await extensionRequestModel.findById(extensionID);
+    if (!extensionRequest) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Extension Request not found');
+    }
 
+    // 2️⃣ Find the related task
+    const task = await TaskModel.findById(extensionRequest.task);
+    if (!task) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+    }
+
+    // 3️⃣ Check authorization (must be provider or customer of the task)
+    const isAuthorized =
+        task.provider?.toString() === profileId ||
+        task.customer?.toString() === profileId;
+
+    if (!isAuthorized) {
+        throw new AppError(
+            httpStatus.UNAUTHORIZED,
+            'You are not authorized to reject this request'
+        );
+    }
+
+    // 4️⃣ Prepare update data safely
+    const updateData: Partial<IExtensionRequest> = {
+        status: ENUM_EXTENSION_REQUEST_STATUS.REJECTED,
+        rejectDetails: payload.rejectDetails,
+        reject_evidence: payload.reject_evidence,
+    };
+
+    // 5️⃣ Update the document
+    const result = await extensionRequestModel.findByIdAndUpdate(
+        extensionID,
+        { $set: updateData },
+        { new: true, runValidators: true }
+    );
+
+    if (!result) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Failed to update rejection');
+    }
+
+    return result;
+};
 const ExtensionRequestServices = {
     extensionRequestIntoDb,
     getExtensionRequestByTaskFromDB,
     cancelExtensionRequestByTaskFromDB,
     acceptRequestFromDB,
+    rejectRequestFromDB,
 };
 export default ExtensionRequestServices;

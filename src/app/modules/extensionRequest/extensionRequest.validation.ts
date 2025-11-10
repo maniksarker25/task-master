@@ -41,9 +41,21 @@ export const updateExtensionRequestZodSchema = z.object({
     }),
 });
 
+const rejectExtensionRequestZodSchema = z.object({
+    body: z.object({
+        rejectDetails: z.string(),
+
+        reject_evidence: z
+            .string()
+            .optional()
+            .describe('Optional image URL or file reference'),
+    }),
+});
+
 const ExtensionRequestValidations = {
     createExtensionRequestZodSchema,
     updateExtensionRequestZodSchema,
+    rejectExtensionRequestZodSchema,
 };
 
 export default ExtensionRequestValidations;
