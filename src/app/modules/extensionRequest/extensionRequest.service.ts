@@ -42,7 +42,10 @@ const extensionRequestIntoDb = async (
     return result;
 };
 
-const getExtensionRequestByTask = async (profileId: string, taskId: string) => {
+const getExtensionRequestByTaskFromDB = async (
+    profileId: string,
+    taskId: string
+) => {
     const task = await TaskModel.findById(taskId);
     if (!task) {
         throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
@@ -70,9 +73,36 @@ const getExtensionRequestByTask = async (profileId: string, taskId: string) => {
     }
     return result;
 };
+const cancelExtensionRequestByTaskFromDB = async (
+    profileId: string,
+    extensionID: string
+) => {
+    const extensionRequest = await extensionRequestModel.findById(extensionID);
+    if (!extensionRequest) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Extension Request not found');
+    }
+
+    if (extensionRequest.requestedBy.toString() !== profileId) {
+        throw new AppError(
+            httpStatus.UNAUTHORIZED,
+            'You are not authorized to cancel this request'
+        );
+    }
+
+    const result = await extensionRequestModel.findByIdAndDelete(extensionID);
+
+    if (!result) {
+        throw new AppError(
+            httpStatus.NOT_FOUND,
+            'No extension request found for this task'
+        );
+    }
+    return result;
+};
 
 const ExtensionRequestServices = {
     extensionRequestIntoDb,
-    getExtensionRequestByTask,
+    getExtensionRequestByTaskFromDB,
+    cancelExtensionRequestByTaskFromDB,
 };
 export default ExtensionRequestServices;
