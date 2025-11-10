@@ -15,5 +15,9 @@ router.post(
     ),
     extensionRequestController.createExtensionRequest
 );
-
+router.get(
+    '/byTask/:taskId',
+    auth(USER_ROLE.customer, USER_ROLE.provider),
+    extensionRequestController.extensionRequestByTask
+);
 export const extensionRequestRoutes = router;

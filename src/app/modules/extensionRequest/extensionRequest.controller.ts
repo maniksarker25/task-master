@@ -15,6 +15,21 @@ const createExtensionRequest = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const extensionRequestByTask = catchAsync(async (req, res) => {
+    const result = await extensionRequestServices.getExtensionRequestByTask(
+        req.user.profileId,
+        req.params.taskId as string
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Extension request Get by Task successfully',
+        data: result,
+    });
+});
 
-const ExtensionRequestController = { createExtensionRequest };
+const ExtensionRequestController = {
+    createExtensionRequest,
+    extensionRequestByTask,
+};
 export default ExtensionRequestController;
