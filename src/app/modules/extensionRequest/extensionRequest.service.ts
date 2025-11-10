@@ -42,5 +42,37 @@ const extensionRequestIntoDb = async (
     return result;
 };
 
-const ExtensionRequestServices = { extensionRequestIntoDb };
+const getExtensionRequestByTask = async (profileId: string, taskId: string) => {
+    const task = await TaskModel.findById(taskId);
+    if (!task) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+    }
+    const isAuthorized =
+        task.provider?.toString() === profileId ||
+        task.customer?.toString() === profileId;
+    if (!isAuthorized) {
+        throw new AppError(
+            httpStatus.UNAUTHORIZED,
+            'You are not authorized to view this request'
+        );
+    }
+
+    const result = await extensionRequestModel
+        .findOne({ task: taskId })
+        .populate('requestedBy')
+        .populate('task');
+
+    if (!result) {
+        throw new AppError(
+            httpStatus.NOT_FOUND,
+            'No extension request found for this task'
+        );
+    }
+    return result;
+};
+
+const ExtensionRequestServices = {
+    extensionRequestIntoDb,
+    getExtensionRequestByTask,
+};
 export default ExtensionRequestServices;
