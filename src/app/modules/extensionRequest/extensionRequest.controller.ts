@@ -1,24 +1,20 @@
-import httpStatus from "http-status";
-import catchAsync from "../../utilities/catchasync";
-import sendResponse from "../../utilities/sendResponse";
-import extensionRequestServices from "./extensionRequest.service";
+import httpStatus from 'http-status';
+import catchAsync from '../../utilities/catchasync';
+import sendResponse from '../../utilities/sendResponse';
+import extensionRequestServices from './extensionRequest.service';
 
-const updateUserProfile = catchAsync(async (req, res) => {
-    const { files } = req;
-    if (files && typeof files === "object" && "profile_image" in files) {
-        req.body.profile_image = files["profile_image"][0].path;
-    }
-    const result = await extensionRequestServices.updateUserProfile(
+const createExtensionRequest = catchAsync(async (req, res) => {
+    const result = await extensionRequestServices.extensionRequestIntoDb(
         req.user.profileId,
         req.body
     );
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Profile updated successfully",
+        message: 'Extension request created successfully',
         data: result,
     });
 });
 
-const ExtensionRequestController = { updateUserProfile };
+const ExtensionRequestController = { createExtensionRequest };
 export default ExtensionRequestController;
