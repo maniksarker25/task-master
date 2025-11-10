@@ -3,6 +3,7 @@ import AppError from '../../error/appError';
 import { IExtensionRequest } from './extensionRequest.interface';
 import extensionRequestModel from './extensionRequest.model';
 import TaskModel from '../task/task.model';
+import { ENUM_EXTENSION_REQUEST_STATUS } from './extensionRequest.enum';
 
 const extensionRequestIntoDb = async (
     profileId: string,
@@ -99,10 +100,45 @@ const cancelExtensionRequestByTaskFromDB = async (
     }
     return result;
 };
+const acceptRequestFromDB = async (profileId: string, extensionID: string) => {
+    const extensionRequest = await extensionRequestModel.findById(extensionID);
+    if (!extensionRequest) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Extension Request not found');
+    }
+
+    const task = await TaskModel.findById(extensionRequest.task);
+
+    const isAuthorized =
+        task?.provider?.toString() === profileId ||
+        task?.customer?.toString() === profileId;
+    if (!isAuthorized) {
+        throw new AppError(
+            httpStatus.UNAUTHORIZED,
+            'You are not authorized to view this request'
+        );
+    }
+
+    const result = await extensionRequestModel.findByIdAndUpdate(
+        extensionID,
+        {
+            status: ENUM_EXTENSION_REQUEST_STATUS.APPROVED,
+        },
+        { new: true, runValidators: true }
+    );
+
+    if (!result) {
+        throw new AppError(
+            httpStatus.NOT_FOUND,
+            'No extension request found for this task'
+        );
+    }
+    return result;
+};
 
 const ExtensionRequestServices = {
     extensionRequestIntoDb,
     getExtensionRequestByTaskFromDB,
     cancelExtensionRequestByTaskFromDB,
+    acceptRequestFromDB,
 };
 export default ExtensionRequestServices;

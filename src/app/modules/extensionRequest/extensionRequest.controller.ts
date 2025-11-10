@@ -41,10 +41,23 @@ const cancelExtensionRequestByTask = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const acceptRequest = catchAsync(async (req, res) => {
+    const result = await extensionRequestServices.acceptRequestFromDB(
+        req.user.profileId,
+        req.params.id as string
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Accept Request successfully',
+        data: result,
+    });
+});
 
 const ExtensionRequestController = {
     createExtensionRequest,
     extensionRequestByTask,
     cancelExtensionRequestByTask,
+    acceptRequest,
 };
 export default ExtensionRequestController;
