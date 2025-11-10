@@ -16,10 +16,11 @@ const createExtensionRequest = catchAsync(async (req, res) => {
     });
 });
 const extensionRequestByTask = catchAsync(async (req, res) => {
-    const result = await extensionRequestServices.getExtensionRequestByTask(
-        req.user.profileId,
-        req.params.taskId as string
-    );
+    const result =
+        await extensionRequestServices.getExtensionRequestByTaskFromDB(
+            req.user.profileId,
+            req.params.taskId as string
+        );
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
@@ -27,9 +28,23 @@ const extensionRequestByTask = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const cancelExtensionRequestByTask = catchAsync(async (req, res) => {
+    const result =
+        await extensionRequestServices.cancelExtensionRequestByTaskFromDB(
+            req.user.profileId,
+            req.params.id as string
+        );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Extension request delete  successfully',
+        data: result,
+    });
+});
 
 const ExtensionRequestController = {
     createExtensionRequest,
     extensionRequestByTask,
+    cancelExtensionRequestByTask,
 };
 export default ExtensionRequestController;

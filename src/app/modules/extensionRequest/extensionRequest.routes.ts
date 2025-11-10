@@ -20,4 +20,9 @@ router.get(
     auth(USER_ROLE.customer, USER_ROLE.provider),
     extensionRequestController.extensionRequestByTask
 );
+router.delete(
+    '/delete/:id',
+    auth(USER_ROLE.customer, USER_ROLE.provider),
+    extensionRequestController.cancelExtensionRequestByTask
+);
 export const extensionRequestRoutes = router;
