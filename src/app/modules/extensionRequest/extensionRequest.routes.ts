@@ -25,4 +25,9 @@ router.delete(
     auth(USER_ROLE.customer, USER_ROLE.provider),
     extensionRequestController.cancelExtensionRequestByTask
 );
+router.patch(
+    '/acceptRequest/:id',
+    auth(USER_ROLE.customer, USER_ROLE.provider),
+    extensionRequestController.acceptRequest
+);
 export const extensionRequestRoutes = router;
