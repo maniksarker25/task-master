@@ -17,6 +17,7 @@ declare namespace Express {
             task_attachments?: File[];
             service_image?: File[];
             question_image?: File[];
+            reject_evidence?: File[];
         };
     }
 }
