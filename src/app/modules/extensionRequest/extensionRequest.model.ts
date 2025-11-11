@@ -11,8 +11,13 @@ const extensionRequestSchema = new Schema<IExtensionRequest>(
         },
         requestedBy: {
             type: Schema.Types.ObjectId,
-            ref: 'User',
             required: true,
+            refPath: 'requestedByModel',
+        },
+        requestedByModel: {
+            type: String,
+            required: true,
+            enum: ['Customer', 'Provider'],
         },
         currentDate: {
             type: Date,

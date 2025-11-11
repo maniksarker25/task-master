@@ -4,6 +4,7 @@ import { ENUM_EXTENSION_REQUEST_STATUS } from './extensionRequest.enum';
 export interface IExtensionRequest {
     task: Types.ObjectId; // ref -> Task
     requestedBy: Types.ObjectId; // ref -> Users
+    requestedByModel: 'Customer' | 'Provider';
     currentDate: Date;
     requestedDate: Date;
     requestedAt: Date;

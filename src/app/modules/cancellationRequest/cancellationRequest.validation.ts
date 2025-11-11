@@ -5,18 +5,14 @@ import { ENUM_CANCELLATION_REQUEST_STATUS } from './cancellationRequest.enum';
 export const createCancellationRequestZodSchema = z.object({
     body: z.object({
         task: z.string({ required_error: 'Task ID is required' }),
-        requestedBy: z.string({
-            required_error: 'RequestedBy (User ID) is required',
-        }),
-        requestedAt: z.coerce.date({
-            required_error: 'RequestedAt date is required',
-        }),
+        requestedBy: z.string().optional(),
         reason: z
             .string({ required_error: 'Reason is required' })
             .min(1, 'Reason cannot be empty'),
         description: z
             .string({ required_error: 'Description is required' })
-            .min(1, 'Description cannot be empty'),
+            .min(1, 'Description cannot be empty')
+            .optional(),
         evidence: z.string().optional(),
         status: z
             .nativeEnum(ENUM_CANCELLATION_REQUEST_STATUS)
@@ -43,9 +39,21 @@ export const updateCancellationRequestZodSchema = z.object({
     }),
 });
 
+const rejectCancellationRequestZodSchema = z.object({
+    body: z.object({
+        rejectDetails: z.string(),
+
+        reject_evidence: z
+            .string()
+            .optional()
+            .describe('Optional image URL or file reference'),
+    }),
+});
+
 const CancellationRequestValidations = {
     createCancellationRequestZodSchema,
     updateCancellationRequestZodSchema,
+    rejectCancellationRequestZodSchema,
 };
 
 export default CancellationRequestValidations;
