@@ -1,24 +1,22 @@
-import httpStatus from "http-status";
-import catchAsync from "../../utilities/catchasync";
-import sendResponse from "../../utilities/sendResponse";
-import cancellationRequestServices from "./cancellationRequest.service";
+import httpStatus from 'http-status';
+import catchAsync from '../../utilities/catchasync';
+import sendResponse from '../../utilities/sendResponse';
+import cancellationRequestServices from './cancellationRequest.service';
 
-const updateUserProfile = catchAsync(async (req, res) => {
-    const { files } = req;
-    if (files && typeof files === "object" && "profile_image" in files) {
-        req.body.profile_image = files["profile_image"][0].path;
-    }
-    const result = await cancellationRequestServices.updateUserProfile(
-        req.user.profileId,
-        req.body
-    );
+const createCancelRequest = catchAsync(async (req, res) => {
+    const result =
+        await cancellationRequestServices.createCancellationRequestIntoDb(
+            req.user.profileId,
+            req.body
+        );
+
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Profile updated successfully",
+        message: 'Cancel request created successfully',
         data: result,
     });
 });
 
-const CancellationRequestController = { updateUserProfile };
+const CancellationRequestController = { createCancelRequest };
 export default CancellationRequestController;
