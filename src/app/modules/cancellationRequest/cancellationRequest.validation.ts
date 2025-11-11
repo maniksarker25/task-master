@@ -39,9 +39,21 @@ export const updateCancellationRequestZodSchema = z.object({
     }),
 });
 
+const rejectCancellationRequestZodSchema = z.object({
+    body: z.object({
+        rejectDetails: z.string(),
+
+        reject_evidence: z
+            .string()
+            .optional()
+            .describe('Optional image URL or file reference'),
+    }),
+});
+
 const CancellationRequestValidations = {
     createCancellationRequestZodSchema,
     updateCancellationRequestZodSchema,
+    rejectCancellationRequestZodSchema,
 };
 
 export default CancellationRequestValidations;
