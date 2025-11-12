@@ -1,10 +1,10 @@
 import express from 'express';
 import auth from '../../middlewares/auth';
-import { USER_ROLE } from '../user/user.constant';
 import validateRequest from '../../middlewares/validateRequest';
+import { USER_ROLE } from '../user/user.constant';
 
-import BidValidations from './bid.validation';
 import BidController from './bid.controller';
+import BidValidations from './bid.validation';
 
 const router = express.Router();
 
@@ -16,7 +16,7 @@ router.post(
 );
 
 router.get('/all-bid', BidController.getAllBid);
-router.get('/bid-byTaskID', BidController.getBidsByTask);
+router.get('/bids-by-task-id/:id', BidController.getBidsByTask);
 router.delete(
     '/delete-bid/:id',
     auth(USER_ROLE.provider),

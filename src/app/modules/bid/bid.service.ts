@@ -1,8 +1,8 @@
 import httpStatus from 'http-status';
 import AppError from '../../error/appError';
+import TaskModel from '../task/task.model';
 import { IBid } from './bid.interface';
 import BidModel from './bid.model';
-import TaskModel from '../task/task.model';
 
 const createBidIntoDB = async (userId: string, payload: IBid) => {
     const task = await TaskModel.findById(payload.task);
@@ -26,8 +26,11 @@ const getBidsByTaskIDFromDB = async (taskId: string) => {
     return result;
 };
 
-const deleteBidFromDB = async (id: string) => {
-    const result = await BidModel.findByIdAndDelete(id);
+const deleteBidFromDB = async (id: string, profileId: string) => {
+    const result = await BidModel.findOneAndDelete({
+        _id: id,
+        provider: profileId,
+    });
     if (!result) {
         throw new AppError(httpStatus.NOT_FOUND, 'Bid not found');
     }
