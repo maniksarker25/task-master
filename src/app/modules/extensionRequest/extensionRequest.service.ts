@@ -4,6 +4,7 @@ import { IExtensionRequest } from './extensionRequest.interface';
 import extensionRequestModel from './extensionRequest.model';
 import TaskModel from '../task/task.model';
 import { ENUM_EXTENSION_REQUEST_STATUS } from './extensionRequest.enum';
+import { ENUM_TASK_STATUS } from '../task/task.enum';
 
 const extensionRequestIntoDb = async (
     profileId: string,
@@ -25,6 +26,13 @@ const extensionRequestIntoDb = async (
         throw new AppError(
             httpStatus.UNAUTHORIZED,
             'You are not authorized to request extension for this task'
+        );
+    }
+
+    if (task.status !== ENUM_TASK_STATUS.IN_PROGRESS) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'Extension request can only be made for in-progress tasks'
         );
     }
     const extensionRequestData: Partial<IExtensionRequest> = {
