@@ -24,9 +24,19 @@ const updateUserProfile = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const getAllCustomer = catchAsync(async (req, res) => {
+    const result = await CustomerServices.getAllCustomerFromDB();
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Customers get successfully',
+        data: result,
+    });
+});
 
 const CustomerController = {
     updateUserProfile,
+    getAllCustomer,
 };
 
 export default CustomerController;

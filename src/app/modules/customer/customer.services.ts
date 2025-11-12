@@ -70,8 +70,14 @@ const updateUserProfile = async (userData: JwtPayload, payload: any) => {
     }
 };
 
+const getAllCustomerFromDB = async () => {
+    const customer = await Customer.find();
+    return customer;
+};
+
 const CustomerServices = {
     updateUserProfile,
+    getAllCustomerFromDB,
 };
 
 export default CustomerServices;
