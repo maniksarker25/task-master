@@ -368,6 +368,29 @@ const acceptOfferByProvider = async (taskId: string, currentUserId: string) => {
 
     return task;
 };
+
+const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
+    const bidData = await bidModel.findById(bidID);
+    if (!bidData) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Bid not found');
+    }
+    const taskData = await TaskModel.findById(bidData.task);
+    if (taskData?.customer.toString() !== profileID) {
+        throw new AppError(
+            httpStatus.UNAUTHORIZED,
+            'You are not authorized to accept this task'
+        );
+    }
+
+    const result = await TaskModel.findByIdAndUpdate(bidData.task, {
+        $set: {
+            provider: bidData.provider,
+            status: ENUM_TASK_STATUS.IN_PROGRESS,
+        },
+    });
+    return result;
+};
+
 const completeTaskByCustomer = async (
     taskId: string,
     currentUserId: string
@@ -398,5 +421,6 @@ const TaskServices = {
     getMyTaskFromDB,
     acceptOfferByProvider,
     completeTaskByCustomer,
+    acceptTaskByCustomerFromDB,
 };
 export default TaskServices;
