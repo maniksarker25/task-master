@@ -26,9 +26,7 @@ const getAllBid = catchAsync(async (req, res) => {
     });
 });
 const getBidsByTask = catchAsync(async (req, res) => {
-    const result = await BidServices.getBidsByTaskIDFromDB(
-        req.body.taskId as string
-    );
+    const result = await BidServices.getBidsByTaskIDFromDB(req.params.id);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
@@ -38,7 +36,10 @@ const getBidsByTask = catchAsync(async (req, res) => {
 });
 
 const deleteBid = catchAsync(async (req, res) => {
-    const result = await BidServices.deleteBidFromDB(req.params.id);
+    const result = await BidServices.deleteBidFromDB(
+        req.params.id,
+        req.user.profileId
+    );
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
