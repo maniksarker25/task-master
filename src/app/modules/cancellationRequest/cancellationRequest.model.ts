@@ -1,6 +1,6 @@
 import { model, Schema } from 'mongoose';
-import { ICancellationRequest } from './cancellationRequest.interface';
 import { ENUM_CANCELLATION_REQUEST_STATUS } from './cancellationRequest.enum';
+import { ICancellationRequest } from './cancellationRequest.interface';
 
 const cancellationRequestSchema = new Schema<ICancellationRequest>(
     {
