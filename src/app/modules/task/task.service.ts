@@ -382,12 +382,16 @@ const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
         );
     }
 
-    const result = await TaskModel.findByIdAndUpdate(bidData.task, {
-        $set: {
-            provider: bidData.provider,
-            status: ENUM_TASK_STATUS.IN_PROGRESS,
+    const result = await TaskModel.findByIdAndUpdate(
+        bidData.task,
+        {
+            $set: {
+                provider: bidData.provider,
+                status: ENUM_TASK_STATUS.IN_PROGRESS,
+            },
         },
-    });
+        { new: true }
+    );
     return result;
 };
 
