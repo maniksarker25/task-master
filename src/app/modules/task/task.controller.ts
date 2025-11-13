@@ -85,6 +85,20 @@ const acceptOffer = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const acceptTaskByCustomer = catchAsync(async (req, res) => {
+    const { bidID } = req.body;
+    const currentUserId = req.user.profileId;
+    const result = await TaskServices.acceptTaskByCustomerFromDB(
+        currentUserId,
+        bidID
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Accept By Customer  successfully',
+        data: result,
+    });
+});
 const completeTask = catchAsync(async (req, res) => {
     const { taskId } = req.body;
     const currentUserId = req.user.profileId;
@@ -108,5 +122,6 @@ const TaskController = {
     acceptOffer,
     getMyTask,
     completeTask,
+    acceptTaskByCustomer,
 };
 export default TaskController;

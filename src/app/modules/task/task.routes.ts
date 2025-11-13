@@ -40,6 +40,11 @@ router.patch(
     TaskController.acceptOffer
 );
 router.patch(
+    '/accept-TaskBy-Customer',
+    auth(USER_ROLE.customer),
+    TaskController.acceptTaskByCustomer
+);
+router.patch(
     '/complete-task',
     auth(USER_ROLE.customer),
     TaskController.completeTask

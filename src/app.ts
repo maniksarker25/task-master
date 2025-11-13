@@ -35,7 +35,7 @@ app.use('/api/v1', router);
 app.post('/contact-us', sendContactUsEmail);
 
 app.get('/', async (req, res) => {
-    res.send({ message: 'nice to meet you' });
+    res.send({ message: 'nice to meet you 2' });
 });
 
 // global error handler
