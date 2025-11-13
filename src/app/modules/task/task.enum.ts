@@ -11,7 +11,7 @@ export enum ENUM_TASK_STATUS {
 export enum ENUM_PAYMENT_STATUS {
     PAID = 'PAID',
     UNPAID = 'UNPAID',
-    REFOUND = 'REFOUND',
+    REFOUND = 'REFUND',
 }
 
 export enum ENUM_DONE_BY {

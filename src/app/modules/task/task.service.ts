@@ -309,8 +309,72 @@ const getMyTaskFromDB = async (
     };
 };
 const getSingleTaskFromDB = async (id: string) => {
-    const result = await TaskModel.findById(id).populate('category provider');
-    return result;
+    const pipeline: any[] = [
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(id),
+                isDeleted: false,
+            },
+        },
+        {
+            $lookup: {
+                from: 'bids',
+                localField: '_id',
+                foreignField: 'task',
+                as: 'bids',
+            },
+        },
+        {
+            $addFields: {
+                totalOffer: { $size: '$bids' },
+            },
+        },
+        {
+            $lookup: {
+                from: 'customers',
+                localField: 'customer',
+                foreignField: '_id',
+                as: 'customer',
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            name: 1,
+                            profile_image: 1,
+                        },
+                    },
+                ],
+            },
+        },
+        { $unwind: { path: '$customer', preserveNullAndEmptyArrays: true } },
+        {
+            $lookup: {
+                from: 'categories',
+                localField: 'category',
+                foreignField: '_id',
+                as: 'category',
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            name: 1,
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $unwind: { path: '$category', preserveNullAndEmptyArrays: true },
+        },
+        {
+            $project: {
+                bids: 0,
+            },
+        },
+    ];
+
+    const result = await TaskModel.aggregate(pipeline);
+    return result[0] || null;
 };
 
 const deleteTaskFromDB = async (id: string, currentUserId: string) => {
