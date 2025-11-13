@@ -56,9 +56,8 @@ router.patch(
 );
 //===
 router.patch(
-    '/change-status/:id',
+    '/block-unblock/:id',
     auth(USER_ROLE.superAdmin),
-    validateRequest(userValidations.changeUserStatus),
     userControllers.changeUserStatus
 );
 router.post(
