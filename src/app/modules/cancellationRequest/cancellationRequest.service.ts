@@ -4,6 +4,7 @@ import { ICancellationRequest } from './cancellationRequest.interface';
 import cancellationRequestModel from './cancellationRequest.model';
 import TaskModel from '../task/task.model';
 import { ENUM_CANCELLATION_REQUEST_STATUS } from './cancellationRequest.enum';
+import { ENUM_TASK_STATUS } from '../task/task.enum';
 
 const createCancellationRequestIntoDb = async (
     profileId: string,
@@ -25,6 +26,13 @@ const createCancellationRequestIntoDb = async (
         throw new AppError(
             httpStatus.UNAUTHORIZED,
             'You are not authorized to cancel request for this task'
+        );
+    }
+
+    if (task.status !== ENUM_TASK_STATUS.IN_PROGRESS) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'Cancel request can only be made for in-progress tasks'
         );
     }
 

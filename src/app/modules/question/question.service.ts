@@ -21,7 +21,9 @@ const getMyQuestionsFromDB = async (providerId: string) => {
     return result;
 };
 const getQuestionsByTaskIDFromDB = async (taskId: string) => {
-    const result = await QuestionModel.find({ task: taskId });
+    const result = await QuestionModel.find({ task: taskId }).populate(
+        'provider'
+    );
     return result;
 };
 

@@ -21,5 +21,10 @@ router.patch(
     validateRequest(CustomerValidations.updateCustomerData),
     CustomerController.updateUserProfile
 );
+router.get(
+    '/all-customer',
+    auth(USER_ROLE.admin),
+    CustomerController.getAllCustomer
+);
 
 export const CustomerRoutes = router;
