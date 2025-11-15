@@ -71,9 +71,31 @@ const updateUserProfile = async (userData: JwtPayload, payload: any) => {
     }
 };
 
-const getAllCustomerFromDB = async (pageNum: string | number) => {
-    const limit = 10;
-    const skip = (Number(pageNum) - 1) * limit;
+const getAllCustomerFromDB = async (query: Record<string, unknown>) => {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const searchTerm = query.searchTerm || '';
+    const filters: any = {};
+    Object.keys(query).forEach((key) => {
+        if (
+            !['searchTerm', 'page', 'limit', 'sortBy', 'sortOrder'].includes(
+                key
+            )
+        ) {
+            filters[key] = query[key];
+        }
+    });
+
+    const searchMatchStage = searchTerm
+        ? {
+              $or: [
+                  { name: { $regex: searchTerm, $options: 'i' } },
+                  { email: { $regex: searchTerm, $options: 'i' } },
+              ],
+          }
+        : {};
+
     const customer = await Customer.aggregate([
         {
             $lookup: {
@@ -106,6 +128,18 @@ const getAllCustomerFromDB = async (pageNum: string | number) => {
         { $skip: skip },
         { $limit: limit },
     ]);
+    //     const result = aggResult[0]?.result || [];
+    // const total = aggResult[0]?.totalCount[0]?.total || 0;
+    // const totalPage = Math.ceil(total / limit);
+    //     return {
+    //     meta: {
+    //         page,
+    //         limit,
+    //         total,
+    //         totalPage,
+    //     },
+    //     result,
+    // };
     return customer;
 };
 
