@@ -73,6 +73,7 @@ const userSchema = new Schema<TUser>(
             type: String,
         },
         playerIds: { type: [String], default: [] },
+        isAdminVerified: { type: Boolean, default: false },
     },
     {
         timestamps: true,
