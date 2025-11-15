@@ -17,12 +17,8 @@ const questionSchema = new Schema<IQuestion>(
             type: String,
             required: true,
         },
-        images: {
+        question_image: {
             type: String, // optional
-        },
-        questionTime: {
-            type: Date,
-            required: true,
         },
     },
     { timestamps: true }

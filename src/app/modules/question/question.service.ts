@@ -1,21 +1,53 @@
-import httpStatus from "http-status";
-import AppError from "../../error/appError";
-import { IQuestion } from "./question.interface";
-import questionModel from "./question.model";
+import httpStatus from 'http-status';
+import AppError from '../../error/appError';
+import TaskModel from '../task/task.model';
+import { IQuestion } from './question.interface';
+import QuestionModel from './question.model';
 
-const updateUserProfile = async (id: string, payload: Partial<IQuestion>) => {
-    if (payload.email || payload.username) {
-        throw new AppError(httpStatus.BAD_REQUEST, "You cannot change the email or username");
+const createQuestionIntoDB = async (providerId: string, payload: IQuestion) => {
+    const task = await TaskModel.findById(payload.task);
+    if (!task) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
     }
-    const user = await questionModel.findById(id);
-    if (!user) {
-        throw new AppError(httpStatus.NOT_FOUND, "Profile not found");
-    }
-    return await questionModel.findByIdAndUpdate(id, payload, {
-        new: true,
-        runValidators: true,
+    const result = await QuestionModel.create({
+        ...payload,
+        provider: providerId,
     });
+    return result;
 };
 
-const QuestionServices = { updateUserProfile };
+const getMyQuestionsFromDB = async (providerId: string) => {
+    const result = await QuestionModel.find({ provider: providerId });
+    return result;
+};
+const getQuestionsByTaskIDFromDB = async (taskId: string) => {
+    const result = await QuestionModel.find({ task: taskId }).populate(
+        'provider'
+    );
+    return result;
+};
+
+const deleteQuestionFromDB = async (providerId: string, questionId: string) => {
+    const question = await QuestionModel.findOne({
+        _id: questionId,
+        provider: providerId,
+    });
+
+    if (!question) {
+        throw new AppError(
+            httpStatus.FORBIDDEN,
+            'You are not allowed to delete this question or it does not exist'
+        );
+    }
+
+    await QuestionModel.findByIdAndDelete(questionId);
+    return { message: 'Question deleted successfully' };
+};
+
+const QuestionServices = {
+    createQuestionIntoDB,
+    getMyQuestionsFromDB,
+    getQuestionsByTaskIDFromDB,
+    deleteQuestionFromDB,
+};
 export default QuestionServices;

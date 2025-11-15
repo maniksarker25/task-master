@@ -5,5 +5,4 @@ export interface IBid {
     task: Types.ObjectId; // ref -> Task
     price: number;
     details: string;
-    time: Date;
 }

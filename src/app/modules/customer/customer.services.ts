@@ -5,6 +5,7 @@ import AppError from '../../error/appError';
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 import { Provider } from '../provider/provider.model';
 import SuperAdmin from '../superAdmin/superAdmin.model';
+import { ENUM_TASK_STATUS } from '../task/task.enum';
 import { USER_ROLE } from '../user/user.constant';
 import { Customer } from './customer.model';
 
@@ -70,8 +71,91 @@ const updateUserProfile = async (userData: JwtPayload, payload: any) => {
     }
 };
 
+const getAllCustomerFromDB = async (query: Record<string, unknown>) => {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const searchTerm = query.searchTerm || '';
+    const filters: any = {};
+    Object.keys(query).forEach((key) => {
+        if (
+            !['searchTerm', 'page', 'limit', 'sortBy', 'sortOrder'].includes(
+                key
+            )
+        ) {
+            filters[key] = query[key];
+        }
+    });
+
+    const searchMatchStage = searchTerm
+        ? {
+              $or: [
+                  { name: { $regex: searchTerm, $options: 'i' } },
+                  { email: { $regex: searchTerm, $options: 'i' } },
+              ],
+          }
+        : {};
+
+    const customer = await Customer.aggregate([
+        {
+            $match: {
+                ...searchMatchStage,
+                ...filters,
+            },
+        },
+        {
+            $lookup: {
+                from: 'tasks',
+                localField: '_id',
+                foreignField: 'customer',
+                as: 'activeTasks',
+                pipeline: [
+                    {
+                        $match: {
+                            status: {
+                                $in: [
+                                    ENUM_TASK_STATUS.IN_PROGRESS,
+                                    ENUM_TASK_STATUS.OPEN_FOR_BID,
+                                ],
+                            },
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $addFields: {
+                totalTaskCount: { $size: '$activeTasks' },
+            },
+        },
+        {
+            $project: { activeTasks: 0 },
+        },
+        {
+            $facet: {
+                result: [{ $skip: skip }, { $limit: limit }],
+                totalCount: [{ $count: 'total' }],
+            },
+        },
+    ]);
+    const result = customer[0]?.result || [];
+    const total = customer[0]?.totalCount[0]?.total || 0;
+    const totalPage = Math.ceil(total / limit);
+
+    return {
+        meta: {
+            page,
+            limit,
+            total,
+            totalPage,
+        },
+        result,
+    };
+};
+
 const CustomerServices = {
     updateUserProfile,
+    getAllCustomerFromDB,
 };
 
 export default CustomerServices;

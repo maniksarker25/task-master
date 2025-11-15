@@ -38,7 +38,11 @@ const taskSchema = new Schema<ITask>(
         },
 
         payOn: { type: String },
-        doneBy: { type: String, enum: Object.values(ENUM_DONE_BY) },
+        doneBy: {
+            type: String,
+            enum: Object.values(ENUM_DONE_BY),
+            required: true,
+        },
 
         location: {
             type: {
@@ -51,6 +55,11 @@ const taskSchema = new Schema<ITask>(
         },
         address: {
             type: String,
+            default: '',
+        },
+        city: {
+            type: String,
+            default: '',
         },
         scheduleType: {
             type: String,

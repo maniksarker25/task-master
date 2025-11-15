@@ -5,12 +5,8 @@ import { ENUM_EXTENSION_REQUEST_STATUS } from './extensionRequest.enum';
 export const createExtensionRequestZodSchema = z.object({
     body: z.object({
         task: z.string({ required_error: 'Task ID is required' }),
-        requestedBy: z.string({
-            required_error: 'RequestedBy (User ID) is required',
-        }),
-        currentDate: z.coerce.date({
-            required_error: 'Current date is required',
-        }),
+        requestedBy: z.string().optional(),
+        currentDate: z.coerce.date().optional(),
         requestedDate: z.coerce.date({
             required_error: 'Requested date is required',
         }),
@@ -45,9 +41,21 @@ export const updateExtensionRequestZodSchema = z.object({
     }),
 });
 
+const rejectExtensionRequestZodSchema = z.object({
+    body: z.object({
+        rejectDetails: z.string(),
+
+        reject_evidence: z
+            .string()
+            .optional()
+            .describe('Optional image URL or file reference'),
+    }),
+});
+
 const ExtensionRequestValidations = {
     createExtensionRequestZodSchema,
     updateExtensionRequestZodSchema,
+    rejectExtensionRequestZodSchema,
 };
 
 export default ExtensionRequestValidations;
