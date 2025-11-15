@@ -66,5 +66,10 @@ router.post(
     validateRequest(userValidations.deleteUserAccountValidationSchema),
     userControllers.deleteUserAccount
 );
+router.patch(
+    '/verify-user/:id',
+    auth(USER_ROLE.admin),
+    userControllers.adminVerifyUser
+);
 
 export const userRoutes = router;

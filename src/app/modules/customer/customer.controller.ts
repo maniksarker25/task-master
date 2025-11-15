@@ -25,7 +25,7 @@ const updateUserProfile = catchAsync(async (req, res) => {
     });
 });
 const getAllCustomer = catchAsync(async (req, res) => {
-    const result = await CustomerServices.getAllCustomerFromDB();
+    const result = await CustomerServices.getAllCustomerFromDB(req.query);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
