@@ -14,9 +14,7 @@ const updateProvider = catchAsync(async (req, res) => {
     });
 });
 const getAllProvider = catchAsync(async (req, res) => {
-    const result = await ProviderServices.getAllProviderFromDB(
-        req.params.pageNum
-    );
+    const result = await ProviderServices.getAllProviderFromDB(req.query);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
