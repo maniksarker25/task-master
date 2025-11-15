@@ -22,7 +22,7 @@ router.patch(
     CustomerController.updateUserProfile
 );
 router.get(
-    '/all-customer',
+    '/all-customer/:pageNum',
     auth(USER_ROLE.admin),
     CustomerController.getAllCustomer
 );
