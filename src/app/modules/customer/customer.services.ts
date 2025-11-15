@@ -7,6 +7,7 @@ import { Provider } from '../provider/provider.model';
 import SuperAdmin from '../superAdmin/superAdmin.model';
 import { USER_ROLE } from '../user/user.constant';
 import { Customer } from './customer.model';
+import { ENUM_TASK_STATUS } from '../task/task.enum';
 
 const updateUserProfile = async (userData: JwtPayload, payload: any) => {
     if (payload.email || payload.phone) {
@@ -71,7 +72,36 @@ const updateUserProfile = async (userData: JwtPayload, payload: any) => {
 };
 
 const getAllCustomerFromDB = async () => {
-    const customer = await Customer.find();
+    const customer = await Customer.aggregate([
+        {
+            $lookup: {
+                from: 'tasks',
+                localField: '_id',
+                foreignField: 'customer',
+                as: 'activeTasks',
+                pipeline: [
+                    {
+                        $match: {
+                            status: {
+                                $in: [
+                                    ENUM_TASK_STATUS.IN_PROGRESS,
+                                    ENUM_TASK_STATUS.OPEN_FOR_BID,
+                                ],
+                            },
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $addFields: {
+                totalTaskCount: { $size: '$activeTasks' },
+            },
+        },
+        {
+            $project: { activeTasks: 0 },
+        },
+    ]);
     return customer;
 };
 

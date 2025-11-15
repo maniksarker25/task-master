@@ -29,7 +29,7 @@ const getAllCustomer = catchAsync(async (req, res) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: 'Customers get successfully',
+        message: 'Customers get loockup successfully',
         data: result,
     });
 });
