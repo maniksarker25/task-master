@@ -71,7 +71,9 @@ const updateUserProfile = async (userData: JwtPayload, payload: any) => {
     }
 };
 
-const getAllCustomerFromDB = async () => {
+const getAllCustomerFromDB = async (pageNum: string | number) => {
+    const limit = 10;
+    const skip = (Number(pageNum) - 1) * limit;
     const customer = await Customer.aggregate([
         {
             $lookup: {
@@ -101,6 +103,8 @@ const getAllCustomerFromDB = async () => {
         {
             $project: { activeTasks: 0 },
         },
+        { $skip: skip },
+        { $limit: limit },
     ]);
     return customer;
 };
