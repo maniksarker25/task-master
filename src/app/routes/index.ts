@@ -17,6 +17,7 @@ import { feedbackRoutes } from '../modules/feedback/feedback.routes';
 import { questionRoutes } from '../modules/question/question.routes';
 import { extensionRequestRoutes } from '../modules/extensionRequest/extensionRequest.routes';
 import { cancellationRequestRoutes } from '../modules/cancellationRequest/cancellationRequest.routes';
+import { CustomerRoutes } from '../modules/customer/customer.routes';
 
 const router = Router();
 
@@ -90,6 +91,10 @@ const moduleRoutes = [
     {
         path: '/cancel-request',
         router: cancellationRequestRoutes,
+    },
+    {
+        path: '/customer',
+        router: CustomerRoutes,
     },
 ];
 

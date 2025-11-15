@@ -11,6 +11,7 @@ import registrationSuccessEmailBody from '../../mailTemplate/registerSucessEmail
 import sendEmail from '../../utilities/sendEmail';
 
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
+import { sendSMS } from '../../helper/sendSms';
 import { ICustomer } from '../customer/customer.interface';
 import { Customer } from '../customer/customer.model';
 import { Provider } from '../provider/provider.model';
@@ -96,7 +97,7 @@ const registerCustomer = async (
 The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
 
         //!TODO: need to send sms to phone
-        // await sendSMS(userData.phone, smsMessage);
+        await sendSMS(userData.phone, smsMessage);
 
         // If SMS sent successfully, commit transaction
         await session.commitTransaction();
@@ -339,6 +340,19 @@ const changeUserStatus = async (id: string) => {
     return result;
 };
 
+const adminVerifyUserFromDB = async (id: string) => {
+    const user = await User.findById(id);
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+    }
+    const result = await User.findByIdAndUpdate(
+        id,
+        { isAdminVerified: true },
+        { new: true, runValidators: true }
+    );
+    return result;
+};
+
 const userServices = {
     registerCustomer,
     verifyCode,
@@ -347,6 +361,7 @@ const userServices = {
     changeUserStatus,
     deleteUserAccount,
     updateUserProfile,
+    adminVerifyUserFromDB,
 };
 
 export default userServices;

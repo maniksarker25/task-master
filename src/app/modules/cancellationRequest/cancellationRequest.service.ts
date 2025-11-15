@@ -4,6 +4,8 @@ import { ICancellationRequest } from './cancellationRequest.interface';
 import cancellationRequestModel from './cancellationRequest.model';
 import TaskModel from '../task/task.model';
 import { ENUM_CANCELLATION_REQUEST_STATUS } from './cancellationRequest.enum';
+import { ENUM_TASK_STATUS } from '../task/task.enum';
+import mongoose from 'mongoose';
 
 const createCancellationRequestIntoDb = async (
     profileId: string,
@@ -25,6 +27,13 @@ const createCancellationRequestIntoDb = async (
         throw new AppError(
             httpStatus.UNAUTHORIZED,
             'You are not authorized to cancel request for this task'
+        );
+    }
+
+    if (task.status !== ENUM_TASK_STATUS.IN_PROGRESS) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'Cancel request can only be made for in-progress tasks'
         );
     }
 
@@ -114,43 +123,58 @@ const acceptCancellationRequestFromDB = async (
     profileId: string,
     cancellationId: string
 ) => {
-    const cancellationRequest =
-        await cancellationRequestModel.findById(cancellationId);
-    if (!cancellationRequest) {
-        throw new AppError(
-            httpStatus.NOT_FOUND,
-            'Cancellation Request not found'
+    const session = await mongoose.startSession();
+    try {
+        session.startTransaction();
+        const cancellationRequest = await cancellationRequestModel
+            .findById(cancellationId)
+            .session(session);
+        if (!cancellationRequest) {
+            throw new AppError(
+                httpStatus.NOT_FOUND,
+                'Cancellation Request not found'
+            );
+        }
+        const task = await TaskModel.findById(cancellationRequest.task).session(
+            session
         );
-    }
-
-    const task = await TaskModel.findById(cancellationRequest.task);
-
-    const isAuthorized =
-        task?.provider?.toString() === profileId ||
-        task?.customer?.toString() === profileId;
-
-    if (!isAuthorized) {
-        throw new AppError(
-            httpStatus.UNAUTHORIZED,
-            'You are not authorized to process this request'
+        if (!task) {
+            throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+        }
+        const isAuthorized =
+            task?.provider?.toString() === profileId ||
+            task?.customer?.toString() === profileId;
+        if (!isAuthorized) {
+            throw new AppError(
+                httpStatus.UNAUTHORIZED,
+                'You are not authorized to process this request'
+            );
+        }
+        const updatedCancellation =
+            await cancellationRequestModel.findByIdAndUpdate(
+                cancellationId,
+                {
+                    status: ENUM_CANCELLATION_REQUEST_STATUS.APPROVED,
+                },
+                { new: true, runValidators: true, session }
+            );
+        const updatedTask = await TaskModel.findByIdAndUpdate(
+            task?._id,
+            {
+                status: ENUM_TASK_STATUS.CANCELLED,
+            },
+            { new: true, runValidators: true, session }
         );
-    }
+        await session.commitTransaction();
 
-    const result = await cancellationRequestModel.findByIdAndUpdate(
-        cancellationId,
-        {
-            status: ENUM_CANCELLATION_REQUEST_STATUS.APPROVED,
-        },
-        { new: true, runValidators: true }
-    );
-
-    if (!result) {
-        throw new AppError(
-            httpStatus.NOT_FOUND,
-            'No cancellation request found'
-        );
+        return { cancellationRequest: updatedCancellation, task: updatedTask };
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
+    } finally {
+        session.endSession();
     }
-    return result;
 };
 
 const rejectCancellationRequestFromDB = async (

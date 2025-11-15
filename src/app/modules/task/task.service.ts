@@ -309,8 +309,72 @@ const getMyTaskFromDB = async (
     };
 };
 const getSingleTaskFromDB = async (id: string) => {
-    const result = await TaskModel.findById(id).populate('category provider');
-    return result;
+    const pipeline: any[] = [
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(id),
+                isDeleted: false,
+            },
+        },
+        {
+            $lookup: {
+                from: 'bids',
+                localField: '_id',
+                foreignField: 'task',
+                as: 'bids',
+            },
+        },
+        {
+            $addFields: {
+                totalOffer: { $size: '$bids' },
+            },
+        },
+        {
+            $lookup: {
+                from: 'customers',
+                localField: 'customer',
+                foreignField: '_id',
+                as: 'customer',
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            name: 1,
+                            profile_image: 1,
+                        },
+                    },
+                ],
+            },
+        },
+        { $unwind: { path: '$customer', preserveNullAndEmptyArrays: true } },
+        {
+            $lookup: {
+                from: 'categories',
+                localField: 'category',
+                foreignField: '_id',
+                as: 'category',
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            name: 1,
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $unwind: { path: '$category', preserveNullAndEmptyArrays: true },
+        },
+        {
+            $project: {
+                bids: 0,
+            },
+        },
+    ];
+
+    const result = await TaskModel.aggregate(pipeline);
+    return result[0] || null;
 };
 
 const deleteTaskFromDB = async (id: string, currentUserId: string) => {
@@ -368,6 +432,33 @@ const acceptOfferByProvider = async (taskId: string, currentUserId: string) => {
 
     return task;
 };
+
+const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
+    const bidData = await bidModel.findById(bidID);
+    if (!bidData) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Bid not found');
+    }
+    const taskData = await TaskModel.findById(bidData.task);
+    if (taskData?.customer.toString() !== profileID) {
+        throw new AppError(
+            httpStatus.UNAUTHORIZED,
+            'You are not authorized to accept this task'
+        );
+    }
+
+    const result = await TaskModel.findByIdAndUpdate(
+        bidData.task,
+        {
+            $set: {
+                provider: bidData.provider,
+                status: ENUM_TASK_STATUS.IN_PROGRESS,
+            },
+        },
+        { new: true }
+    );
+    return result;
+};
+
 const completeTaskByCustomer = async (
     taskId: string,
     currentUserId: string
@@ -398,5 +489,6 @@ const TaskServices = {
     getMyTaskFromDB,
     acceptOfferByProvider,
     completeTaskByCustomer,
+    acceptTaskByCustomerFromDB,
 };
 export default TaskServices;

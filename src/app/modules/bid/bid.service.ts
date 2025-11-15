@@ -22,7 +22,7 @@ const getAllBidFromDB = async () => {
 };
 
 const getBidsByTaskIDFromDB = async (taskId: string) => {
-    const result = await BidModel.find({ task: taskId });
+    const result = await BidModel.find({ task: taskId }).populate('provider');
     return result;
 };
 
