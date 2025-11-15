@@ -56,9 +56,8 @@ router.patch(
 );
 //===
 router.patch(
-    '/change-status/:id',
+    '/block-unblock/:id',
     auth(USER_ROLE.superAdmin),
-    validateRequest(userValidations.changeUserStatus),
     userControllers.changeUserStatus
 );
 router.post(
@@ -66,6 +65,11 @@ router.post(
     auth(USER_ROLE.customer),
     validateRequest(userValidations.deleteUserAccountValidationSchema),
     userControllers.deleteUserAccount
+);
+router.patch(
+    '/verify-user/:id',
+    auth(USER_ROLE.admin),
+    userControllers.adminVerifyUser
 );
 
 export const userRoutes = router;

@@ -4,6 +4,7 @@ import { ENUM_CANCELLATION_REQUEST_STATUS } from './cancellationRequest.enum';
 export interface ICancellationRequest {
     task: Types.ObjectId; // ref -> Task
     requestedBy: Types.ObjectId; // ref -> Users
+    requestedByModel: 'Customer' | 'Provider';
     requestedAt: Date;
     reason: string;
     description: string;

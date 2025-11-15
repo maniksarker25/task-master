@@ -1,6 +1,6 @@
 import { model, Schema } from 'mongoose';
-import { ICancellationRequest } from './cancellationRequest.interface';
 import { ENUM_CANCELLATION_REQUEST_STATUS } from './cancellationRequest.enum';
+import { ICancellationRequest } from './cancellationRequest.interface';
 
 const cancellationRequestSchema = new Schema<ICancellationRequest>(
     {
@@ -11,12 +11,13 @@ const cancellationRequestSchema = new Schema<ICancellationRequest>(
         },
         requestedBy: {
             type: Schema.Types.ObjectId,
-            ref: 'User',
             required: true,
+            refPath: 'requestedByModel',
         },
-        requestedAt: {
-            type: Date,
+        requestedByModel: {
+            type: String,
             required: true,
+            enum: ['Customer', 'Provider'],
         },
         reason: {
             type: String,
@@ -24,7 +25,6 @@ const cancellationRequestSchema = new Schema<ICancellationRequest>(
         },
         description: {
             type: String,
-            required: true,
         },
         evidence: {
             type: String,

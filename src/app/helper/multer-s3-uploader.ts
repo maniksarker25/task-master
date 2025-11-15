@@ -27,6 +27,9 @@ export const uploadFile = () => {
             'category_image',
             'address_document',
             'task_attachments',
+            'service_image',
+            'question_image',
+            'reject_evidence',
         ];
 
         if (file.fieldname === undefined) {
@@ -81,6 +84,12 @@ export const uploadFile = () => {
                 uploadPath = 'uploads/documents/address_document';
             } else if (file.fieldname === 'task_attachments') {
                 uploadPath = 'uploads/images/task_attachments';
+            } else if (file.fieldname === 'service_image') {
+                uploadPath = 'uploads/images/service_image';
+            } else if (file.fieldname === 'reject_evidence') {
+                uploadPath = 'uploads/images/reject_evidence';
+            } else if (file.fieldname === 'question_image') {
+                uploadPath = 'uploads/images/question_image';
             } else {
                 uploadPath = 'uploads';
             }
@@ -109,8 +118,11 @@ export const uploadFile = () => {
         { name: 'image', maxCount: 1 },
         { name: 'profile_image', maxCount: 1 },
         { name: 'category_image', maxCount: 2 },
+        { name: 'question_image', maxCount: 2 },
+        { name: 'reject_evidence', maxCount: 2 },
         { name: 'address_document', maxCount: 1 },
         { name: 'task_attachments', maxCount: 5 },
+        { name: 'service_image', maxCount: 5 },
     ]);
 
     return upload;

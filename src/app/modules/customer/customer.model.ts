@@ -28,12 +28,15 @@ const customerSchema = new Schema<ICustomer>(
         },
         profile_image: {
             type: String,
+            default: '',
         },
         city: {
             type: String,
+            default: '',
         },
         street: {
             type: String,
+            default: '',
         },
         address_document: {
             type: String,

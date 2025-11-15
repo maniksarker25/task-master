@@ -12,6 +12,12 @@ import { bidRoutes } from '../modules/bid/bid.routes';
 import { promoRoutes } from '../modules/promo/promo.routes';
 import { promoUseRoutes } from '../modules/promoUse/promoUse.routes';
 import { providerRoutes } from '../modules/provider/provider.routes';
+import { serviceRoutes } from '../modules/service/service.routes';
+import { feedbackRoutes } from '../modules/feedback/feedback.routes';
+import { questionRoutes } from '../modules/question/question.routes';
+import { extensionRequestRoutes } from '../modules/extensionRequest/extensionRequest.routes';
+import { cancellationRequestRoutes } from '../modules/cancellationRequest/cancellationRequest.routes';
+import { CustomerRoutes } from '../modules/customer/customer.routes';
 
 const router = Router();
 
@@ -65,6 +71,30 @@ const moduleRoutes = [
     {
         path: '/subscriber',
         router: subscriberRoutes,
+    },
+    {
+        path: '/service',
+        router: serviceRoutes,
+    },
+    {
+        path: '/feedback',
+        router: feedbackRoutes,
+    },
+    {
+        path: '/question',
+        router: questionRoutes,
+    },
+    {
+        path: '/extension-request',
+        router: extensionRequestRoutes,
+    },
+    {
+        path: '/cancel-request',
+        router: cancellationRequestRoutes,
+    },
+    {
+        path: '/customer',
+        router: CustomerRoutes,
     },
 ];
 

@@ -24,6 +24,7 @@ app.use(
             'https://taskalley-landing-page.vercel.app',
             'https://taskalley.com',
             'https://www.taskalley.com',
+            'http://localhost:3001',
         ],
         credentials: true,
     })
@@ -34,7 +35,7 @@ app.use('/api/v1', router);
 app.post('/contact-us', sendContactUsEmail);
 
 app.get('/', async (req, res) => {
-    res.send({ message: 'nice to meet you' });
+    res.send({ message: 'nice to meet you 2' });
 });
 
 // global error handler
