@@ -24,10 +24,40 @@ const updateProviderFromDB = async (
     return result;
 };
 
-const getAllProviderFromDB = async (pageNum: string | number) => {
-    const limit = 10;
-    const skip = (Number(pageNum) - 1) * limit;
+const getAllProviderFromDB = async (query: Record<string, unknown>) => {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const searchTerm = query.searchTerm || '';
+
+    const filters: any = {};
+    Object.keys(query).forEach((key) => {
+        if (
+            !['searchTerm', 'page', 'limit', 'sortBy', 'sortOrder'].includes(
+                key
+            )
+        ) {
+            filters[key] = query[key];
+        }
+    });
+
+    const searchMatchStage = searchTerm
+        ? {
+              $or: [
+                  { name: { $regex: searchTerm, $options: 'i' } },
+                  { email: { $regex: searchTerm, $options: 'i' } },
+                  { phone: { $regex: searchTerm, $options: 'i' } },
+              ],
+          }
+        : {};
+
     const provider = await Provider.aggregate([
+        {
+            $match: {
+                ...searchMatchStage,
+                ...filters,
+            },
+        },
         {
             $lookup: {
                 from: 'tasks',
@@ -56,10 +86,27 @@ const getAllProviderFromDB = async (pageNum: string | number) => {
         {
             $project: { activeTasks: 0 },
         },
-        { $skip: skip },
-        { $limit: limit },
+        {
+            $facet: {
+                result: [{ $skip: skip }, { $limit: limit }],
+                totalCount: [{ $count: 'total' }],
+            },
+        },
     ]);
-    return provider;
+
+    const result = provider[0]?.result || [];
+    const total = provider[0]?.totalCount[0]?.total || 0;
+    const totalPage = Math.ceil(total / limit);
+
+    return {
+        meta: {
+            page,
+            limit,
+            total,
+            totalPage,
+        },
+        result,
+    };
 };
 
 const ProviderServices = {

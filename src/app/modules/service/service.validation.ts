@@ -12,25 +12,6 @@ export const createServiceZodSchema = z.object({
         description: z
             .string({ required_error: 'Description is required' })
             .min(1, 'Description cannot be empty'),
-        location: z
-            .object({
-                type: z.literal('Point').default('Point'),
-                coordinates: z
-                    .array(z.number())
-                    .length(2, 'Coordinates must have [longitude, latitude]'),
-            })
-            .optional(),
-        availability: z
-            .string({ required_error: 'Availability is required' })
-            .min(1, 'Availability cannot be empty'),
-        experience: z
-            .string({ required_error: 'Experience is required' })
-            .min(1, 'Experience cannot be empty'),
-        onSiteSupport: z.boolean().optional(),
-        toolsProvided: z.boolean().optional(),
-        languages: z
-            .array(z.string({ required_error: 'Language is required' }))
-            .min(1, 'At least one language is required'),
         price: z
             .number({ required_error: 'Price range is required' })
             .min(1, 'Price range cannot be empty')
@@ -46,19 +27,6 @@ export const updateServiceZodSchema = z.object({
         title: z.string().optional(),
         images: z.array(z.string()).optional(),
         description: z.string().optional(),
-        location: z
-            .object({
-                type: z.literal('Point').default('Point'),
-                coordinates: z
-                    .array(z.number())
-                    .length(2, 'Coordinates must have [longitude, latitude]'),
-            })
-            .optional(),
-        availability: z.string().optional(),
-        experience: z.string().optional(),
-        onSiteSupport: z.boolean().optional(),
-        toolsProvided: z.boolean().optional(),
-        languages: z.array(z.string()).optional(),
         price: z.number().optional(),
         status: z.nativeEnum(ENUM_SERVICE_STATUS).optional(),
     }),
