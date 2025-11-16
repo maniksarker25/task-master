@@ -26,7 +26,10 @@ const getAllBid = catchAsync(async (req, res) => {
     });
 });
 const getBidsByTask = catchAsync(async (req, res) => {
-    const result = await BidServices.getBidsByTaskIDFromDB(req.params.id);
+    const result = await BidServices.getBidsByTaskIDFromDB(
+        req.params.id,
+        req.query
+    );
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
