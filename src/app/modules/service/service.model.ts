@@ -19,26 +19,6 @@ const serviceSchema = new Schema<IService>(
         },
 
         description: { type: String, required: true },
-        location: {
-            type: {
-                type: String,
-                enum: ['Point'],
-                required: true,
-                default: 'Point',
-            },
-            coordinates: { type: [Number], required: true, index: '2dsphere' },
-        },
-        address: {
-            type: String,
-        },
-        city: {
-            type: String,
-        },
-        availability: { type: String, required: true },
-        experience: { type: String, required: true },
-        onSiteSupport: { type: Boolean, default: true },
-        toolsProvided: { type: Boolean, default: true },
-        languages: [{ type: String, required: true }],
         isActive: { type: Boolean, default: true },
         price: { type: Number, required: true },
 
