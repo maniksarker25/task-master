@@ -15,7 +15,7 @@ router.patch(
     ProviderController.updateProvider
 );
 router.get(
-    '/all-provider/:pageNum',
+    '/all-provider',
     auth(USER_ROLE.admin),
     ProviderController.getAllProvider
 );
