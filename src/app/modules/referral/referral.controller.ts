@@ -24,6 +24,22 @@ const updateReferralValue = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const updateReferralStatus = catchAsync(async (req, res) => {
+    const result = await referralServices.updateReferralStatusFromDB(
+        req.params.id
+    );
 
-const ReferralController = { getAllReferral, updateReferralValue };
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Referral status updated successfully',
+        data: result,
+    });
+});
+
+const ReferralController = {
+    getAllReferral,
+    updateReferralValue,
+    updateReferralStatus,
+};
 export default ReferralController;

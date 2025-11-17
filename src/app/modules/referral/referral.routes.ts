@@ -20,4 +20,10 @@ router.patch(
     referralController.updateReferralValue
 );
 
+router.patch(
+    '/update-status/:id',
+    auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+    referralController.updateReferralStatus
+);
+
 export const referralRoutes = router;
