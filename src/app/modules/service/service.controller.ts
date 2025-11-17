@@ -65,10 +65,13 @@ const inactiveService = catchAsync(async (req, res) => {
         serviceId
     );
 
+    const message = result.isActive
+        ? 'Service activated successfully'
+        : 'Service deactivated successfully';
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: 'Delete Service  Successfully',
+        message,
         data: result,
     });
 });
