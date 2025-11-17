@@ -4,6 +4,7 @@ import validateRequest from '../../middlewares/validateRequest';
 import { USER_ROLE } from '../user/user.constant';
 
 import { uploadFile } from '../../helper/multer-s3-uploader';
+import simpleAuth from '../../middlewares/simpleAuth';
 import TaskController from './task.controller';
 import taskValidations from './task.validation';
 
@@ -28,7 +29,17 @@ router.get(
     auth(USER_ROLE.customer, USER_ROLE.provider),
     TaskController.getMyTask
 );
-router.get('/single-task/:id', TaskController.getSingleTask);
+router.get(
+    '/single-task/:id',
+    // auth(
+    //     USER_ROLE.customer,
+    //     USER_ROLE.provider,
+    //     USER_ROLE.admin,
+    //     USER_ROLE.superAdmin
+    // ),
+    simpleAuth,
+    TaskController.getSingleTask
+);
 router.delete(
     '/delete-task/:id',
     auth(USER_ROLE.provider, USER_ROLE.customer),
