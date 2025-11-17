@@ -100,9 +100,41 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
     };
 };
 const getMyService = async (userId: string) => {
-    const result = await ServiceModel.findOne({ provider: userId });
-    return result;
+    const service = await ServiceModel.aggregate([
+        {
+            $match: {
+                provider: new mongoose.Types.ObjectId(userId),
+            },
+        },
+        {
+            $lookup: {
+                from: 'feedbacks',
+                localField: 'provider',
+                foreignField: 'provider',
+                as: 'feedbacks',
+            },
+        },
+        {
+            $addFields: {
+                averageRating: {
+                    $cond: [
+                        { $gt: [{ $size: '$feedbacks' }, 0] },
+                        { $avg: '$feedbacks.rating' },
+                        0,
+                    ],
+                },
+            },
+        },
+        {
+            $project: {
+                feedbacks: 0,
+            },
+        },
+    ]);
+
+    return service[0] || [];
 };
+
 const deleteServiceFromDB = async (profileId: string, serviceId: string) => {
     const service = await serviceModel.findOne({
         _id: serviceId,

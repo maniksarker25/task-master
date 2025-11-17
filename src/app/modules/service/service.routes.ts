@@ -23,7 +23,7 @@ router.post(
 );
 router.get('/all-service', serviceController.getAllService);
 router.get(
-    '/my-services',
+    '/my-service',
     auth(USER_ROLE.provider),
     serviceController.getMyService
 );
