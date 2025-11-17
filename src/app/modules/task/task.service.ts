@@ -85,6 +85,7 @@ const getAllTaskFromDB = async (query: Record<string, any>) => {
                 totalOffer: { $size: '$bids' },
             },
         },
+
         {
             $lookup: {
                 from: 'customers',
@@ -311,7 +312,7 @@ const getMyTaskFromDB = async (
         result,
     };
 };
-const getSingleTaskFromDB = async (id: string) => {
+const getSingleTaskFromDB = async (userId: string, id: string) => {
     const pipeline: any[] = [
         {
             $match: {
@@ -330,6 +331,36 @@ const getSingleTaskFromDB = async (id: string) => {
         {
             $addFields: {
                 totalOffer: { $size: '$bids' },
+            },
+        },
+        {
+            $lookup: {
+                from: 'bids',
+                let: { taskId: '$_id' },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ['$task', '$$taskId'] },
+                                    {
+                                        $eq: [
+                                            '$provider',
+                                            new mongoose.Types.ObjectId(userId),
+                                        ],
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                    { $project: { _id: 1 } },
+                ],
+                as: 'userBid',
+            },
+        },
+        {
+            $addFields: {
+                isBid: { $gt: [{ $size: '$userBid' }, 0] },
             },
         },
         {
@@ -390,6 +421,7 @@ const getSingleTaskFromDB = async (id: string) => {
         {
             $project: {
                 bids: 0,
+                userBid: 0,
             },
         },
     ];
