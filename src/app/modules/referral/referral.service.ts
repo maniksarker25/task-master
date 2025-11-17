@@ -1,21 +1,19 @@
-import httpStatus from "http-status";
-import AppError from "../../error/appError";
-import { IReferral } from "./referral.interface";
-import referralModel from "./referral.model";
+import referralModel from './referral.model';
 
-const updateUserProfile = async (id: string, payload: Partial<IReferral>) => {
-    if (payload.email || payload.username) {
-        throw new AppError(httpStatus.BAD_REQUEST, "You cannot change the email or username");
-    }
-    const user = await referralModel.findById(id);
-    if (!user) {
-        throw new AppError(httpStatus.NOT_FOUND, "Profile not found");
-    }
-    return await referralModel.findByIdAndUpdate(id, payload, {
-        new: true,
-        runValidators: true,
-    });
+const getAllReferralFromDB = async () => {
+    const result = await referralModel.find();
+    return result;
+};
+const updateReferralValueFromDB = async (id: string, value: number) => {
+    const result = await referralModel.findByIdAndUpdate(
+        id,
+        {
+            value: value,
+        },
+        { new: true }
+    );
+    return result;
 };
 
-const ReferralServices = { updateUserProfile };
+const ReferralServices = { getAllReferralFromDB, updateReferralValueFromDB };
 export default ReferralServices;

@@ -1,24 +1,29 @@
-import httpStatus from "http-status";
-import catchAsync from "../../utilities/catchasync";
-import sendResponse from "../../utilities/sendResponse";
-import referralServices from "./referral.service";
+import httpStatus from 'http-status';
+import catchAsync from '../../utilities/catchasync';
+import sendResponse from '../../utilities/sendResponse';
+import referralServices from './referral.service';
 
-const updateUserProfile = catchAsync(async (req, res) => {
-    const { files } = req;
-    if (files && typeof files === "object" && "profile_image" in files) {
-        req.body.profile_image = files["profile_image"][0].path;
-    }
-    const result = await referralServices.updateUserProfile(
-        req.user.profileId,
-        req.body
+const getAllReferral = catchAsync(async (req, res) => {
+    const result = await referralServices.getAllReferralFromDB();
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'referral get successfully',
+        data: result,
+    });
+});
+const updateReferralValue = catchAsync(async (req, res) => {
+    const result = await referralServices.updateReferralValueFromDB(
+        req.params.id,
+        req.body.value
     );
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Profile updated successfully",
+        message: 'referral value update successfully',
         data: result,
     });
 });
 
-const ReferralController = { updateUserProfile };
+const ReferralController = { getAllReferral, updateReferralValue };
 export default ReferralController;
