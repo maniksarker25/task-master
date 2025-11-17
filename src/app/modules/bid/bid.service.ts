@@ -145,10 +145,28 @@ const deleteBidFromDB = async (id: string, profileId: string) => {
     }
     return result;
 };
+
+const updateBidIntoDB = async (
+    bidId: string,
+    profileId: string,
+    payload: Partial<IBid>
+) => {
+    const bid = await BidModel.findOne({ _id: bidId, provider: profileId });
+    if (!bid) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Bid not found');
+    }
+    const updateBid = await BidModel.findByIdAndUpdate(
+        bidId,
+        { ...payload },
+        { new: true }
+    );
+    return updateBid;
+};
 const BidServices = {
     createBidIntoDB,
     getAllBidFromDB,
     deleteBidFromDB,
     getBidsByTaskIDFromDB,
+    updateBidIntoDB,
 };
 export default BidServices;
