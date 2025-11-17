@@ -15,6 +15,7 @@ const initializeSocket = (server: HTTPServer) => {
                     'http://localhost:3008',
                     'http://localhost:3000',
                     'https://taskalley-deploy.vercel.app',
+                    'http://10.10.20.48:3000',
                 ],
             },
         });
