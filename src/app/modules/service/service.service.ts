@@ -99,6 +99,10 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
         result,
     };
 };
+const getMyService = async (userId: string) => {
+    const result = await ServiceModel.findOne({ provider: userId });
+    return result;
+};
 const deleteServiceFromDB = async (profileId: string, serviceId: string) => {
     const service = await serviceModel.findOne({
         _id: serviceId,
@@ -191,5 +195,6 @@ const ServiceServices = {
     getSingleServiceFromDB,
     updateServiceFromDB,
     toggleServiceActiveStatusFromDB,
+    getMyService,
 };
 export default ServiceServices;
