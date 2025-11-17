@@ -53,9 +53,10 @@ export const sendSMS = async (
 ): Promise<SmsResponse> => {
     try {
         const response: SmsResponse = await mocean.sms().send({
-            'mocean-from': 'Task alley',
+            'mocean-from': '12345',
             'mocean-to': phoneNumber,
-            'mocean-text': smsMessage,
+            // 'mocean-text': smsMessage,
+            'mocean-text': 'Hello, this is a test.',
         });
 
         console.log('✅ SMS sent successfully:', response);

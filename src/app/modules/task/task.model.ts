@@ -5,7 +5,19 @@ import {
     ENUM_SCHEDULE_TYPE,
     ENUM_TASK_STATUS,
 } from './task.enum';
-import { ITask } from './task.interface';
+import { IStatusWithDate, ITask } from './task.interface';
+
+const statusWithDateSchema = new Schema<IStatusWithDate>({
+    status: {
+        type: String,
+        enum: Object.values(ENUM_TASK_STATUS),
+        required: true,
+    },
+    date: {
+        type: Date,
+        required: true,
+    },
+});
 
 const taskSchema = new Schema<ITask>(
     {
@@ -69,6 +81,9 @@ const taskSchema = new Schema<ITask>(
         preferredTime: { type: String },
         description: { type: String, required: true },
         task_attachments: [{ type: String }],
+        statusWithDate: {
+            type: [statusWithDateSchema],
+        },
     },
     { timestamps: true }
 );
