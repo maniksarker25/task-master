@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Customer } from '../customer/customer.model';
 import { Provider } from '../provider/provider.model';
 import { ENUM_TASK_STATUS } from '../task/task.enum';
@@ -24,12 +25,12 @@ const getDashboardMetaData = async () => {
     };
 };
 
-const getUserChartData = async (year: number) => {
+const getCustomerChartData = async (year: number) => {
     const startOfYear = new Date(year, 0, 1);
 
     const endOfYear = new Date(year + 1, 0, 1);
 
-    const chartData = await NormalUser.aggregate([
+    const chartData = await Customer.aggregate([
         {
             $match: {
                 createdAt: {
@@ -77,42 +78,59 @@ const getUserChartData = async (year: number) => {
             chartData.find((item) => item.month === index + 1)?.totalUser || 0,
     }));
 
-    return data;
-};
+    const yearsResult = await Customer.aggregate([
+        {
+            $group: {
+                _id: { $year: '$createdAt' },
+            },
+        },
+        {
+            $project: {
+                year: '$_id',
+                _id: 0,
+            },
+        },
+        {
+            $sort: { year: 1 },
+        },
+    ]);
 
-const getSubscriptionChartData = async (year: number) => {
+    const yearsDropdown = yearsResult.map((item: any) => item.year);
+
+    return {
+        chartData: data,
+        yearsDropdown,
+    };
+};
+const getProviderChartData = async (year: number) => {
     const startOfYear = new Date(year, 0, 1);
+
     const endOfYear = new Date(year + 1, 0, 1);
 
-    const chartData = await Transaction.aggregate([
+    const chartData = await Provider.aggregate([
         {
             $match: {
                 createdAt: {
                     $gte: startOfYear,
                     $lt: endOfYear,
                 },
-                type: {
-                    $in: ['Purchase Subcription', 'Review Subscription'],
-                },
             },
         },
         {
             $group: {
                 _id: { $month: '$createdAt' },
-                totalSubscriber: { $sum: 1 },
+                totalUser: { $sum: 1 },
             },
         },
         {
             $project: {
                 month: '$_id',
-                totalSubscriber: 1,
+                totalUser: 1,
                 _id: 0,
             },
         },
         {
-            $sort: {
-                month: 1,
-            },
+            $sort: { month: 1 },
         },
     ]);
 
@@ -133,18 +151,39 @@ const getSubscriptionChartData = async (year: number) => {
 
     const data = Array.from({ length: 12 }, (_, index) => ({
         month: months[index],
-        totalSubscriber:
-            chartData.find((item) => item.month === index + 1)
-                ?.totalSubscriber || 0,
+        totalUser:
+            chartData.find((item) => item.month === index + 1)?.totalUser || 0,
     }));
 
-    return data;
+    const yearsResult = await Provider.aggregate([
+        {
+            $group: {
+                _id: { $year: '$createdAt' },
+            },
+        },
+        {
+            $project: {
+                year: '$_id',
+                _id: 0,
+            },
+        },
+        {
+            $sort: { year: 1 },
+        },
+    ]);
+
+    const yearsDropdown = yearsResult.map((item: any) => item.year);
+
+    return {
+        chartData: data,
+        yearsDropdown,
+    };
 };
 
 const MetaService = {
     getDashboardMetaData,
-    getUserChartData,
-    getSubscriptionChartData,
+    getCustomerChartData,
+    getProviderChartData,
 };
 
 export default MetaService;
