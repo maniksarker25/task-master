@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
 import AppError from '../../error/appError';
+import { ENUM_TASK_STATUS } from '../task/task.enum';
 import { IProvider } from './provider.interface';
 import { Provider } from './provider.model';
-import { ENUM_TASK_STATUS } from '../task/task.enum';
 
 const updateProviderFromDB = async (
     id: string,
@@ -114,4 +115,3 @@ const ProviderServices = {
     getAllProviderFromDB,
 };
 export default ProviderServices;
-//  test
