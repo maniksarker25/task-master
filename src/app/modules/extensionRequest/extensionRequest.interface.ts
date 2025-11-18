@@ -8,11 +8,10 @@ export interface IExtensionRequest {
     requestTo: Types.ObjectId;
     requestToModel: 'Customer' | 'Provider';
     currentDate: Date;
-    requestedDate: Date;
-    requestedAt: Date;
+    requestedDateTime: Date;
     reason: string;
     status: (typeof ENUM_EXTENSION_REQUEST_STATUS)[keyof typeof ENUM_EXTENSION_REQUEST_STATUS];
     rejectDetails?: string;
-    reject_evidence: string; // ref -> RejectReason
+    reject_evidence: string;
     reviewedRequestAt?: Date;
 }
