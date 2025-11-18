@@ -75,6 +75,7 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
                         else: 0,
                     },
                 },
+                totalRating: { $size: '$feedbacks' },
             },
         },
         {
@@ -145,6 +146,7 @@ const getMyService = async (userId: string) => {
                         0,
                     ],
                 },
+                totalRating: { $size: '$feedbacks' },
             },
         },
         {
