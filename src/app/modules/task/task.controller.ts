@@ -50,7 +50,10 @@ const getMyTask = catchAsync(async (req, res) => {
 const getSingleTask = catchAsync(async (req, res) => {
     const id = req.params.id;
 
-    const result = await TaskServices.getSingleTaskFromDB(id);
+    const result = await TaskServices.getSingleTaskFromDB(
+        req?.user?.profileId,
+        id
+    );
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,

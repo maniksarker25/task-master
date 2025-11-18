@@ -25,6 +25,7 @@ app.use(
             'https://taskalley.com',
             'https://www.taskalley.com',
             'http://localhost:3001',
+            'http://10.10.20.48:3000',
         ],
         credentials: true,
     })

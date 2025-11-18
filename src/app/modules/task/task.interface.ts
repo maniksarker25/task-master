@@ -6,6 +6,11 @@ import {
     ENUM_TASK_STATUS,
 } from './task.enum';
 
+export interface IStatusWithDate {
+    status: (typeof ENUM_TASK_STATUS)[keyof typeof ENUM_TASK_STATUS];
+    date: Date;
+}
+
 export interface ITask {
     title: string;
     category: Types.ObjectId;
@@ -28,4 +33,5 @@ export interface ITask {
     preferredTime?: string;
     description: string;
     task_attachments?: string[];
+    statusWithDate: IStatusWithDate[];
 }

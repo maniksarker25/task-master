@@ -10,6 +10,13 @@ import {
 } from './service.model';
 
 const createServiceIntoDB = async (userId: string, payload: IService) => {
+    const isExist = await ServiceModel.findOne({ provider: userId });
+    if (isExist) {
+        throw new AppError(
+            httpStatus.BAD_GATEWAY,
+            'You already have a service'
+        );
+    }
     const result = await serviceModel.create({ ...payload, provider: userId });
     return result;
 };
@@ -99,6 +106,57 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
         result,
     };
 };
+const getMyService = async (userId: string) => {
+    const service = await ServiceModel.aggregate([
+        {
+            $match: {
+                provider: new mongoose.Types.ObjectId(userId),
+            },
+        },
+
+        {
+            $lookup: {
+                from: 'categories',
+                localField: 'category',
+                foreignField: '_id',
+                as: 'category',
+            },
+        },
+        {
+            $addFields: {
+                category: { $arrayElemAt: ['$category', 0] },
+            },
+        },
+
+        {
+            $lookup: {
+                from: 'feedbacks',
+                localField: 'provider',
+                foreignField: 'provider',
+                as: 'feedbacks',
+            },
+        },
+        {
+            $addFields: {
+                averageRating: {
+                    $cond: [
+                        { $gt: [{ $size: '$feedbacks' }, 0] },
+                        { $avg: '$feedbacks.rating' },
+                        0,
+                    ],
+                },
+            },
+        },
+        {
+            $project: {
+                feedbacks: 0,
+            },
+        },
+    ]);
+
+    return service[0] || [];
+};
+
 const deleteServiceFromDB = async (profileId: string, serviceId: string) => {
     const service = await serviceModel.findOne({
         _id: serviceId,
@@ -191,5 +249,6 @@ const ServiceServices = {
     getSingleServiceFromDB,
     updateServiceFromDB,
     toggleServiceActiveStatusFromDB,
+    getMyService,
 };
 export default ServiceServices;

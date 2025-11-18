@@ -13,7 +13,10 @@ import TaskModel from './task.model';
 
 const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
     const result = (
-        await TaskModel.create({ ...payload, customer: profileId })
+        await TaskModel.create({
+            ...payload,
+            customer: profileId,
+        })
     ).populate('category');
     return result;
 };
@@ -82,6 +85,7 @@ const getAllTaskFromDB = async (query: Record<string, any>) => {
                 totalOffer: { $size: '$bids' },
             },
         },
+
         {
             $lookup: {
                 from: 'customers',
@@ -308,7 +312,7 @@ const getMyTaskFromDB = async (
         result,
     };
 };
-const getSingleTaskFromDB = async (id: string) => {
+const getSingleTaskFromDB = async (userId: string, id: string) => {
     const pipeline: any[] = [
         {
             $match: {
@@ -331,6 +335,36 @@ const getSingleTaskFromDB = async (id: string) => {
         },
         {
             $lookup: {
+                from: 'bids',
+                let: { taskId: '$_id' },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ['$task', '$$taskId'] },
+                                    {
+                                        $eq: [
+                                            '$provider',
+                                            new mongoose.Types.ObjectId(userId),
+                                        ],
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                    { $project: { _id: 1 } },
+                ],
+                as: 'userBid',
+            },
+        },
+        {
+            $addFields: {
+                isBid: { $gt: [{ $size: '$userBid' }, 0] },
+            },
+        },
+        {
+            $lookup: {
                 from: 'customers',
                 localField: 'customer',
                 foreignField: '_id',
@@ -347,6 +381,24 @@ const getSingleTaskFromDB = async (id: string) => {
             },
         },
         { $unwind: { path: '$customer', preserveNullAndEmptyArrays: true } },
+        {
+            $lookup: {
+                from: 'providers',
+                localField: 'provider',
+                foreignField: '_id',
+                as: 'provider',
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            name: 1,
+                            profile_image: 1,
+                        },
+                    },
+                ],
+            },
+        },
+        { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
         {
             $lookup: {
                 from: 'categories',
@@ -369,6 +421,7 @@ const getSingleTaskFromDB = async (id: string) => {
         {
             $project: {
                 bids: 0,
+                userBid: 0,
             },
         },
     ];
@@ -428,13 +481,14 @@ const acceptOfferByProvider = async (taskId: string, currentUserId: string) => {
     }
 
     task.status = ENUM_TASK_STATUS.IN_PROGRESS;
+
     await task.save();
 
     return task;
 };
 
 const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
-    const bidData = await bidModel.findById(bidID);
+    const bidData: any = await bidModel.findById(bidID);
     if (!bidData) {
         throw new AppError(httpStatus.NOT_FOUND, 'Bid not found');
     }
@@ -453,6 +507,10 @@ const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
                 provider: bidData.provider,
                 status: ENUM_TASK_STATUS.IN_PROGRESS,
             },
+            statusWithDate: [
+                { status: ENUM_TASK_STATUS.OFFERED, date: bidData.createdAt },
+                { status: ENUM_TASK_STATUS.IN_PROGRESS, date: Date.now() },
+            ],
         },
         { new: true }
     );
