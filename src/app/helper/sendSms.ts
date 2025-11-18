@@ -1,32 +1,4 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// import httpStatus from 'http-status';
-// import twilio from 'twilio';
-// import config from '../config';
-// import AppError from '../error/appError';
-
-// const client = twilio(config.twilio.accountSid, config.twilio.authToken);
-// const sendSMS = async (to: string, message: string) => {
-//     try {
-//         await client.messages.create({
-//             body: message,
-//             from: 'whatsapp:+14155238886',
-//             to: 'whatsapp:' + to,
-//         });
-
-//         return {
-//             invalid: false,
-//             message: `Message sent successfully to ${to}`,
-//         };
-//     } catch (error) {
-//         console.error('Error sending SMS:', error);
-
-//         throw new AppError(
-//             httpStatus.INTERNAL_SERVER_ERROR,
-//             'Failed to send sms'
-//         );
-//     }
-// };
 
 // export default sendSMS;
 // @ts-ignore
@@ -53,9 +25,10 @@ export const sendSMS = async (
 ): Promise<SmsResponse> => {
     try {
         const response: SmsResponse = await mocean.sms().send({
-            'mocean-from': 'Task alley',
+            'mocean-from': '12345',
             'mocean-to': phoneNumber,
-            'mocean-text': smsMessage,
+            // 'mocean-text': smsMessage,
+            'mocean-text': 'Hello, this is a test.',
         });
 
         console.log('✅ SMS sent successfully:', response);

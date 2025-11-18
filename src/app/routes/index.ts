@@ -18,6 +18,8 @@ import { questionRoutes } from '../modules/question/question.routes';
 import { extensionRequestRoutes } from '../modules/extensionRequest/extensionRequest.routes';
 import { cancellationRequestRoutes } from '../modules/cancellationRequest/cancellationRequest.routes';
 import { CustomerRoutes } from '../modules/customer/customer.routes';
+import { referralRoutes } from '../modules/referral/referral.routes';
+import { faqRoutes } from '../modules/faq/faq.routes';
 
 const router = Router();
 
@@ -95,6 +97,14 @@ const moduleRoutes = [
     {
         path: '/customer',
         router: CustomerRoutes,
+    },
+    {
+        path: '/referral',
+        router: referralRoutes,
+    },
+    {
+        path: '/faq',
+        router: faqRoutes,
     },
 ];
 

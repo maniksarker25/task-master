@@ -6,6 +6,7 @@ export enum ENUM_TASK_STATUS {
     CANCELLED = 'CANCELLED',
     DISPUTE = 'DISPUTE',
     LATE = 'LATE',
+    OFFERED = 'OFFERED',
 }
 
 export enum ENUM_PAYMENT_STATUS {
