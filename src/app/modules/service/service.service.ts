@@ -10,6 +10,13 @@ import {
 } from './service.model';
 
 const createServiceIntoDB = async (userId: string, payload: IService) => {
+    const isExist = await ServiceModel.findOne({ provider: userId });
+    if (isExist) {
+        throw new AppError(
+            httpStatus.BAD_GATEWAY,
+            'You already have a service'
+        );
+    }
     const result = await serviceModel.create({ ...payload, provider: userId });
     return result;
 };
@@ -106,6 +113,21 @@ const getMyService = async (userId: string) => {
                 provider: new mongoose.Types.ObjectId(userId),
             },
         },
+
+        {
+            $lookup: {
+                from: 'categories',
+                localField: 'category',
+                foreignField: '_id',
+                as: 'category',
+            },
+        },
+        {
+            $addFields: {
+                category: { $arrayElemAt: ['$category', 0] },
+            },
+        },
+
         {
             $lookup: {
                 from: 'feedbacks',
