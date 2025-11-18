@@ -50,6 +50,25 @@ const deleteBid = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const updateBid = catchAsync(async (req, res) => {
+    const result = await BidServices.updateBidIntoDB(
+        req.params.id,
+        req.user.profileId,
+        req.body
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Bid Update successfully',
+        data: result,
+    });
+});
 
-const BidController = { createBid, getAllBid, deleteBid, getBidsByTask };
+const BidController = {
+    createBid,
+    getAllBid,
+    deleteBid,
+    getBidsByTask,
+    updateBid,
+};
 export default BidController;
