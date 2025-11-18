@@ -4,40 +4,42 @@ import sendResponse from '../../utilities/sendResponse';
 import MetaService from './meta.service';
 
 const getDashboardMetaData = catchAsync(async (req, res) => {
-  const result = await MetaService.getDashboardMetaData();
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: 'Dashboard meta data retrieved successfully',
-    data: result,
-  });
+    const result = await MetaService.getDashboardMetaData();
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Dashboard meta data retrieved successfully',
+        data: result,
+    });
 });
 
-const getUserChartData = catchAsync(async (req, res) => {
-  const result = await MetaService.getUserChartData(Number(req?.query.year));
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: 'User chart data retrieved successfully',
-    data: result,
-  });
+const getCustomerChartData = catchAsync(async (req, res) => {
+    const result = await MetaService.getCustomerChartData(
+        Number(req?.query.year)
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'User chart data retrieved successfully',
+        data: result,
+    });
 });
-const getSubscriptionChartData = catchAsync(async (req, res) => {
-  const result = await MetaService.getSubscriptionChartData(
-    Number(req?.query.year),
-  );
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: 'Subscription chart data retrieved successfully',
-    data: result,
-  });
+const getProviderChartData = catchAsync(async (req, res) => {
+    const result = await MetaService.getProviderChartData(
+        Number(req?.query.year)
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Provider chart data retrieved successfully',
+        data: result,
+    });
 });
 
 const MetaController = {
-  getDashboardMetaData,
-  getUserChartData,
-  getSubscriptionChartData,
+    getDashboardMetaData,
+    getCustomerChartData,
+    getProviderChartData,
 };
 
 export default MetaController;
