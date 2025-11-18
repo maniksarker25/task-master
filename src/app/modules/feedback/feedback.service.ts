@@ -41,10 +41,11 @@ const createFeedbackIntoDB = async (
 const getMyFeedBackFromDB = async (currentUserID: string) => {
     const feedBack = await FeedbackModel.find({
         provider: currentUserID,
-    });
+    }).populate({ path: 'customer', select: 'name profile_image' });
 
     return feedBack;
 };
+
 const getFeedBackByTaskFromDB = async (taskId: string) => {
     const task = await TaskModel.findById(taskId);
     if (!task) {
