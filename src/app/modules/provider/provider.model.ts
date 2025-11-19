@@ -65,6 +65,12 @@ const providerSchema = new Schema<IProvider>(
             type: String,
             default: false,
         },
+        bankAccountNumber: {
+            type: String,
+        },
+        bankName: {
+            type: String,
+        },
     },
     {
         timestamps: true,

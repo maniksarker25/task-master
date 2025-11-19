@@ -4,22 +4,22 @@ import { ManageRoutes } from '../modules/manage-web/manage.routes';
 import { notificationRoutes } from '../modules/notification/notification.routes';
 import { userRoutes } from '../modules/user/user.routes';
 
-import { categoryRoutes } from '../modules/category/category.routes';
-import { subscriberRoutes } from '../modules/subscriber/subscriber.routes';
-import { superAdminRoutes } from '../modules/superAdmin/superAdmin.routes';
-import { taskRoutes } from '../modules/task/task.routes';
 import { bidRoutes } from '../modules/bid/bid.routes';
+import { cancellationRequestRoutes } from '../modules/cancellationRequest/cancellationRequest.routes';
+import { categoryRoutes } from '../modules/category/category.routes';
+import { CustomerRoutes } from '../modules/customer/customer.routes';
+import { extensionRequestRoutes } from '../modules/extensionRequest/extensionRequest.routes';
+import { feedbackRoutes } from '../modules/feedback/feedback.routes';
+import { metaRoutes } from '../modules/meta/meta.routes';
 import { promoRoutes } from '../modules/promo/promo.routes';
 import { promoUseRoutes } from '../modules/promoUse/promoUse.routes';
 import { providerRoutes } from '../modules/provider/provider.routes';
-import { serviceRoutes } from '../modules/service/service.routes';
-import { feedbackRoutes } from '../modules/feedback/feedback.routes';
 import { questionRoutes } from '../modules/question/question.routes';
-import { extensionRequestRoutes } from '../modules/extensionRequest/extensionRequest.routes';
-import { cancellationRequestRoutes } from '../modules/cancellationRequest/cancellationRequest.routes';
-import { CustomerRoutes } from '../modules/customer/customer.routes';
 import { referralRoutes } from '../modules/referral/referral.routes';
-import { faqRoutes } from '../modules/faq/faq.routes';
+import { serviceRoutes } from '../modules/service/service.routes';
+import { subscriberRoutes } from '../modules/subscriber/subscriber.routes';
+import { superAdminRoutes } from '../modules/superAdmin/superAdmin.routes';
+import { taskRoutes } from '../modules/task/task.routes';
 
 const router = Router();
 
@@ -103,8 +103,8 @@ const moduleRoutes = [
         router: referralRoutes,
     },
     {
-        path: '/faq',
-        router: faqRoutes,
+        path: '/meta',
+        router: metaRoutes,
     },
 ];
 

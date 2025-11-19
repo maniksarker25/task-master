@@ -22,5 +22,11 @@ router.delete(
     auth(USER_ROLE.provider),
     BidController.deleteBid
 );
+router.patch(
+    '/update-bid/:id',
+    auth(USER_ROLE.provider),
+    validateRequest(BidValidations.updateBidZodSchema),
+    BidController.updateBid
+);
 
 export const bidRoutes = router;

@@ -219,9 +219,10 @@ const getMyTaskFromDB = async (
         if (minPrice !== null) filters.budget.$gte = minPrice;
         if (maxPrice !== null) filters.budget.$lte = maxPrice;
     }
+
     // Sorting
-    const sortBy = query.sortBy || 'createdAt'; // default sorting field
-    const sortOrder = query.sortOrder === 'asc' ? 1 : -1; // default descending
+    const sortBy = query.sortBy || 'createdAt';
+    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
     const sortStage = { [sortBy]: sortOrder };
 
     const pipeline: any[] = [

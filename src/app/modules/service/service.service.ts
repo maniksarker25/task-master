@@ -75,6 +75,7 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
                         else: 0,
                     },
                 },
+                totalRating: { $size: '$feedbacks' },
             },
         },
         {
@@ -145,6 +146,7 @@ const getMyService = async (userId: string) => {
                         0,
                     ],
                 },
+                totalRating: { $size: '$feedbacks' },
             },
         },
         {
@@ -206,12 +208,76 @@ const toggleServiceActiveStatusFromDB = async (
     return service;
 };
 const getSingleServiceFromDB = async (serviceId: string) => {
-    const service = await serviceModel.findById(serviceId);
-    if (!service) {
-        throw new AppError(httpStatus.NOT_FOUND, 'Service Not Found');
-    }
+    const service = await ServiceModel.aggregate([
+        {
+            $match: { _id: new mongoose.Types.ObjectId(serviceId) },
+        },
+        {
+            $lookup: {
+                from: 'categories',
+                localField: 'category',
+                foreignField: '_id',
+                as: 'category',
+            },
+        },
 
-    return service;
+        {
+            $addFields: {
+                category: { $arrayElemAt: ['$category', 0] },
+            },
+        },
+        {
+            $lookup: {
+                from: 'providers',
+                localField: 'provider',
+                foreignField: '_id',
+                as: 'provider',
+                pipeline: [
+                    {
+                        $project: {
+                            name: 1,
+                            profile_image: 1,
+                        },
+                    },
+                ],
+            },
+        },
+
+        {
+            $addFields: {
+                provider: { $arrayElemAt: ['$provider', 0] },
+            },
+        },
+
+        {
+            $lookup: {
+                from: 'feedbacks',
+                localField: 'provider',
+                foreignField: 'provider',
+                as: 'feedbacks',
+            },
+        },
+
+        {
+            $addFields: {
+                averageRating: {
+                    $cond: {
+                        if: { $gt: [{ $size: '$feedbacks' }, 0] },
+                        then: { $avg: '$feedbacks.rating' },
+                        else: 0,
+                    },
+                },
+                totalRating: { $size: '$feedbacks' },
+            },
+        },
+        {
+            $project: {
+                feedbacks: 0,
+            },
+        },
+    ]);
+
+    return service[0] || null;
 };
 const updateServiceFromDB = async (profileId: string, payload: any) => {
     const service = await serviceModel.findOne({ provider: profileId });
