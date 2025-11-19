@@ -177,22 +177,25 @@ const rejectRequestFromDB = async (
     extensionID: string,
     payload: Partial<IExtensionRequest>
 ) => {
-    // 1️⃣ Find the extension request
-    const extensionRequest = await extensionRequestModel.findById(extensionID);
+    const extensionRequest: any = await extensionRequestModel
+        .findById(extensionID)
+        .populate({
+            path: 'task',
+            select: 'provider customer',
+            populate: { path: 'provider customer', select: '_id' },
+        });
+
     if (!extensionRequest) {
         throw new AppError(httpStatus.NOT_FOUND, 'Extension Request not found');
     }
 
-    // 2️⃣ Find the related task
-    const task = await TaskModel.findById(extensionRequest.task);
-    if (!task) {
+    if (!extensionRequest.task) {
         throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
     }
 
-    // 3️⃣ Check authorization (must be provider or customer of the task)
     const isAuthorized =
-        task.provider?.toString() === profileId ||
-        task.customer?.toString() === profileId;
+        extensionRequest.task.provider?.toString() === profileId ||
+        extensionRequest.task.customer?.toString() === profileId;
 
     if (!isAuthorized) {
         throw new AppError(
@@ -201,14 +204,12 @@ const rejectRequestFromDB = async (
         );
     }
 
-    // 4️⃣ Prepare update data safely
     const updateData: Partial<IExtensionRequest> = {
         status: ENUM_EXTENSION_REQUEST_STATUS.REJECTED,
         rejectDetails: payload.rejectDetails,
         reject_evidence: payload.reject_evidence,
     };
 
-    // 5️⃣ Update the document
     const result = await extensionRequestModel.findByIdAndUpdate(
         extensionID,
         { $set: updateData },
