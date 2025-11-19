@@ -46,6 +46,12 @@ const customerSchema = new Schema<ICustomer>(
             type: Boolean,
             default: false,
         },
+        bankAccountNumber: {
+            type: String,
+        },
+        bankName: {
+            type: String,
+        },
     },
     {
         timestamps: true,
