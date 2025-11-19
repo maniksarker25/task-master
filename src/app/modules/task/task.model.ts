@@ -79,6 +79,7 @@ const taskSchema = new Schema<ITask>(
         },
         preferredDate: { type: Date },
         preferredTime: { type: String },
+        preferredDeliveryDateTime: { type: Date },
         description: { type: String, required: true },
         task_attachments: [{ type: String }],
         statusWithDate: {
