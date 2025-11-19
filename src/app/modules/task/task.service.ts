@@ -432,30 +432,22 @@ const getSingleTaskFromDB = async (userId: string, id: string) => {
 };
 
 const deleteTaskFromDB = async (id: string, currentUserId: string) => {
-    const taskData = await TaskModel.findById(id);
+    const taskData = await TaskModel.findOne({
+        _id: id,
+        customer: currentUserId,
+    });
 
     if (!taskData) {
         throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
     }
-    if (taskData.provider?.toString() !== currentUserId) {
-        throw new AppError(
-            httpStatus.UNAUTHORIZED,
-            'You are not authorized to accept this task'
-        );
-    }
 
-    if (taskData.provider) {
-        taskData.isDeleted = true;
+    await Promise.all([
+        bidModel.deleteMany({ task: taskData._id }),
+        QuestionModel.deleteMany({ task: taskData._id }),
+        TaskModel.findByIdAndDelete(id),
+    ]);
 
-        await taskData.save();
-    } else {
-        await bidModel.deleteMany({ task: taskData._id });
-        await QuestionModel.deleteMany({ task: taskData._id });
-
-        await TaskModel.findByIdAndDelete(id);
-    }
-
-    return;
+    return taskData;
 };
 
 const acceptOfferByProvider = async (taskId: string, currentUserId: string) => {

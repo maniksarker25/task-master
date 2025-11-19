@@ -105,6 +105,20 @@ const getAllCustomerFromDB = async (query: Record<string, unknown>) => {
         },
         {
             $lookup: {
+                from: 'users',
+                localField: 'user',
+                foreignField: '_id',
+                as: 'user',
+                pipeline: [{ $project: { isBlocked: 1, isAdminVerified: 1 } }],
+            },
+        },
+        {
+            $addFields: {
+                user: { $arrayElemAt: ['$user', 0] },
+            },
+        },
+        {
+            $lookup: {
                 from: 'tasks',
                 localField: '_id',
                 foreignField: 'customer',

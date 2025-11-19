@@ -48,19 +48,19 @@ const auth = (...requiredRoles: TUserRole[]) => {
             if (!user) {
                 throw new AppError(
                     httpStatus.UNAUTHORIZED,
-                    'Unauthorized access'
+                    'Unauthorized access 1'
                 );
             }
             if (user.isDeleted) {
                 throw new AppError(
                     httpStatus.UNAUTHORIZED,
-                    'Unauthorized access'
+                    'Unauthorized access 2'
                 );
             }
             if (user.isBlocked) {
                 throw new AppError(
                     httpStatus.UNAUTHORIZED,
-                    'Unauthorized access'
+                    'Your account is blocked'
                 );
             }
             if (!user?.isVerified) {
