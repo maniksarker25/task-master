@@ -26,5 +26,10 @@ router.get(
     auth(USER_ROLE.admin, USER_ROLE.superAdmin),
     CustomerController.getAllCustomer
 );
+router.get(
+    '/get-single/:id',
+    auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+    CustomerController.getSingleCustomer
+);
 
 export const CustomerRoutes = router;

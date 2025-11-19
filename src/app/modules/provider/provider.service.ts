@@ -110,8 +110,17 @@ const getAllProviderFromDB = async (query: Record<string, unknown>) => {
     };
 };
 
+const getSingleProvider = async (id: string) => {
+    const result = await Provider.findById(id).populate({
+        path: 'user',
+        select: 'isBlocked isAdminVerified',
+    });
+    return result;
+};
+
 const ProviderServices = {
     updateProviderFromDB,
     getAllProviderFromDB,
+    getSingleProvider,
 };
 export default ProviderServices;
