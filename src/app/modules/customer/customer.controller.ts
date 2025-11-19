@@ -33,10 +33,20 @@ const getAllCustomer = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const getSingleCustomer = catchAsync(async (req, res) => {
+    const result = await CustomerServices.getSingleCustomer(req.params.id);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Single customer retrieved successfully',
+        data: result,
+    });
+});
 
 const CustomerController = {
     updateUserProfile,
     getAllCustomer,
+    getSingleCustomer,
 };
 
 export default CustomerController;

@@ -16,6 +16,7 @@ const extensionRequestIntoDb = async (
     let requestTo: any;
     const task = await TaskModel.findOne({
         $or: [{ provider: profileId }, { customer: profileId }],
+        _id: payload.task,
     });
     if (!task) {
         throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
@@ -37,6 +38,7 @@ const extensionRequestIntoDb = async (
             'Extension request can only be made for in-progress tasks'
         );
     }
+
     const extensionRequestData = {
         task: payload.task,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,9 +50,7 @@ const extensionRequestIntoDb = async (
         requestedDateTime: payload.requestedDateTime,
         reason: payload.reason,
     };
-    const result = (
-        await extensionRequestModel.create(extensionRequestData)
-    ).populate('requestedBy');
+    const result = await extensionRequestModel.create(extensionRequestData);
     return result;
 };
 
@@ -73,16 +73,10 @@ const getExtensionRequestByTaskFromDB = async (
     }
 
     const result = await extensionRequestModel
-        .findOne({ task: taskId })
-        .populate('requestedBy')
-        .populate('task');
+        .find({ task: taskId })
+        .populate('requestTo', 'name profile_image')
+        .populate({ path: 'requestFrom', select: 'name profile_image' });
 
-    if (!result) {
-        throw new AppError(
-            httpStatus.NOT_FOUND,
-            'No extension request found for this task'
-        );
-    }
     return result;
 };
 const cancelExtensionRequestByTaskFromDB = async (

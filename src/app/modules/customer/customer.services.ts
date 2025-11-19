@@ -153,9 +153,18 @@ const getAllCustomerFromDB = async (query: Record<string, unknown>) => {
     };
 };
 
+const getSingleCustomer = async (id: string) => {
+    const result = await Customer.findById(id).populate({
+        path: 'user',
+        select: 'isBlocked isAdminVerified',
+    });
+    return result;
+};
+
 const CustomerServices = {
     updateUserProfile,
     getAllCustomerFromDB,
+    getSingleCustomer,
 };
 
 export default CustomerServices;
