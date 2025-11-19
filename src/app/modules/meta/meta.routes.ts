@@ -6,20 +6,20 @@ import MetaController from './meta.controller';
 const router = express.Router();
 
 router.get(
-  '/get-dashboard-meta-data',
-  auth(USER_ROLE.superAdmin),
-  MetaController.getDashboardMetaData,
+    '/meta-data',
+    auth(USER_ROLE.superAdmin, USER_ROLE.admin),
+    MetaController.getDashboardMetaData
 );
 
 router.get(
-  '/user-chart-data',
-  auth(USER_ROLE.superAdmin),
-  MetaController.getUserChartData,
+    '/customer-chart-data',
+    auth(USER_ROLE.superAdmin, USER_ROLE.admin),
+    MetaController.getCustomerChartData
 );
 router.get(
-  '/subscription-chart-data',
-  auth(USER_ROLE.superAdmin),
-  MetaController.getSubscriptionChartData,
+    '/provider-chart-data',
+    auth(USER_ROLE.superAdmin, USER_ROLE.admin),
+    MetaController.getProviderChartData
 );
 
 export const metaRoutes = router;

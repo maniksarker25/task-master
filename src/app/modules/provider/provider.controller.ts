@@ -22,6 +22,18 @@ const getAllProvider = catchAsync(async (req, res) => {
         data: result,
     });
 });
-
-const ProviderController = { getAllProvider, updateProvider };
+const getSingleProvider = catchAsync(async (req, res) => {
+    const result = await ProviderServices.getSingleProvider(req.params.id);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Single provider retrieved successfully',
+        data: result,
+    });
+});
+const ProviderController = {
+    getAllProvider,
+    updateProvider,
+    getSingleProvider,
+};
 export default ProviderController;

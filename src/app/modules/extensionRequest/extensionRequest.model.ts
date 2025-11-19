@@ -9,12 +9,22 @@ const extensionRequestSchema = new Schema<IExtensionRequest>(
             ref: 'Task',
             required: true,
         },
-        requestedBy: {
+        requestFrom: {
             type: Schema.Types.ObjectId,
             required: true,
-            refPath: 'requestedByModel',
+            refPath: 'requestedFromModel',
         },
-        requestedByModel: {
+        requestedFromModel: {
+            type: String,
+            required: true,
+            enum: ['Customer', 'Provider'],
+        },
+        requestTo: {
+            type: Schema.Types.ObjectId,
+            required: true,
+            refPath: 'requestToModel',
+        },
+        requestToModel: {
             type: String,
             required: true,
             enum: ['Customer', 'Provider'],
@@ -23,11 +33,7 @@ const extensionRequestSchema = new Schema<IExtensionRequest>(
             type: Date,
             required: true,
         },
-        requestedDate: {
-            type: Date,
-            required: true,
-        },
-        requestedAt: {
+        requestedDateTime: {
             type: Date,
             required: true,
         },
@@ -40,11 +46,12 @@ const extensionRequestSchema = new Schema<IExtensionRequest>(
             enum: Object.values(ENUM_EXTENSION_REQUEST_STATUS),
             default: ENUM_EXTENSION_REQUEST_STATUS.PENDING,
         },
-        rejectDetails: { type: String },
-        reject_evidence: { type: String },
+        rejectDetails: { type: String, default: '' },
+        reject_evidence: { type: String, default: '' },
 
         reviewedRequestAt: {
             type: Date,
+            default: null,
         },
     },
     { timestamps: true }
