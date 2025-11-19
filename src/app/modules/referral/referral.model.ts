@@ -18,6 +18,7 @@ const referralSchema = new Schema<IReferral>(
             enum: Object.values(ENUM_REFERRAL_STATUS),
             default: ENUM_REFERRAL_STATUS.ACTIVE,
         },
+        code: { type: String, required: true },
     },
     { timestamps: true }
 );
