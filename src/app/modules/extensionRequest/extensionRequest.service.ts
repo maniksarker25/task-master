@@ -182,7 +182,6 @@ const rejectRequestFromDB = async (
         .populate({
             path: 'task',
             select: 'provider customer',
-            populate: { path: 'provider customer', select: '_id' },
         });
 
     if (!extensionRequest) {
