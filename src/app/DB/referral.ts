@@ -38,7 +38,6 @@ const seedReferral = async () => {
                 value: 50, // default or dynamic
                 referralFor: ENUM_REFERRAL_FOR.CUSTOMER,
                 status: ENUM_REFERRAL_STATUS.INACTIVE,
-                code: Math.random().toString(36).substring(2, 8).toUpperCase(),
             });
         }
 
@@ -47,7 +46,6 @@ const seedReferral = async () => {
                 value: 50, // default or dynamic
                 referralFor: ENUM_REFERRAL_FOR.PROVIDER,
                 status: ENUM_REFERRAL_STATUS.INACTIVE,
-                code: Math.random().toString(36).substring(2, 8).toUpperCase(),
             });
         }
 

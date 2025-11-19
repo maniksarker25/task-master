@@ -11,7 +11,6 @@ export const createReferralZodSchema = z.object({
             required_error: 'ReferelFor is required',
         }),
         status: z.nativeEnum(ENUM_REFERRAL_STATUS).optional(),
-        code: z.string(),
     }),
 });
 
@@ -21,7 +20,6 @@ export const updateReferralZodSchema = z.object({
         value: z.number().positive('Value must be positive').optional(),
         referralFor: z.nativeEnum(ENUM_REFERRAL_FOR).optional(),
         status: z.nativeEnum(ENUM_REFERRAL_STATUS).optional(),
-        code: z.string().optional(),
     }),
 });
 export const updateReferralValueZodSchema = z.object({
