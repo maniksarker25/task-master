@@ -85,11 +85,6 @@ const taskSchema = new Schema<ITask>(
         statusWithDate: {
             type: [statusWithDateSchema],
         },
-        referralCode: {
-            type: String,
-            default: Math.random().toString(36).substring(2, 8).toUpperCase(),
-            unique: true,
-        },
     },
 
     { timestamps: true }

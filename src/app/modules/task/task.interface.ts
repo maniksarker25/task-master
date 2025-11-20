@@ -35,5 +35,4 @@ export interface ITask {
     description: string;
     task_attachments?: string[];
     statusWithDate: IStatusWithDate[];
-    referralCode?: string;
 }
