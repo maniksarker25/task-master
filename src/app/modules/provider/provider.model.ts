@@ -71,6 +71,11 @@ const providerSchema = new Schema<IProvider>(
         bankName: {
             type: String,
         },
+        referralCode: {
+            type: String,
+            default: Math.random().toString(36).substring(2, 7).toUpperCase(),
+            unique: true,
+        },
     },
     {
         timestamps: true,
