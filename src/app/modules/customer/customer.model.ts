@@ -48,9 +48,11 @@ const customerSchema = new Schema<ICustomer>(
         },
         bankAccountNumber: {
             type: String,
+            default: '',
         },
         bankName: {
             type: String,
+            default: '',
         },
         referralCode: {
             type: String,
