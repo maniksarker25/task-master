@@ -37,6 +37,7 @@ const auth = (...requiredRoles: TUserRole[]) => {
             } catch (err) {
                 throw new AppError(httpStatus.UNAUTHORIZED, 'Token is expired');
             }
+
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { id, role, email, profileId, iat } = decoded;
 
