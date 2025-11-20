@@ -5,6 +5,7 @@ import { Customer } from '../customer/customer.model';
 import ReferralUseModel from './referralUse.model';
 import { Provider } from '../provider/provider.model';
 import ReferralModel from '../referral/referral.model';
+import { ENUM_REFERRAL_FOR } from '../referral/referral.enum';
 
 type TRole = 'customer' | 'provider';
 
@@ -36,7 +37,7 @@ const verifyReferralCodeFromDB = async (
             throw new AppError(httpStatus.NOT_FOUND, 'Customer not found');
 
         const referral = await ReferralModel.findOne({
-            referralFor: 'customer',
+            referralFor: ENUM_REFERRAL_FOR.CUSTOMER,
         });
         if (!referral)
             throw new AppError(
@@ -86,7 +87,7 @@ const verifyReferralCodeFromDB = async (
             throw new AppError(httpStatus.NOT_FOUND, 'Provider not found');
 
         const referral = await ReferralModel.findOne({
-            referralFor: 'provider',
+            referralFor: ENUM_REFERRAL_FOR.PROVIDER,
         });
 
         if (!referral)
