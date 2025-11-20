@@ -68,7 +68,7 @@ router.post(
 );
 router.patch(
     '/verify-user/:id',
-    auth(USER_ROLE.admin),
+    auth(USER_ROLE.admin, USER_ROLE.superAdmin),
     userControllers.adminVerifyUser
 );
 

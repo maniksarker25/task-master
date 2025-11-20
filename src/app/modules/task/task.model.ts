@@ -43,7 +43,11 @@ const taskSchema = new Schema<ITask>(
             default: ENUM_PAYMENT_STATUS.UNPAID,
         },
 
-        provider: { type: Schema.Types.ObjectId, ref: 'Provider' },
+        provider: {
+            type: Schema.Types.ObjectId,
+            ref: 'Provider',
+            default: null,
+        },
         customer: {
             type: Schema.Types.ObjectId,
             ref: 'Customer',

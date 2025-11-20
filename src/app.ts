@@ -39,6 +39,11 @@ app.get('/', async (req, res) => {
     res.send({ message: 'nice to meet you 2' });
 });
 
+// (async () => {
+//     const ninResult = await verifyNIN('12345678901');
+//     console.log('NIN Result:', ninResult);
+// })();
+
 // global error handler
 app.use(globalErrorHandler);
 // not found
