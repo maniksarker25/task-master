@@ -186,7 +186,12 @@ const getMyTaskFromDB = async (
     const matchStage: any = {};
     if (userData.role == USER_ROLE.customer) {
         matchStage.customer = new mongoose.Types.ObjectId(userData.profileId);
-    } else {
+    }
+    if (
+        query.status != ENUM_TASK_STATUS.OPEN_FOR_BID &&
+        query.status != 'bidMade' &&
+        userData.role == USER_ROLE.provider
+    ) {
         matchStage.provider = new mongoose.Types.ObjectId(userData.profileId);
     }
 
@@ -219,6 +224,16 @@ const getMyTaskFromDB = async (
         if (minPrice !== null) filters.budget.$gte = minPrice;
         if (maxPrice !== null) filters.budget.$lte = maxPrice;
     }
+    if (userData.role === USER_ROLE.provider) {
+        if (query.status === 'bidMade') {
+            // Do NOT put inside filters!
+            delete filters.status;
+        }
+
+        if (query.status === 'bidReceived') {
+            filters.status = ENUM_TASK_STATUS.OPEN_FOR_BID;
+        }
+    }
 
     // Sorting
     const sortBy = query.sortBy || 'createdAt';
@@ -242,6 +257,19 @@ const getMyTaskFromDB = async (
                 as: 'bids',
             },
         },
+        // Apply "bidMade" filter here
+        ...(query.status === 'bidMade'
+            ? [
+                  {
+                      $match: {
+                          'bids.provider': new mongoose.Types.ObjectId(
+                              userData.profileId
+                          ),
+                      },
+                  },
+              ]
+            : []),
+
         {
             $addFields: {
                 totalOffer: { $size: '$bids' },

@@ -39,15 +39,19 @@ const providerSchema = new Schema<IProvider>(
         },
         identificationDocumentType: {
             type: String,
+            default: '',
         },
         identificationDocumentNumber: {
             type: String,
+            default: '',
         },
         identification_document: {
             type: String,
+            default: '',
         },
         bankVerificationNumber: {
             type: String,
+            default: '',
         },
         isVerified: {
             type: Boolean,
@@ -67,9 +71,11 @@ const providerSchema = new Schema<IProvider>(
         },
         bankAccountNumber: {
             type: String,
+            default: '',
         },
         bankName: {
             type: String,
+            default: '',
         },
         referralCode: {
             type: String,
