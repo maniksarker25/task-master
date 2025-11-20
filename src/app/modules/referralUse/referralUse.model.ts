@@ -6,13 +6,23 @@ const referralUseSchema = new Schema<IReferralUse>(
     {
         referrer: {
             type: Schema.Types.ObjectId,
-            ref: 'User',
+            refPath: 'referrerFromModel',
             required: true,
+        },
+        referrerFromModel: {
+            type: String,
+            required: true,
+            enum: ['Customer', 'Provider'],
         },
         referred: {
             type: Schema.Types.ObjectId,
-            ref: 'User',
+            refPath: 'referredFromModel',
             required: true,
+        },
+        referredFromModel: {
+            type: String,
+            required: true,
+            enum: ['Customer', 'Provider'],
         },
         status: {
             type: String,

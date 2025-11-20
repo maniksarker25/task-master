@@ -1,25 +1,17 @@
-import express from "express";
-import auth from "../../middlewares/auth";
-import { USER_ROLE } from "../user/user.constant";
-import validateRequest from "../../middlewares/validateRequest";
-import referralUseValidations from "./referralUse.validation";
-import referralUseController from "./referralUse.controller";
-import { uploadFile } from "../../helper/fileUploader";
+import express from 'express';
+import auth from '../../middlewares/auth';
+import { USER_ROLE } from '../user/user.constant';
+import validateRequest from '../../middlewares/validateRequest';
+import referralUseValidations from './referralUse.validation';
+import referralUseController from './referralUse.controller';
 
 const router = express.Router();
 
-router.patch(
-    "/update-profile",
-    auth(USER_ROLE.user),
-    uploadFile(),
-    (req, res, next) => {
-        if (req.body.data) {
-            req.body = JSON.parse(req.body.data);
-        }
-        next();
-    },
-    validateRequest(referralUseValidations.updateReferralUseData),
-    referralUseController.updateUserProfile
+router.post(
+    '/verify-referral-code',
+    validateRequest(referralUseValidations.verifyReferralCodeZodSchema),
+    auth(USER_ROLE.customer, USER_ROLE.provider),
+    referralUseController.verifyReferralCode
 );
 
 export const referralUseRoutes = router;
