@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { ENUM_REFERRAL_USE_STATUS } from './referralUse.enum';
 
 // ✅ Create Referral Use Zod Schema
-export const createReferralUseZodSchema = z.object({
+const createReferralUseZodSchema = z.object({
     body: z.object({
         referrer: z.string({ required_error: 'Referrer ID is required' }),
         referred: z.string({ required_error: 'Referred ID is required' }),
@@ -10,9 +10,14 @@ export const createReferralUseZodSchema = z.object({
         referral: z.string({ required_error: 'Referral ID is required' }),
     }),
 });
+const verifyReferralCodeZodSchema = z.object({
+    body: z.object({
+        code: z.string({ required_error: 'Code Missing' }),
+    }),
+});
 
 // ✅ Update Referral Use Zod Schema
-export const updateReferralUseZodSchema = z.object({
+const updateReferralUseZodSchema = z.object({
     body: z.object({
         referrer: z.string().optional(),
         referred: z.string().optional(),
@@ -24,6 +29,7 @@ export const updateReferralUseZodSchema = z.object({
 const ReferralUseValidations = {
     createReferralUseZodSchema,
     updateReferralUseZodSchema,
+    verifyReferralCodeZodSchema,
 };
 
 export default ReferralUseValidations;
