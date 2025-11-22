@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { ENUM_DISCOUNT_TYPE, ENUM_PROMO_STATUS } from './promo.enum';
 
 // ✅ Create Promo Zod Schema
-export const createPromoZodSchema = z.object({
+const createPromoZodSchema = z.object({
     body: z.object({
         promoCode: z
             .string({ required_error: 'Promo code is required' })
@@ -27,7 +27,7 @@ export const createPromoZodSchema = z.object({
 });
 
 // ✅ Update Promo Zod Schema
-export const updatePromoZodSchema = z.object({
+const updatePromoZodSchema = z.object({
     body: z.object({
         promoCode: z.string().optional(),
         promoType: z.string().optional(),
@@ -43,10 +43,16 @@ export const updatePromoZodSchema = z.object({
         usesDate: z.coerce.date().optional(),
     }),
 });
+const verifyPromoZodSchema = z.object({
+    body: z.object({
+        promoCode: z.string({ required_error: 'Promo code is required' }),
+    }),
+});
 
 const PromoValidations = {
     createPromoZodSchema,
     updatePromoZodSchema,
+    verifyPromoZodSchema,
 };
 
 export default PromoValidations;
