@@ -16,13 +16,7 @@ const promoUseSchema = new Schema<IPromoUse>(
         task: {
             type: Schema.Types.ObjectId,
             ref: 'Task',
-        },
-        service: {
-            type: Schema.Types.ObjectId,
-            ref: 'Service',
-        },
-        usedDate: {
-            type: Date,
+            required: true,
         },
     },
     { timestamps: true }
