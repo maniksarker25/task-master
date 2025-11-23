@@ -6,9 +6,8 @@ export interface IMessage {
     imageUrl: string[];
     videoUrl: string[];
     pdfUrl: string[];
-
+    seen: boolean;
     msgByUserId: ObjectId;
-    seenBy: ObjectId[];
     conversationId: ObjectId;
     createdAt: Date;
     updatedAt: Date;
