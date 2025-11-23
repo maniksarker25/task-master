@@ -95,11 +95,11 @@ const handleChat = async (
         );
         //send conversation --------------
         const conversationSender = await getSingleConversation(
-            currentUserId,
+            conversationId,
             msgByUserId
         );
         const conversationReceiver = await getSingleConversation(
-            msgByUserId,
+            conversationId,
             currentUserId
         );
 
