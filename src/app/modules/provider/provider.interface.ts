@@ -20,4 +20,5 @@ export interface IProvider {
     isAddressProvided?: boolean;
     bankName?: string;
     bankAccountNumber?: string;
+    referralCode?: string;
 }

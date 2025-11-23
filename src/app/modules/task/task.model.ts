@@ -90,6 +90,7 @@ const taskSchema = new Schema<ITask>(
             type: [statusWithDateSchema],
         },
     },
+
     { timestamps: true }
 );
 

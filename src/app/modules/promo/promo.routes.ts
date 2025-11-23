@@ -35,4 +35,11 @@ router.delete(
     auth(USER_ROLE.admin, USER_ROLE.superAdmin),
     promoController.deletePromo
 );
+
+router.get(
+    '/verify-promo',
+    auth(USER_ROLE.customer),
+    validateRequest(promoValidations.verifyPromoZodSchema),
+    promoController.verifyPromo
+);
 export const promoRoutes = router;
