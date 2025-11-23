@@ -70,7 +70,7 @@ const extensionRequestIntoDb = async (
         message,
         receiver: requestTo.toString(), // 👈 Send to the target user
         type: ENUM_NOTIFICATION_TYPE.EXTENSION_REQUEST,
-        redirectLink: `/task/${task._id}`,
+        redirectLink: `${task._id}`,
     });
 
     // Send push notification
