@@ -10,15 +10,49 @@ import QuestionModel from '../question/question.model';
 import { USER_ROLE } from '../user/user.constant';
 import { ENUM_TASK_STATUS } from './task.enum';
 import TaskModel from './task.model';
+import { User } from '../user/user.model';
+import Notification from '../notification/notification.model';
+import { sendBatchPushNotification } from '../../helper/sendPushNotification';
 
 const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
-    const result = (
-        await TaskModel.create({
+    try {
+        const createdTask = await TaskModel.create({
             ...payload,
             customer: profileId,
-        })
-    ).populate('category');
-    return result;
+        });
+
+        const result = await TaskModel.findById(createdTask._id).populate(
+            'category'
+        );
+
+        const admins = await User.find({ role: USER_ROLE.admin }).select(
+            '_id profileId'
+        );
+
+        if (admins.length > 0) {
+            const title = 'New Task Created';
+            const message = `A new task "${payload.title}" has been created`;
+
+            // 🔥 Save only ONE notification for all admins
+            await Notification.create({
+                title,
+                message,
+                receiver: USER_ROLE.admin,
+            });
+
+            // 🔥 But still send push notification to all admin devices
+            const adminUserIds = admins.map((admin) => admin._id.toString());
+            await sendBatchPushNotification(adminUserIds, title, message, {
+                taskId: result?._id.toString(),
+                type: 'task_created',
+            });
+        }
+
+        return result;
+    } catch (err) {
+        console.error('Failed to send task create admin notification:', err);
+        throw err;
+    }
 };
 
 const getAllTaskFromDB = async (query: Record<string, any>) => {
