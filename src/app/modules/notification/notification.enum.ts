@@ -1,7 +1,8 @@
+/* eslint-disable no-unused-vars */
 export enum ENUM_NOTIFICATION_TYPE {
     TASK_CREATED = 'TASK_CREATED',
     TASK_ACCEPTED = 'TASK_ACCEPTED',
     TASK_COMPLETED = 'TASK_COMPLETED',
-
+    EXTENSION_REQUEST = 'EXTENSION_REQUEST',
     GENERAL = 'general',
 }
