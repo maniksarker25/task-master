@@ -73,13 +73,11 @@ const handleChat = async (
             //send conversation
             const conversationSender = await getSingleConversation(
                 conversation._id.toString(),
-                currentUserId,
-                'participants'
+                currentUserId
             );
             const conversationReceiver = await getSingleConversation(
                 conversation._id.toString(),
-                data?.receiver,
-                'participants'
+                data?.receiver
             );
             io.to(currentUserId.toString()).emit(
                 'conversation',
