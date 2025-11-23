@@ -630,6 +630,34 @@ const completeTaskByCustomer = async (
 
     task.status = ENUM_TASK_STATUS.COMPLETED;
     await task.save();
+    // ================================
+    // 🔥 SEND NOTIFICATION TO ADMINS
+    // ================================
+
+    const title = 'Task Completed';
+    const message = `Task "${task.title}" has been completed`;
+    const redirectLink = `${task._id}`;
+
+    // 1. Save ONE notification for all admins
+    await Notification.create({
+        title,
+        message,
+        receiver: USER_ROLE.admin, // All admins
+        type: ENUM_NOTIFICATION_TYPE.TASK_COMPLETED,
+        redirectLink,
+    });
+
+    // 2. Push notification to all admin userIds
+    const admins = await User.find({ role: USER_ROLE.admin }).select('_id');
+
+    if (admins.length > 0) {
+        const adminUserIds = admins.map((a) => a._id.toString());
+
+        await sendBatchPushNotification(adminUserIds, title, message, {
+            type: ENUM_NOTIFICATION_TYPE.TASK_COMPLETED,
+            taskId: task._id.toString(),
+        });
+    }
 
     return task;
 };
