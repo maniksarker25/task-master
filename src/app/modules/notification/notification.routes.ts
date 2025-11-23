@@ -8,9 +8,9 @@ router.get(
     '/get-notifications',
     auth(
         USER_ROLE.superAdmin,
-        USER_ROLE.user,
-        USER_ROLE.player,
-        USER_ROLE.team
+        USER_ROLE.customer,
+        USER_ROLE.provider,
+        USER_ROLE.admin
     ),
     notificationController.getAllNotification
 );
@@ -18,16 +18,16 @@ router.patch(
     '/see-notifications',
     auth(
         USER_ROLE.superAdmin,
-        USER_ROLE.user,
-        USER_ROLE.player,
-        USER_ROLE.team
+        USER_ROLE.customer,
+        USER_ROLE.provider,
+        USER_ROLE.admin
     ),
     notificationController.seeNotification
 );
 
 router.delete(
     '/delete-notification/:id',
-    auth(USER_ROLE.user, USER_ROLE.superAdmin),
+    auth(USER_ROLE.admin, USER_ROLE.superAdmin),
     notificationController.deleteNotification
 );
 //
