@@ -1,14 +1,14 @@
-import { ObjectId } from 'mongodb';
+import { Types } from 'mongoose';
 
 export interface IMessage {
-    id: ObjectId;
-    text: string;
-    imageUrl: string[];
-    videoUrl: string[];
-    pdfUrl: string[];
-    seen: boolean;
-    msgByUserId: ObjectId;
-    conversationId: ObjectId;
-    createdAt: Date;
-    updatedAt: Date;
+    text?: string;
+    imageUrl?: string[];
+    videoUrl?: string[];
+    pdfUrl?: string[];
+    msgByUserId: Types.ObjectId;
+    msgByUserModel: 'Customer' | 'Provider';
+    seen?: boolean;
+    conversationId: Types.ObjectId;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
