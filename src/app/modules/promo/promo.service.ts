@@ -38,11 +38,49 @@ const deletePromoFromDB = async (id: string) => {
     }
     return result;
 };
+const verifyPromoFromDB = async (promoCode: string) => {
+    const promo = await PromoModel.findOne({ promoCode });
+
+    // Promo Not Found
+    if (!promo) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Promo code is not valid');
+    }
+
+    const now = new Date();
+
+    // If promo has not started yet
+    if (promo.startDate > now) {
+        throw new AppError(httpStatus.BAD_REQUEST, 'Promo is not active yet');
+    }
+
+    // If promo expired
+    if (promo.endDate < now) {
+        throw new AppError(httpStatus.BAD_REQUEST, 'Promo code has expired');
+    }
+
+    // Promo status must be ACTIVE
+    if (promo.status !== 'ACTIVE') {
+        throw new AppError(httpStatus.BAD_REQUEST, 'Promo is not active');
+    }
+
+    // If usedCount is null/undefined → treat as 0
+    const used = promo.usedCount ?? 0;
+
+    // Check usage limit
+    if (used >= promo.limit) {
+        throw new AppError(httpStatus.BAD_REQUEST, 'Promo usage limit reached');
+    }
+
+    // Return only safe/public data
+    return promo;
+};
+
 const PromoServices = {
     createPromoIntoDB,
     getAllPromoFromDB,
     getSinglePromoFromDB,
     updatePromoInDB,
     deletePromoFromDB,
+    verifyPromoFromDB,
 };
 export default PromoServices;

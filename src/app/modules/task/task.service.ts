@@ -10,15 +10,55 @@ import QuestionModel from '../question/question.model';
 import { USER_ROLE } from '../user/user.constant';
 import { ENUM_TASK_STATUS } from './task.enum';
 import TaskModel from './task.model';
+import { User } from '../user/user.model';
+import Notification from '../notification/notification.model';
+import {
+    sendBatchPushNotification,
+    sendSinglePushNotification,
+} from '../../helper/sendPushNotification';
+import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
 
 const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
-    const result = (
-        await TaskModel.create({
+    try {
+        const createdTask = await TaskModel.create({
             ...payload,
             customer: profileId,
-        })
-    ).populate('category');
-    return result;
+        });
+
+        const result = await TaskModel.findById(createdTask._id).populate(
+            'category'
+        );
+
+        const admins = await User.find({ role: USER_ROLE.admin }).select(
+            '_id profileId'
+        );
+
+        if (admins.length > 0) {
+            const title = 'New Task Created';
+            const message = `A new task "${payload.title}" has been created`;
+
+            // 🔥 Save only ONE notification for all admins
+            await Notification.create({
+                title,
+                message,
+                receiver: USER_ROLE.admin,
+                type: ENUM_NOTIFICATION_TYPE.TASK_CREATED,
+                redirectLink: `${createdTask?._id}`,
+            });
+
+            // 🔥 But still send push notification to all admin devices
+            const adminUserIds = admins.map((admin) => admin._id.toString());
+            await sendBatchPushNotification(adminUserIds, title, message, {
+                taskId: result?._id.toString(),
+                type: ENUM_NOTIFICATION_TYPE.TASK_CREATED,
+            });
+        }
+
+        return result;
+    } catch (err) {
+        console.error('Failed to send task create admin notification:', err);
+        throw err;
+    }
 };
 
 const getAllTaskFromDB = async (query: Record<string, any>) => {
@@ -535,6 +575,40 @@ const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
         },
         { new: true }
     );
+
+    // ============================
+    // 🔥 SEND NOTIFICATION TO PROVIDER
+    // ============================
+
+    // 1. Task title (for message)
+    const taskTitle = taskData?.title || 'Your task';
+
+    // 2. Create notification in DB for provider
+    await Notification.create({
+        title: 'Task Accepted',
+        message: `Your bid has been accepted for task "${taskTitle}"`,
+        receiver: bidData.provider.toString(), // Provider profileId
+        type: ENUM_NOTIFICATION_TYPE.TASK_ACCEPTED,
+        redirectLink: `${bidData?.task}`,
+    });
+
+    // 3. Get provider userId for push notification
+    const providerUser: any = await User.findOne({
+        profileId: bidData.provider,
+    });
+
+    if (providerUser) {
+        await sendSinglePushNotification(
+            providerUser._id.toString(),
+            'Task Accepted',
+            `Your bid has been accepted for task "${taskTitle}"`,
+            {
+                taskId: bidData.task.toString(),
+                type: ENUM_NOTIFICATION_TYPE.TASK_ACCEPTED,
+            }
+        );
+    }
+
     return result;
 };
 
@@ -556,6 +630,34 @@ const completeTaskByCustomer = async (
 
     task.status = ENUM_TASK_STATUS.COMPLETED;
     await task.save();
+    // ================================
+    // 🔥 SEND NOTIFICATION TO ADMINS
+    // ================================
+
+    const title = 'Task Completed';
+    const message = `Task "${task.title}" has been completed`;
+    const redirectLink = `${task._id}`;
+
+    // 1. Save ONE notification for all admins
+    await Notification.create({
+        title,
+        message,
+        receiver: USER_ROLE.admin, // All admins
+        type: ENUM_NOTIFICATION_TYPE.TASK_COMPLETED,
+        redirectLink,
+    });
+
+    // 2. Push notification to all admin userIds
+    const admins = await User.find({ role: USER_ROLE.admin }).select('_id');
+
+    if (admins.length > 0) {
+        const adminUserIds = admins.map((a) => a._id.toString());
+
+        await sendBatchPushNotification(adminUserIds, title, message, {
+            type: ENUM_NOTIFICATION_TYPE.TASK_COMPLETED,
+            taskId: task._id.toString(),
+        });
+    }
 
     return task;
 };

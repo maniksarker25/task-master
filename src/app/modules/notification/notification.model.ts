@@ -1,5 +1,6 @@
 import { model, Schema } from 'mongoose';
 import { INotification } from './notification.interface';
+import { ENUM_NOTIFICATION_TYPE } from './notification.enum';
 
 const notificationSchema = new Schema<INotification>(
     {
@@ -22,6 +23,15 @@ const notificationSchema = new Schema<INotification>(
         seenBy: {
             type: [String],
             default: [],
+        },
+        redirectLink: {
+            type: String, // e.g. /task/123 or /provider/profile
+            default: '',
+        },
+        type: {
+            type: String,
+            enum: Object.values(ENUM_NOTIFICATION_TYPE),
+            default: ENUM_NOTIFICATION_TYPE.GENERAL,
         },
     },
     //-------------------------

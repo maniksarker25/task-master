@@ -2,8 +2,12 @@
 import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import AppError from '../../error/appError';
+import { sendSinglePushNotification } from '../../helper/sendPushNotification';
+import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
+import Notification from '../notification/notification.model';
 import { ENUM_TASK_STATUS } from '../task/task.enum';
 import TaskModel from '../task/task.model';
+import { User } from '../user/user.model';
 import { ENUM_EXTENSION_REQUEST_STATUS } from './extensionRequest.enum';
 import { IExtensionRequest } from './extensionRequest.interface';
 import {
@@ -55,6 +59,38 @@ const extensionRequestIntoDb = async (
         reason: payload.reason,
     };
     const result = await extensionRequestModel.create(extensionRequestData);
+
+    // ============================================
+    // 🔥 SEND NOTIFICATION TO requestTo USER
+    // ============================================
+
+    const title = 'Extension Request';
+    const message = `${currentUserRole} requested more time for the task "${task.title}"`;
+
+    // Save notification
+    await Notification.create({
+        title,
+        message,
+        receiver: requestTo.toString(), // 👈 Send to the target user
+        type: ENUM_NOTIFICATION_TYPE.EXTENSION_REQUEST,
+        redirectLink: `${task._id}`,
+    });
+
+    // Send push notification
+    const receiverUser = await User.findOne({ profileId: requestTo });
+
+    if (receiverUser) {
+        await sendSinglePushNotification(
+            receiverUser._id.toString(),
+            title,
+            message,
+            {
+                taskId: task._id.toString(),
+                type: ENUM_NOTIFICATION_TYPE.EXTENSION_REQUEST,
+            }
+        );
+    }
+
     return result;
 };
 

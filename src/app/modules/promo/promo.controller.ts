@@ -50,11 +50,22 @@ const deletePromo = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const verifyPromo = catchAsync(async (req, res) => {
+    const result = await promoServices.verifyPromoFromDB(req.body.promoCode);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Promo verify successfully',
+        data: result,
+    });
+});
+
 const PromoController = {
     createPromo,
     getAllPromo,
     getSinglePromo,
     updatePromo,
     deletePromo,
+    verifyPromo,
 };
 export default PromoController;

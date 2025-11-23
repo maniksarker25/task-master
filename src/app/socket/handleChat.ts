@@ -31,9 +31,17 @@ const handleChat = async (
                     { participants: data.receiver },
                 ],
             });
+            let participantsModel: any[] = [];
+            if (role == USER_ROLE.customer) {
+                participantsModel = ['Customer', 'Provider'];
+            } else if (role == USER_ROLE.provider) {
+                participantsModel = ['Provider', 'Customer'];
+            }
+
             if (!conversation) {
                 conversation = await Conversation.create({
                     participants: [currentUserId, data.receiver],
+                    participantsModel: participantsModel,
                 });
             }
 

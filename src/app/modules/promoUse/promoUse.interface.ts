@@ -1,9 +1,7 @@
-import { Types } from 'mongoose';
+import { Schema } from 'mongoose';
 
 export interface IPromoUse {
-    promo: Types.ObjectId;
-    customer: Types.ObjectId;
-    task?: Types.ObjectId;
-    service?: Types.ObjectId;
-    usedDate?: Date;
+    promo: Schema.Types.ObjectId;
+    customer: Schema.Types.ObjectId;
+    task: Schema.Types.ObjectId;
 }

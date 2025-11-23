@@ -20,6 +20,7 @@ import { serviceRoutes } from '../modules/service/service.routes';
 import { subscriberRoutes } from '../modules/subscriber/subscriber.routes';
 import { superAdminRoutes } from '../modules/superAdmin/superAdmin.routes';
 import { taskRoutes } from '../modules/task/task.routes';
+import { referralUseRoutes } from '../modules/referralUse/referralUse.routes';
 
 const router = Router();
 
@@ -105,6 +106,10 @@ const moduleRoutes = [
     {
         path: '/meta',
         router: metaRoutes,
+    },
+    {
+        path: '/referralUse',
+        router: referralUseRoutes,
     },
 ];
 
