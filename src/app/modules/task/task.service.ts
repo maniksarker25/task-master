@@ -12,7 +12,11 @@ import { ENUM_TASK_STATUS } from './task.enum';
 import TaskModel from './task.model';
 import { User } from '../user/user.model';
 import Notification from '../notification/notification.model';
-import { sendBatchPushNotification } from '../../helper/sendPushNotification';
+import {
+    sendBatchPushNotification,
+    sendSinglePushNotification,
+} from '../../helper/sendPushNotification';
+import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
 
 const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
     try {
@@ -38,13 +42,15 @@ const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
                 title,
                 message,
                 receiver: USER_ROLE.admin,
+                type: ENUM_NOTIFICATION_TYPE.TASK_CREATED,
+                redirectLink: `${createdTask?._id}`,
             });
 
             // 🔥 But still send push notification to all admin devices
             const adminUserIds = admins.map((admin) => admin._id.toString());
             await sendBatchPushNotification(adminUserIds, title, message, {
                 taskId: result?._id.toString(),
-                type: 'task_created',
+                type: ENUM_NOTIFICATION_TYPE.TASK_CREATED,
             });
         }
 
@@ -569,6 +575,40 @@ const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
         },
         { new: true }
     );
+
+    // ============================
+    // 🔥 SEND NOTIFICATION TO PROVIDER
+    // ============================
+
+    // 1. Task title (for message)
+    const taskTitle = taskData?.title || 'Your task';
+
+    // 2. Create notification in DB for provider
+    await Notification.create({
+        title: 'Task Accepted',
+        message: `Your bid has been accepted for task "${taskTitle}"`,
+        receiver: bidData.provider.toString(), // Provider profileId
+        type: ENUM_NOTIFICATION_TYPE.TASK_ACCEPTED,
+        redirectLink: `${bidData?.task}`,
+    });
+
+    // 3. Get provider userId for push notification
+    const providerUser: any = await User.findOne({
+        profileId: bidData.provider,
+    });
+
+    if (providerUser) {
+        await sendSinglePushNotification(
+            providerUser._id.toString(),
+            'Task Accepted',
+            `Your bid has been accepted for task "${taskTitle}"`,
+            {
+                taskId: bidData.task.toString(),
+                type: ENUM_NOTIFICATION_TYPE.TASK_ACCEPTED,
+            }
+        );
+    }
+
     return result;
 };
 
