@@ -3,40 +3,28 @@ import { IMessage } from './message.interface';
 
 const messageSchema = new Schema<IMessage>(
     {
-        text: {
-            type: String,
-            default: '',
-        },
-        imageUrl: {
-            type: [String],
-            default: [],
-        },
-        videoUrl: {
-            type: [String],
-            default: [],
-        },
-        pdfUrl: {
-            type: [String],
-            default: [],
-        },
+        text: { type: String, default: '' },
+        imageUrl: { type: [String], default: [] },
+        videoUrl: { type: [String], default: [] },
+        pdfUrl: { type: [String], default: [] },
         msgByUserId: {
             type: Schema.Types.ObjectId,
-            ref: 'NormalUser',
             required: true,
+            refPath: 'msgByUserModel',
         },
-        seen: {
-            type: Boolean,
-            default: false,
+        msgByUserModel: {
+            type: String,
+            required: true,
+            enum: ['Customer', 'Provider'],
         },
+        seen: { type: Boolean, default: false },
         conversationId: {
             type: Schema.Types.ObjectId,
             ref: 'Conversation',
             required: true,
         },
     },
-    {
-        timestamps: true,
-    }
+    { timestamps: true }
 );
 
 const Message = model<IMessage>('Message', messageSchema);

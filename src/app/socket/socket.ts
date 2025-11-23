@@ -43,11 +43,18 @@ const initializeSocket = (server: HTTPServer) => {
             // const currentUserId = currentUser?._id.toString();
             const token =
                 socket.handshake.auth?.token || socket.handshake.query?.token;
+            if (!token) {
+                console.log('No token provided, disconnecting socket.');
+                socket.disconnect();
+                return;
+            }
             const decode = (await jwt.verify(
                 token,
                 config.jwt_access_secret as string
             )) as JwtPayload;
             const currentUserId = decode.profileId;
+            const role = decode.role;
+            console.log('A user connected:', currentUserId);
             // create a room-------------------------
             socket.join(currentUserId as string);
             // set online user
@@ -55,7 +62,12 @@ const initializeSocket = (server: HTTPServer) => {
             // send to the client
             io.emit('onlineUser', Array.from(onlineUser));
             // handle caht
-            await handleChat(io, socket, currentUserId as string);
+            await handleChat(
+                io,
+                socket,
+                currentUserId as string,
+                role as string
+            );
             socket.on('disconnect', () => {
                 console.log('A user disconnected:', socket.id);
             });

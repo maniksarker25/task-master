@@ -3,27 +3,23 @@ import { Server as IOServer, Socket } from 'socket.io';
 import { getSingleConversation } from '../helper/getSingleConversation';
 import Conversation from '../modules/conversation/conversation.model';
 import Message from '../modules/message/message.model';
+import { USER_ROLE } from '../modules/user/user.constant';
 import { emitError } from './helper';
 
 const handleChat = async (
     io: IOServer,
     socket: Socket,
-    currentUserId: string
+    currentUserId: string,
+    role: string
 ): Promise<void> => {
     // new message -----------------------------------
     socket.on('send-message', async (data) => {
-        if (
-            !data.receiver &&
-            !data.projectId &&
-            !data.groupId &&
-            !data.bondLinkId
-        ) {
+        if (!data.receiver) {
             emitError(socket, {
                 code: 400,
-                message: 'Receiver or project id required',
+                message: 'Receiver is required',
                 type: 'general',
-                details:
-                    'You must provide either a receiverId (for one-to-one) or a projectId (for group chat) or a groupId (for chat group) or a bondLinkId (for bond link chat)',
+                details: 'You must provide either a receiverId ',
             });
             return;
         }
@@ -47,6 +43,8 @@ const handleChat = async (
                 videoUrl: data.videoUrl || [],
                 pdfUrl: data.pdfUrl || [],
                 msgByUserId: currentUserId,
+                msgByUserModel:
+                    role == USER_ROLE.customer ? 'Customer' : 'Provider',
                 conversationId: conversation?._id,
             };
             const saveMessage = await Message.create(messageData);
