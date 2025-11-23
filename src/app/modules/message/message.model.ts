@@ -5,7 +5,6 @@ const messageSchema = new Schema<IMessage>(
     {
         text: {
             type: String,
-            // required: true,
             default: '',
         },
         imageUrl: {
@@ -25,10 +24,9 @@ const messageSchema = new Schema<IMessage>(
             ref: 'NormalUser',
             required: true,
         },
-        seenBy: {
-            type: [Schema.Types.ObjectId],
-            ref: 'NormalUser',
-            default: [],
+        seen: {
+            type: Boolean,
+            default: false,
         },
         conversationId: {
             type: Schema.Types.ObjectId,
