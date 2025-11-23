@@ -6,7 +6,10 @@ import { ENUM_TASK_STATUS } from '../task/task.enum';
 import TaskModel from '../task/task.model';
 import { ENUM_EXTENSION_REQUEST_STATUS } from './extensionRequest.enum';
 import { IExtensionRequest } from './extensionRequest.interface';
-import extensionRequestModel from './extensionRequest.model';
+import {
+    default as extensionRequestModel,
+    default as ExtensionRequestModel,
+} from './extensionRequest.model';
 
 const extensionRequestIntoDb = async (
     profileId: string,
@@ -221,11 +224,26 @@ const rejectRequestFromDB = async (
 
     return result;
 };
+
+const makeDisputeForAdmin = async (profileId: string, extensionID: string) => {
+    const extensionRequest: any = await ExtensionRequestModel.findOne({
+        _id: extensionID,
+        requestTo: profileId,
+    });
+    if (!extensionRequest) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Extension Request not found');
+    }
+    extensionRequest.isDisputed = true;
+    await extensionRequest.save();
+    return extensionRequest;
+};
+
 const ExtensionRequestServices = {
     extensionRequestIntoDb,
     getExtensionRequestByTaskFromDB,
     cancelExtensionRequestByTaskFromDB,
     acceptRequestFromDB,
     rejectRequestFromDB,
+    makeDisputeForAdmin,
 };
 export default ExtensionRequestServices;

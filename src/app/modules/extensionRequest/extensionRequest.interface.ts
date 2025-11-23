@@ -16,4 +16,5 @@ export interface IExtensionRequest {
     reviewedRequestAt?: Date;
     extensionReason?: string;
     extensionEvidence?: string[];
+    isDisputed: boolean;
 }
