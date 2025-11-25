@@ -2,15 +2,19 @@ import { Types } from 'mongoose';
 import { ENUM_EXTENSION_REQUEST_STATUS } from './extensionRequest.enum';
 
 export interface IExtensionRequest {
-    task: Types.ObjectId; // ref -> Task
-    requestedBy: Types.ObjectId; // ref -> Users
-    requestedByModel: 'Customer' | 'Provider';
+    task: Types.ObjectId;
+    requestFrom: Types.ObjectId;
+    requestedFromModel: 'Customer' | 'Provider';
+    requestTo: Types.ObjectId;
+    requestToModel: 'Customer' | 'Provider';
     currentDate: Date;
-    requestedDate: Date;
-    requestedAt: Date;
+    requestedDateTime: Date;
     reason: string;
     status: (typeof ENUM_EXTENSION_REQUEST_STATUS)[keyof typeof ENUM_EXTENSION_REQUEST_STATUS];
     rejectDetails?: string;
-    reject_evidence: string; // ref -> RejectReason
+    reject_evidence: string;
     reviewedRequestAt?: Date;
+    extensionReason?: string;
+    extensionEvidence?: string[];
+    isDisputed: boolean;
 }

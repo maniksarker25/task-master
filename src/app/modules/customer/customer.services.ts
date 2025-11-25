@@ -105,6 +105,20 @@ const getAllCustomerFromDB = async (query: Record<string, unknown>) => {
         },
         {
             $lookup: {
+                from: 'users',
+                localField: 'user',
+                foreignField: '_id',
+                as: 'user',
+                pipeline: [{ $project: { isBlocked: 1, isAdminVerified: 1 } }],
+            },
+        },
+        {
+            $addFields: {
+                user: { $arrayElemAt: ['$user', 0] },
+            },
+        },
+        {
+            $lookup: {
                 from: 'tasks',
                 localField: '_id',
                 foreignField: 'customer',
@@ -153,9 +167,18 @@ const getAllCustomerFromDB = async (query: Record<string, unknown>) => {
     };
 };
 
+const getSingleCustomer = async (id: string) => {
+    const result = await Customer.findById(id).populate({
+        path: 'user',
+        select: 'isBlocked isAdminVerified',
+    });
+    return result;
+};
+
 const CustomerServices = {
     updateUserProfile,
     getAllCustomerFromDB,
+    getSingleCustomer,
 };
 
 export default CustomerServices;

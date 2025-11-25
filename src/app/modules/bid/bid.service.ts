@@ -2,6 +2,9 @@
 import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import AppError from '../../error/appError';
+import { sendSinglePushNotification } from '../../helper/sendPushNotification';
+import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
+import Notification from '../notification/notification.model';
 import TaskModel from '../task/task.model';
 import { IBid } from './bid.interface';
 import BidModel from './bid.model';
@@ -14,7 +17,19 @@ const createBidIntoDB = async (userId: string, payload: IBid) => {
     const result = (
         await BidModel.create({ ...payload, provider: userId })
     ).populate('provider task');
-
+    await Notification.create({
+        title: 'New Bid Placed',
+        message: `A new bid has been placed for the task "${task.title}"`,
+        receiver: task.customer,
+        type: ENUM_NOTIFICATION_TYPE.BID_PLACED,
+        redirectLink: `${task._id}`,
+    });
+    sendSinglePushNotification(
+        task!.customer.toString(),
+        'New Bid Placed',
+        `A new bid has been placed for the task "${task.title}"`,
+        { taskId: task._id.toString() }
+    );
     return result;
 };
 
@@ -145,10 +160,28 @@ const deleteBidFromDB = async (id: string, profileId: string) => {
     }
     return result;
 };
+
+const updateBidIntoDB = async (
+    bidId: string,
+    profileId: string,
+    payload: Partial<IBid>
+) => {
+    const bid = await BidModel.findOne({ _id: bidId, provider: profileId });
+    if (!bid) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Bid not found');
+    }
+    const updateBid = await BidModel.findByIdAndUpdate(
+        bidId,
+        { ...payload },
+        { new: true }
+    );
+    return updateBid;
+};
 const BidServices = {
     createBidIntoDB,
     getAllBidFromDB,
     deleteBidFromDB,
     getBidsByTaskIDFromDB,
+    updateBidIntoDB,
 };
 export default BidServices;

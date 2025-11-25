@@ -43,6 +43,10 @@ const promoSchema = new Schema<IPromo>(
         usesDate: {
             type: Date,
         },
+        usedCount: {
+            type: Number,
+            default: 0,
+        },
     },
     { timestamps: true }
 );
