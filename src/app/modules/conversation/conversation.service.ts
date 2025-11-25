@@ -1,7 +1,10 @@
 import mongoose from 'mongoose';
 import Conversation from './conversation.model';
 
-const getConversation = async (profileId: string, query: any) => {
+const getConversation = async (
+    profileId: string,
+    query: Record<string, unknown>
+) => {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -139,6 +142,7 @@ const getConversation = async (profileId: string, query: any) => {
                     _id: '$userData._id',
                     name: '$userData.name',
                     profile_image: '$userData.profile_image',
+                    email: '$userData.email',
                 },
             },
         },

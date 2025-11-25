@@ -85,6 +85,13 @@ const getMessages = async (
                                     '$$provider.profile_image',
                                 ],
                             },
+                            email: {
+                                $cond: [
+                                    { $ifNull: ['$$customer', false] },
+                                    '$$customer.email',
+                                    '$$provider.email',
+                                ],
+                            },
                         },
                     },
                 },
