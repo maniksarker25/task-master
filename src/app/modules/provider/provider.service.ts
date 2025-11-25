@@ -4,6 +4,9 @@ import AppError from '../../error/appError';
 import { ENUM_TASK_STATUS } from '../task/task.enum';
 import { IProvider } from './provider.interface';
 import { Provider } from './provider.model';
+import TaskModel from '../task/task.model';
+import { Types } from 'mongoose';
+import BidModel from '../bid/bid.model';
 
 const updateProviderFromDB = async (
     id: string,
@@ -132,9 +135,61 @@ const getSingleProvider = async (id: string) => {
     return result;
 };
 
+const getProviderMetaDataFromDB = async (profileId: string) => {
+    // -------- 1) TASK META COUNT --------
+    const result = await TaskModel.aggregate([
+        {
+            $match: {
+                provider: new Types.ObjectId(profileId),
+            },
+        },
+        {
+            $group: {
+                _id: '$status',
+                count: { $sum: 1 },
+            },
+        },
+    ]);
+
+    const meta = {
+        completedCount: 0,
+        inProgressCount: 0,
+        pendingCount: 0,
+    };
+
+    result.forEach((item) => {
+        if (item._id === ENUM_TASK_STATUS.COMPLETED)
+            meta.completedCount = item.count;
+
+        if (item._id === ENUM_TASK_STATUS.IN_PROGRESS)
+            meta.inProgressCount = item.count;
+
+        if (item._id === ENUM_TASK_STATUS.OPEN_FOR_BID)
+            meta.pendingCount = item.count;
+    });
+
+    // -------- 2) FIND TASKS WHERE PROVIDER BIDDED & TASK IS OPEN_FOR_BID --------
+    const myBids = await BidModel.find({ provider: profileId }).populate(
+        'task'
+    );
+
+    // Filter only those bids where task.status === OPEN_FOR_BID
+    const openForBidTasks = myBids.filter(
+        (bid) => bid.task && bid.task.status === ENUM_TASK_STATUS.OPEN_FOR_BID
+    );
+
+    const bidOpenForBidCount = openForBidTasks.length;
+
+    return {
+        ...meta,
+        bidOpenForBidCount,
+    };
+};
+
 const ProviderServices = {
     updateProviderFromDB,
     getAllProviderFromDB,
     getSingleProvider,
+    getProviderMetaDataFromDB,
 };
 export default ProviderServices;
