@@ -1,16 +1,36 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from 'mongoose';
+import Conversation from '../conversation/conversation.model';
 import Message from './message.model';
 
 const getMessages = async (
     profileId: string,
+    otherUserId: string,
     query: Record<string, unknown>
 ) => {
-    const conversationId = query.conversationId as string;
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
     const searchTerm = (query?.searchTerm as string) || '';
+
+    // Find conversation between the two users
+    const conversation = await Conversation.findOne({
+        participants: {
+            $all: [
+                new mongoose.Types.ObjectId(profileId),
+                new mongoose.Types.ObjectId(otherUserId),
+            ],
+        },
+    }).select('_id');
+
+    if (!conversation) {
+        return {
+            meta: { page, limit, total: 0, totalPages: 0 },
+            result: [],
+        };
+    }
+
+    const conversationId = conversation._id;
 
     const messages = await Message.aggregate([
         {
@@ -38,11 +58,35 @@ const getMessages = async (
         {
             $addFields: {
                 userDetails: {
-                    $cond: [
-                        { $gt: [{ $size: '$customerDetails' }, 0] },
-                        { $arrayElemAt: ['$customerDetails', 0] },
-                        { $arrayElemAt: ['$providerDetails', 0] },
-                    ],
+                    $let: {
+                        vars: {
+                            customer: { $arrayElemAt: ['$customerDetails', 0] },
+                            provider: { $arrayElemAt: ['$providerDetails', 0] },
+                        },
+                        in: {
+                            _id: {
+                                $cond: [
+                                    { $ifNull: ['$$customer', false] },
+                                    '$$customer._id',
+                                    '$$provider._id',
+                                ],
+                            },
+                            name: {
+                                $cond: [
+                                    { $ifNull: ['$$customer', false] },
+                                    '$$customer.name',
+                                    '$$provider.name',
+                                ],
+                            },
+                            profile_image: {
+                                $cond: [
+                                    { $ifNull: ['$$customer', false] },
+                                    '$$customer.profile_image',
+                                    '$$provider.profile_image',
+                                ],
+                            },
+                        },
+                    },
                 },
                 isMyMessage: {
                     $eq: [
@@ -60,11 +104,11 @@ const getMessages = async (
                 pdfUrl: 1,
                 seen: 1,
                 msgByUserId: 1,
+                msgByUserModel: 1,
                 conversationId: 1,
                 createdAt: 1,
                 updatedAt: 1,
-                'userDetails.name': 1,
-                'userDetails.profile_image': 1,
+                userDetails: 1,
                 isMyMessage: 1,
             },
         },

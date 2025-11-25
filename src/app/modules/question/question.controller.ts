@@ -12,6 +12,7 @@ const createQuestion = catchAsync(async (req, res) => {
     if (req.files?.question_image) {
         req.body.question_image = getCloudFrontUrl(file[0].key);
     }
+    console.log('req.body:', req.body);
 
     const result = await QuestionServices.createQuestionIntoDB(
         req.user.profileId,

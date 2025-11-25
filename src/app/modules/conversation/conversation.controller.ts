@@ -1,24 +1,23 @@
-import httpStatus from "http-status";
-import catchAsync from "../../utilities/catchasync";
-import sendResponse from "../../utilities/sendResponse";
-import conversationServices from "./conversation.service";
+import catchAsync from '../../utilities/catchasync';
+import sendResponse from '../../utilities/sendResponse';
+import ConversationService from './conversation.service';
 
-const updateUserProfile = catchAsync(async (req, res) => {
-    const { files } = req;
-    if (files && typeof files === "object" && "profile_image" in files) {
-        req.body.profile_image = files["profile_image"][0].path;
-    }
-    const result = await conversationServices.updateUserProfile(
-        req.user.profileId,
-        req.body
+const getChatList = catchAsync(async (req, res) => {
+    const result = await ConversationService.getConversation(
+        req?.user?.profileId,
+        req.query
     );
+
     sendResponse(res, {
-        statusCode: httpStatus.OK,
+        statusCode: 200,
         success: true,
-        message: "Profile updated successfully",
+        message: 'Conversation retrieved successfully',
         data: result,
     });
 });
 
-const ConversationController = { updateUserProfile };
+const ConversationController = {
+    getChatList,
+};
+
 export default ConversationController;

@@ -6,6 +6,7 @@ import messageServices from './message.service';
 const getMessages = catchAsync(async (req, res) => {
     const result = await messageServices.getMessages(
         req.user.profileId,
+        req.params.id,
         req.query
     );
     sendResponse(res, {

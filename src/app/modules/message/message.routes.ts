@@ -6,7 +6,7 @@ import messageController from './message.controller';
 const router = express.Router();
 
 router.get(
-    '/get-messages',
+    '/get-messages/:id',
     auth(USER_ROLE.customer, USER_ROLE.provider),
     messageController.getMessages
 );

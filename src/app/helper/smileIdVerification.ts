@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable no-undef */
 // smileid.ts
-import * as SmileID from 'smile-identity-core';
+const SmileID = require('smile-identity-core').default;
 
 export const smileID = new SmileID({
     partner_id: process.env.SMILE_PARTNER_ID!,
