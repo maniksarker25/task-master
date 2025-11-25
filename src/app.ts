@@ -10,6 +10,7 @@ import sendContactUsEmail from './app/helper/sendContactUsEmail';
 import globalErrorHandler from './app/middlewares/globalErrorHandler';
 import notFound from './app/middlewares/notFound';
 import router from './app/routes';
+import smileIdClient from './app/utilities/smileIdClient';
 const app: Application = express();
 // parser----------------
 app.use(express.json());
@@ -39,10 +40,29 @@ app.get('/', async (req, res) => {
     res.send({ message: 'nice to meet you 2' });
 });
 
-// (async () => {
-//     const ninResult = await verifyNIN('12345678901');
-//     console.log('NIN Result:', ninResult);
-// })();
+router.post('/verify', async (req: any, res: any) => {
+    try {
+        const { id_type, id_number, dob, user_id, job_id } = req.body;
+
+        if (!id_type || !id_number || !user_id || !job_id) {
+            return res
+                .status(400)
+                .json({ message: 'Missing required parameters' });
+        }
+
+        const idInfo = { id_type, id_number, dob };
+        const partnerParams = {
+            user_id,
+            job_id,
+            job_type: 'BASIC_KYC' as const,
+        };
+
+        const result = await smileIdClient.verifyId(idInfo, partnerParams);
+        res.send(result);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+});
 
 // global error handler
 app.use(globalErrorHandler);
