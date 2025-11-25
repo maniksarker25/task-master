@@ -5,18 +5,18 @@ import { ITask } from './task.interface';
 
 import { JwtPayload } from 'jsonwebtoken';
 import mongoose from 'mongoose';
-import bidModel from '../bid/bid.model';
-import QuestionModel from '../question/question.model';
-import { USER_ROLE } from '../user/user.constant';
-import { ENUM_TASK_STATUS } from './task.enum';
-import TaskModel from './task.model';
-import { User } from '../user/user.model';
-import Notification from '../notification/notification.model';
 import {
     sendBatchPushNotification,
     sendSinglePushNotification,
 } from '../../helper/sendPushNotification';
+import bidModel from '../bid/bid.model';
 import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
+import Notification from '../notification/notification.model';
+import QuestionModel from '../question/question.model';
+import { USER_ROLE } from '../user/user.constant';
+import { User } from '../user/user.model';
+import { ENUM_TASK_STATUS } from './task.enum';
+import TaskModel from './task.model';
 
 const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
     try {
@@ -444,6 +444,7 @@ const getSingleTaskFromDB = async (userId: string, id: string) => {
                             _id: 1,
                             name: 1,
                             profile_image: 1,
+                            email: 1,
                         },
                     },
                 ],
@@ -462,6 +463,7 @@ const getSingleTaskFromDB = async (userId: string, id: string) => {
                             _id: 1,
                             name: 1,
                             profile_image: 1,
+                            email: 1,
                         },
                     },
                 ],

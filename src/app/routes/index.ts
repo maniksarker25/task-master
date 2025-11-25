@@ -11,6 +11,7 @@ import { conversationRoutes } from '../modules/conversation/conversation.routes'
 import { CustomerRoutes } from '../modules/customer/customer.routes';
 import { extensionRequestRoutes } from '../modules/extensionRequest/extensionRequest.routes';
 import { feedbackRoutes } from '../modules/feedback/feedback.routes';
+import { fileUploadRoutes } from '../modules/file-upload/file-upload.routes';
 import { messageRoutes } from '../modules/message/message.routes';
 import { metaRoutes } from '../modules/meta/meta.routes';
 import { promoRoutes } from '../modules/promo/promo.routes';
@@ -120,6 +121,10 @@ const moduleRoutes = [
     {
         path: '/message',
         router: messageRoutes,
+    },
+    {
+        path: '/file',
+        router: fileUploadRoutes,
     },
 ];
 
