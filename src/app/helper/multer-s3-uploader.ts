@@ -30,6 +30,8 @@ export const uploadFile = () => {
             'service_image',
             'question_image',
             'reject_evidence',
+            'conversation_pdf',
+            'conversation_image',
         ];
 
         if (file.fieldname === undefined) {
@@ -90,6 +92,10 @@ export const uploadFile = () => {
                 uploadPath = 'uploads/images/reject_evidence';
             } else if (file.fieldname === 'question_image') {
                 uploadPath = 'uploads/images/question_image';
+            } else if (file.fieldname === 'conversation_pdf') {
+                uploadPath = 'uploads/documents/conversation_pdf';
+            } else if (file.fieldname === 'conversation_image') {
+                uploadPath = 'uploads/images/conversation_image';
             } else {
                 uploadPath = 'uploads';
             }
@@ -123,6 +129,8 @@ export const uploadFile = () => {
         { name: 'address_document', maxCount: 1 },
         { name: 'task_attachments', maxCount: 5 },
         { name: 'service_image', maxCount: 5 },
+        { name: 'conversation_image', maxCount: 5 },
+        { name: 'conversation_pdf', maxCount: 2 },
     ]);
 
     return upload;

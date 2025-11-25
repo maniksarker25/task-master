@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
 // export default sendSMS;
@@ -27,14 +28,13 @@ export const sendSMS = async (
         const response: SmsResponse = await mocean.sms().send({
             'mocean-from': '12345',
             'mocean-to': phoneNumber,
-            // 'mocean-text': smsMessage,
             'mocean-text': 'Hello, this is a test.',
         });
 
-        console.log('✅ SMS sent successfully:', response);
+        console.log('SMS sent successfully:', response);
         return response;
     } catch (error: any) {
-        console.error('❌ Failed to send SMS:', error.message || error);
+        console.error('Failed to send SMS:', error.message || error);
         throw new Error('Failed to send SMS');
     }
 };

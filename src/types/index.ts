@@ -18,6 +18,9 @@ declare namespace Express {
             service_image?: File[];
             question_image?: File[];
             reject_evidence?: File[];
+            conversation_image?: File[];
+            conversation_video?: File[];
+            conversation_pdf?: File[];
         };
     }
 }
