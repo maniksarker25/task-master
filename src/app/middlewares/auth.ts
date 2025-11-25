@@ -37,6 +37,7 @@ const auth = (...requiredRoles: TUserRole[]) => {
             } catch (err) {
                 throw new AppError(httpStatus.UNAUTHORIZED, 'Token is expired');
             }
+
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { id, role, email, profileId, iat } = decoded;
 
@@ -48,19 +49,19 @@ const auth = (...requiredRoles: TUserRole[]) => {
             if (!user) {
                 throw new AppError(
                     httpStatus.UNAUTHORIZED,
-                    'Unauthorized access'
+                    'Unauthorized access 1'
                 );
             }
             if (user.isDeleted) {
                 throw new AppError(
                     httpStatus.UNAUTHORIZED,
-                    'Unauthorized access'
+                    'Unauthorized access 2'
                 );
             }
             if (user.isBlocked) {
                 throw new AppError(
                     httpStatus.UNAUTHORIZED,
-                    'Unauthorized access'
+                    'Your account is blocked'
                 );
             }
             if (!user?.isVerified) {
