@@ -14,4 +14,17 @@ router.post(
     referralUseController.verifyReferralCode
 );
 
+router.get(
+    '/my-referral',
+    auth(USER_ROLE.customer, USER_ROLE.provider),
+    referralUseController.getMyReferral
+);
+
+router.post(
+    '/create-referral-use',
+    auth(USER_ROLE.customer, USER_ROLE.provider),
+    validateRequest(referralUseValidations.createReferralUseZodSchema),
+    referralUseController.createReferralUse
+);
+
 export const referralUseRoutes = router;

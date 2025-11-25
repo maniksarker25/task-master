@@ -33,6 +33,35 @@ const verifyReferralCode = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const getMyReferral = catchAsync(async (req, res) => {
+    const result = await referralUseServices.getMyReferralFromDB(
+        req.user.profileId
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'My Referral get successfully',
+        data: result,
+    });
+});
 
-const ReferralUseController = { verifyReferralCode };
+const createReferralUse = catchAsync(async (req, res) => {
+    const result = await referralUseServices.createReferralUseFromDB(
+        req.user.profileId,
+        req.user.role,
+        req.body
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Referral Use created successfully',
+        data: result,
+    });
+});
+
+const ReferralUseController = {
+    verifyReferralCode,
+    getMyReferral,
+    createReferralUse,
+};
 export default ReferralUseController;
