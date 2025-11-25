@@ -46,12 +46,18 @@ const extensionRequestSchema = new Schema<IExtensionRequest>(
             enum: Object.values(ENUM_EXTENSION_REQUEST_STATUS),
             default: ENUM_EXTENSION_REQUEST_STATUS.PENDING,
         },
+        extensionReason: { type: String, default: '' },
+        extensionEvidence: { type: [String], default: [] },
         rejectDetails: { type: String, default: '' },
         reject_evidence: { type: String, default: '' },
 
         reviewedRequestAt: {
             type: Date,
             default: null,
+        },
+        isDisputed: {
+            type: Boolean,
+            default: false,
         },
     },
     { timestamps: true }

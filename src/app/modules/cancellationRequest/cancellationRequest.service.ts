@@ -1,55 +1,57 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
+import mongoose from 'mongoose';
 import AppError from '../../error/appError';
-import { ICancellationRequest } from './cancellationRequest.interface';
-import cancellationRequestModel from './cancellationRequest.model';
+import { ENUM_TASK_STATUS } from '../task/task.enum';
 import TaskModel from '../task/task.model';
 import { ENUM_CANCELLATION_REQUEST_STATUS } from './cancellationRequest.enum';
-import { ENUM_TASK_STATUS } from '../task/task.enum';
-import mongoose from 'mongoose';
+import { ICancellationRequest } from './cancellationRequest.interface';
+import CancellationRequestModel from './cancellationRequest.model';
 
 const createCancellationRequestIntoDb = async (
     profileId: string,
     payload: Partial<ICancellationRequest>
 ) => {
-    let currentUserRole: 'Customer' | 'Provider' | '' = '';
-    const task = await TaskModel.findById(payload.task);
+    let currentUserRole;
+    let requestToUserRole;
+    let requestTo: any;
+    const task = await TaskModel.findOne({
+        $or: [{ provider: profileId }, { customer: profileId }],
+        _id: payload.task,
+    });
     if (!task) {
         throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
     }
 
     if (profileId == task.provider?.toString()) {
         currentUserRole = 'Provider';
+        requestToUserRole = 'Customer';
+        requestTo = task.customer;
     } else if (profileId == task.customer?.toString()) {
         currentUserRole = 'Customer';
-    }
-
-    if (currentUserRole === '') {
-        throw new AppError(
-            httpStatus.UNAUTHORIZED,
-            'You are not authorized to cancel request for this task'
-        );
+        requestToUserRole = 'Provider';
+        requestTo = task.provider;
     }
 
     if (task.status !== ENUM_TASK_STATUS.IN_PROGRESS) {
         throw new AppError(
             httpStatus.BAD_REQUEST,
-            'Cancel request can only be made for in-progress tasks'
+            'Extension request can only be made for in-progress tasks'
         );
     }
 
-    const cancelRequestData: Partial<ICancellationRequest> = {
+    const extensionRequestData = {
         task: payload.task,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        requestedBy: profileId as any,
-        requestedByModel: currentUserRole,
+        requestFrom: profileId as any,
+        requestTo: requestTo,
+        requestedFromModel: currentUserRole,
+        requestToModel: requestToUserRole,
+        currentDate: task.preferredDeliveryDateTime,
+        requestedDateTime: payload.requestedDateTime,
         reason: payload.reason,
-        description: payload.description,
-        evidence: payload.reject_evidence,
     };
-
-    const result = (
-        await cancellationRequestModel.create(cancelRequestData)
-    ).populate('requestedBy');
+    const result = await CancellationRequestModel.create(extensionRequestData);
     return result;
 };
 
@@ -73,10 +75,9 @@ const getCancellationRequestByTaskFromDB = async (
         );
     }
 
-    const result = await cancellationRequestModel
-        .findOne({ task: taskId })
-        .populate('requestedBy')
-        .populate('task');
+    const result = await CancellationRequestModel.findOne({
+        task: taskId,
+    }).populate('requestFrom', 'name profile_image');
 
     if (!result) {
         throw new AppError(
@@ -92,7 +93,7 @@ const cancelCancellationRequestByTaskFromDB = async (
     cancellationId: string
 ) => {
     const cancellationRequest =
-        await cancellationRequestModel.findById(cancellationId);
+        await CancellationRequestModel.findById(cancellationId);
     if (!cancellationRequest) {
         throw new AppError(
             httpStatus.NOT_FOUND,
@@ -100,7 +101,7 @@ const cancelCancellationRequestByTaskFromDB = async (
         );
     }
 
-    if (cancellationRequest.requestedBy.toString() !== profileId) {
+    if (cancellationRequest.requestFrom.toString() !== profileId) {
         throw new AppError(
             httpStatus.UNAUTHORIZED,
             'You are not authorized to cancel this request'
@@ -108,7 +109,7 @@ const cancelCancellationRequestByTaskFromDB = async (
     }
 
     const result =
-        await cancellationRequestModel.findByIdAndDelete(cancellationId);
+        await CancellationRequestModel.findByIdAndDelete(cancellationId);
 
     if (!result) {
         throw new AppError(
@@ -126,9 +127,10 @@ const acceptCancellationRequestFromDB = async (
     const session = await mongoose.startSession();
     try {
         session.startTransaction();
-        const cancellationRequest = await cancellationRequestModel
-            .findById(cancellationId)
-            .session(session);
+        const cancellationRequest =
+            await CancellationRequestModel.findById(cancellationId).session(
+                session
+            );
         if (!cancellationRequest) {
             throw new AppError(
                 httpStatus.NOT_FOUND,
@@ -151,7 +153,7 @@ const acceptCancellationRequestFromDB = async (
             );
         }
         const updatedCancellation =
-            await cancellationRequestModel.findByIdAndUpdate(
+            await CancellationRequestModel.findByIdAndUpdate(
                 cancellationId,
                 {
                     status: ENUM_CANCELLATION_REQUEST_STATUS.APPROVED,
@@ -162,6 +164,12 @@ const acceptCancellationRequestFromDB = async (
             task?._id,
             {
                 status: ENUM_TASK_STATUS.CANCELLED,
+                $push: {
+                    statusWithDate: {
+                        status: ENUM_TASK_STATUS.CANCELLED,
+                        date: new Date(),
+                    },
+                },
             },
             { new: true, runValidators: true, session }
         );
@@ -182,9 +190,8 @@ const rejectCancellationRequestFromDB = async (
     cancellationId: string,
     payload: Partial<ICancellationRequest>
 ) => {
-    // 1️⃣ Find the cancellation request
     const cancellationRequest =
-        await cancellationRequestModel.findById(cancellationId);
+        await CancellationRequestModel.findById(cancellationId);
     if (!cancellationRequest) {
         throw new AppError(
             httpStatus.NOT_FOUND,
@@ -192,13 +199,11 @@ const rejectCancellationRequestFromDB = async (
         );
     }
 
-    // 2️⃣ Find the related task
     const task = await TaskModel.findById(cancellationRequest.task);
     if (!task) {
         throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
     }
 
-    // 3️⃣ Check authorization (must be provider or customer of the task)
     const isAuthorized =
         task.provider?.toString() === profileId ||
         task.customer?.toString() === profileId;
@@ -210,15 +215,13 @@ const rejectCancellationRequestFromDB = async (
         );
     }
 
-    // 4️⃣ Prepare update data safely
     const updateData: Partial<ICancellationRequest> = {
         status: ENUM_CANCELLATION_REQUEST_STATUS.REJECTED,
         rejectDetails: payload.rejectDetails,
         reject_evidence: payload.reject_evidence,
     };
 
-    // 5️⃣ Update the document
-    const result = await cancellationRequestModel.findByIdAndUpdate(
+    const result = await CancellationRequestModel.findByIdAndUpdate(
         cancellationId,
         { $set: updateData },
         { new: true, runValidators: true }

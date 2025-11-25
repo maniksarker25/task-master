@@ -6,24 +6,26 @@ import {
 } from '../modules/referral/referral.enum';
 
 const seedReferral = async () => {
-    // check existing referrals for both types
     const existingReferrals = await ReferralModel.find({
-        referralFor: {
-            $in: [ENUM_REFERRAL_FOR.CUSTOMER, ENUM_REFERRAL_FOR.PROVIDER],
-        },
+        referralFor: { $in: Object.values(ENUM_REFERRAL_FOR) },
     });
 
     const hasCustomerReferral = existingReferrals.some(
         (ref) => ref.referralFor === ENUM_REFERRAL_FOR.CUSTOMER
     );
+
     const hasProviderReferral = existingReferrals.some(
         (ref) => ref.referralFor === ENUM_REFERRAL_FOR.PROVIDER
     );
 
     if (hasCustomerReferral && hasProviderReferral) {
-        console.log('Referral already exists for CUSTOMER and PROVIDER');
+        console.log('Both referrals exist — skipping.');
         return;
     }
+
+    console.log('Existing referrals:', existingReferrals);
+    console.log('Found CUSTOMER:', hasCustomerReferral);
+    console.log('Found PROVIDER:', hasProviderReferral);
 
     const session = await mongoose.startSession();
     session.startTransaction();
