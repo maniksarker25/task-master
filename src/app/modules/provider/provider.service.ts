@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
+import mongoose, { Types } from 'mongoose';
 import AppError from '../../error/appError';
+import BidModel from '../bid/bid.model';
 import { ENUM_TASK_STATUS } from '../task/task.enum';
+import TaskModel from '../task/task.model';
 import { IProvider } from './provider.interface';
 import { Provider } from './provider.model';
-import TaskModel from '../task/task.model';
-import { Types } from 'mongoose';
-import BidModel from '../bid/bid.model';
 
 const updateProviderFromDB = async (
     id: string,
@@ -168,18 +168,30 @@ const getProviderMetaDataFromDB = async (profileId: string) => {
             meta.pendingCount = item.count;
     });
 
-    // -------- 2) FIND TASKS WHERE PROVIDER BIDDED & TASK IS OPEN_FOR_BID --------
-    const myBids = await BidModel.find({ provider: profileId }).populate(
-        'task'
-    );
+    const bids = await BidModel.aggregate([
+        {
+            $match: {
+                provider: new mongoose.Types.ObjectId(profileId),
+            },
+        },
+        {
+            $lookup: {
+                from: 'tasks',
+                localField: 'task',
+                foreignField: '_id',
+                as: 'task',
+            },
+        },
+        { $unwind: '$task' },
+        {
+            $match: {
+                'task.status': ENUM_TASK_STATUS.OPEN_FOR_BID,
+            },
+        },
+        { $count: 'count' },
+    ]);
 
-    // Filter only those bids where task.status === OPEN_FOR_BID
-    const openForBidTasks = myBids.filter(
-        (bid) => bid.task && bid.task.status === ENUM_TASK_STATUS.OPEN_FOR_BID
-    );
-
-    const bidOpenForBidCount = openForBidTasks.length;
-
+    const bidOpenForBidCount = bids[0]?.count || 0;
     return {
         ...meta,
         bidOpenForBidCount,

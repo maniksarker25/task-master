@@ -237,6 +237,7 @@ const getSingleServiceFromDB = async (serviceId: string) => {
                         $project: {
                             name: 1,
                             profile_image: 1,
+                            email: 1,
                         },
                     },
                 ],
