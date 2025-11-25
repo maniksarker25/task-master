@@ -11,4 +11,7 @@ export interface ICustomer {
     street?: string;
     address_document?: string;
     isAddressProvided?: boolean;
+    bankName?: string;
+    bankAccountNumber?: string;
+    referralCode?: string;
 }

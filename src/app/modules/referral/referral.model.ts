@@ -8,7 +8,7 @@ const referralSchema = new Schema<IReferral>(
             type: Number,
             required: true,
         },
-        referelFor: {
+        referralFor: {
             type: String,
             enum: Object.values(ENUM_REFERRAL_FOR),
             required: true,

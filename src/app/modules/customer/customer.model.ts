@@ -46,6 +46,19 @@ const customerSchema = new Schema<ICustomer>(
             type: Boolean,
             default: false,
         },
+        bankAccountNumber: {
+            type: String,
+            default: '',
+        },
+        bankName: {
+            type: String,
+            default: '',
+        },
+        referralCode: {
+            type: String,
+            default: Math.random().toString(36).substring(2, 7).toUpperCase(),
+            unique: true,
+        },
     },
     {
         timestamps: true,

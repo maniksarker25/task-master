@@ -22,6 +22,11 @@ router.post(
     serviceController.createService
 );
 router.get('/all-service', serviceController.getAllService);
+router.get(
+    '/my-service',
+    auth(USER_ROLE.provider),
+    serviceController.getMyService
+);
 router.delete(
     '/delete-service/:id',
     auth(USER_ROLE.provider),

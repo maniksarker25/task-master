@@ -57,7 +57,7 @@ router.patch(
 //===
 router.patch(
     '/block-unblock/:id',
-    auth(USER_ROLE.superAdmin),
+    auth(USER_ROLE.superAdmin, USER_ROLE.admin),
     userControllers.changeUserStatus
 );
 router.post(
@@ -68,7 +68,7 @@ router.post(
 );
 router.patch(
     '/verify-user/:id',
-    auth(USER_ROLE.admin),
+    auth(USER_ROLE.admin, USER_ROLE.superAdmin),
     userControllers.adminVerifyUser
 );
 

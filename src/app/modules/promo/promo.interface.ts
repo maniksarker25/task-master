@@ -10,4 +10,5 @@ export interface IPromo {
     endDate: Date;
     status: (typeof ENUM_PROMO_STATUS)[keyof typeof ENUM_PROMO_STATUS];
     usesDate?: Date;
+    usedCount?: number;
 }

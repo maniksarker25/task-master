@@ -43,7 +43,11 @@ const taskSchema = new Schema<ITask>(
             default: ENUM_PAYMENT_STATUS.UNPAID,
         },
 
-        provider: { type: Schema.Types.ObjectId, ref: 'Provider' },
+        provider: {
+            type: Schema.Types.ObjectId,
+            ref: 'Provider',
+            default: null,
+        },
         customer: {
             type: Schema.Types.ObjectId,
             ref: 'Customer',
@@ -79,12 +83,14 @@ const taskSchema = new Schema<ITask>(
         },
         preferredDate: { type: Date },
         preferredTime: { type: String },
+        preferredDeliveryDateTime: { type: Date },
         description: { type: String, required: true },
         task_attachments: [{ type: String }],
         statusWithDate: {
             type: [statusWithDateSchema],
         },
     },
+
     { timestamps: true }
 );
 

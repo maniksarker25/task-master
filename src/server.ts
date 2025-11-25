@@ -7,6 +7,7 @@ import config from './app/config';
 import seedSuperAdmin from './app/DB';
 import { errorLogger, logger } from './app/shared/logger';
 import { initializeSocket } from './app/socket/socket';
+import seedReferral from './app/DB/referral';
 
 let myServer: HTTPServer | undefined;
 
@@ -20,6 +21,7 @@ async function main() {
         myServer = server.listen(port, '0.0.0.0', () => {
             logger.info(`Server running on http://0.0.0.0:${port}`);
             seedSuperAdmin();
+            seedReferral();
         });
 
         initializeSocket(myServer);

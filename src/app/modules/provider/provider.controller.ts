@@ -22,6 +22,32 @@ const getAllProvider = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const getSingleProvider = catchAsync(async (req, res) => {
+    const result = await ProviderServices.getSingleProvider(req.params.id);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Single provider retrieved successfully',
+        data: result,
+    });
+});
 
-const ProviderController = { getAllProvider, updateProvider };
+const getProviderMetaData = catchAsync(async (req, res) => {
+    const result = await ProviderServices.getProviderMetaDataFromDB(
+        req.user.profileId
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Provider meta data retrieved successfully',
+        data: result,
+    });
+});
+
+const ProviderController = {
+    getAllProvider,
+    updateProvider,
+    getSingleProvider,
+    getProviderMetaData,
+};
 export default ProviderController;

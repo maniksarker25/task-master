@@ -1,8 +1,8 @@
 import httpStatus from 'http-status';
+import { getCloudFrontUrl } from '../../helper/multer-s3-uploader';
 import catchAsync from '../../utilities/catchasync';
 import sendResponse from '../../utilities/sendResponse';
 import extensionRequestServices from './extensionRequest.service';
-import { getCloudFrontUrl } from '../../helper/multer-s3-uploader';
 
 const createExtensionRequest = catchAsync(async (req, res) => {
     const result = await extensionRequestServices.extensionRequestIntoDb(
@@ -74,6 +74,19 @@ const rejectRequest = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const makeDisputeForAdmin = catchAsync(async (req, res) => {
+    const result = await extensionRequestServices.makeDisputeForAdmin(
+        req.user.profileId,
+        req.params.id as string
+    );
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Dispute made for admin review',
+        data: result,
+    });
+});
 
 const ExtensionRequestController = {
     createExtensionRequest,
@@ -81,5 +94,6 @@ const ExtensionRequestController = {
     cancelExtensionRequestByTask,
     acceptRequest,
     rejectRequest,
+    makeDisputeForAdmin,
 };
 export default ExtensionRequestController;

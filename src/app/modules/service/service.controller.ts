@@ -32,6 +32,16 @@ const getAllService = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const getMyService = catchAsync(async (req, res) => {
+    const result = await serviceServices.getMyService(req.user.profileId);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Services retrieved Successfully',
+        data: result,
+    });
+});
 const deleteService = catchAsync(async (req, res) => {
     const profileId = req.user?.profileId;
     const serviceId = req.params.id;
@@ -55,10 +65,13 @@ const inactiveService = catchAsync(async (req, res) => {
         serviceId
     );
 
+    const message = result.isActive
+        ? 'Service activated successfully'
+        : 'Service deactivated successfully';
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: 'Delete Service  Successfully',
+        message,
         data: result,
     });
 });
@@ -97,5 +110,6 @@ const ServiceController = {
     getSingleService,
     inactiveService,
     updateService,
+    getMyService,
 };
 export default ServiceController;

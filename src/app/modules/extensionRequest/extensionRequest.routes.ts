@@ -50,4 +50,10 @@ router.patch(
     extensionRequestController.rejectRequest
 );
 
+router.post(
+    '/make-dispute-for-admin/:id',
+    auth(USER_ROLE.customer, USER_ROLE.provider),
+    extensionRequestController.makeDisputeForAdmin
+);
+
 export const extensionRequestRoutes = router;

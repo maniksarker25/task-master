@@ -5,23 +5,14 @@ import promoUseServices from './promoUse.service';
 
 const createPromoUse = catchAsync(async (req, res) => {
     const payload = req.body;
-    const result = await promoUseServices.createPromoUseIntoDB(payload);
+    const result = await promoUseServices.createPromoUseIntoDB(
+        payload,
+        req.user.profileId
+    );
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
         message: 'PromoUse created successfully',
-        data: result,
-    });
-});
-
-const updatePromoUse = catchAsync(async (req, res) => {
-    const { id } = req.params;
-    const payload = req.body;
-    const result = await promoUseServices.updatePromoUseByIdFromDB(id, payload);
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: 'PromoUse updated successfully',
         data: result,
     });
 });
@@ -38,7 +29,7 @@ const getAllPromoUses = catchAsync(async (req, res) => {
 
 const PromoUseController = {
     createPromoUse,
-    updatePromoUse,
+
     getAllPromoUses,
 };
 export default PromoUseController;
