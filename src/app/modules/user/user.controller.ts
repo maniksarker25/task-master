@@ -59,6 +59,7 @@ const updateUserProfile = catchAsync(async (req, res) => {
             address_document_file[0].key
         );
     }
+
     const result = await userServices.updateUserProfile(req.user, req.body);
     sendResponse(res, {
         statusCode: httpStatus.OK,
