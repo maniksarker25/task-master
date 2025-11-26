@@ -18,7 +18,8 @@ const verifyReferralCode = catchAsync(async (req, res) => {
 });
 const getMyReferral = catchAsync(async (req, res) => {
     const result = await referralUseServices.getMyReferralFromDB(
-        req.user.profileId
+        req.user.profileId,
+        req.query
     );
     sendResponse(res, {
         statusCode: httpStatus.OK,

@@ -1,15 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
+import mongoose from 'mongoose';
 import AppError from '../../error/appError';
-import { USER_ROLE } from '../user/user.constant';
 import { Customer } from '../customer/customer.model';
-import ReferralUseModel from './referralUse.model';
 import { Provider } from '../provider/provider.model';
-import ReferralModel from '../referral/referral.model';
 import {
     ENUM_REFERRAL_FOR,
     ENUM_REFERRAL_STATUS,
 } from '../referral/referral.enum';
+import ReferralModel from '../referral/referral.model';
+import { USER_ROLE } from '../user/user.constant';
+import ReferralUseModel from './referralUse.model';
 
 type TRole = 'customer' | 'provider';
 
@@ -36,7 +37,7 @@ const verifyReferralCodeFromDB = async (
             );
         }
 
-        const referred = await Customer.findById(profileId);
+        const referred = await Customer.findById(profileId).select('_id');
         if (!referred)
             throw new AppError(httpStatus.NOT_FOUND, 'Customer not found');
 
@@ -69,7 +70,7 @@ const verifyReferralCodeFromDB = async (
 
             referred: referred._id,
             referredFromModel: 'Customer',
-
+            value: referral.value,
             referral: referral._id,
         });
 
@@ -137,31 +138,68 @@ const verifyReferralCodeFromDB = async (
             referral: referral._id,
         });
 
-        // POPULATE ALL
-        const populated = await ReferralUseModel.findById(created._id)
-            .populate('referral')
-            .populate('referrer')
-            .populate('referred');
-
-        return populated;
+        return created;
     }
 
     throw new AppError(httpStatus.BAD_REQUEST, 'Invalid role');
 };
 
-const getMyReferralFromDB = async (profileId: string) => {
-    const result = await ReferralUseModel.find({
-        $or: [{ referrer: profileId }, { referred: profileId }],
-    }).populate('referral');
+const getMyReferralFromDB = async (
+    profileId: string,
+    query: Record<string, unknown>
+) => {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-    // Determine myStatus for each referral entry
-    const formatted = result.map((item: any) => ({
-        ...item.toObject(),
-        myStatus:
-            item.referrer.toString() === profileId ? 'referrer' : 'referred',
-    }));
+    const pipeline: any[] = [
+        {
+            $match: {
+                $or: [
+                    { referrer: new mongoose.Types.ObjectId(profileId) },
+                    { referred: new mongoose.Types.ObjectId(profileId) },
+                ],
+            },
+        },
+        {
+            $addFields: {
+                isMeReferrer: {
+                    $cond: [
+                        {
+                            $eq: [
+                                '$referrer',
+                                new mongoose.Types.ObjectId(profileId),
+                            ],
+                        },
+                        true,
+                        false,
+                    ],
+                },
+            },
+        },
+        {
+            $facet: {
+                result: [{ $skip: skip }, { $limit: limit }],
+                totalCount: [{ $count: 'total' }],
+            },
+        },
+    ];
 
-    return formatted;
+    const aggResult = await ReferralUseModel.aggregate(pipeline);
+
+    const result = aggResult[0]?.result || [];
+    const total = aggResult[0]?.totalCount[0]?.total || 0;
+    const totalPage = Math.ceil(total / limit);
+
+    return {
+        meta: {
+            page,
+            limit,
+            total,
+            totalPage,
+        },
+        result,
+    };
 };
 
 const ReferralUseServices = {
