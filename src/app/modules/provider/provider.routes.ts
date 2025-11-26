@@ -24,4 +24,9 @@ router.get(
     auth(USER_ROLE.admin, USER_ROLE.superAdmin),
     ProviderController.getSingleProvider
 );
+router.get(
+    '/metaData',
+    auth(USER_ROLE.provider),
+    ProviderController.getProviderMetaData
+);
 export const providerRoutes = router;
