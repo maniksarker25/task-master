@@ -1,6 +1,6 @@
 import { model, Schema } from 'mongoose';
-import { IReferralUse } from './referralUse.interface';
 import { ENUM_REFERRAL_USE_STATUS } from './referralUse.enum';
+import { IReferralUse } from './referralUse.interface';
 
 const referralUseSchema = new Schema<IReferralUse>(
     {
@@ -33,6 +33,14 @@ const referralUseSchema = new Schema<IReferralUse>(
             type: Schema.Types.ObjectId,
             ref: 'Referral',
             required: true,
+        },
+        value: {
+            type: Number,
+            required: true,
+        },
+        appliedAt: {
+            type: Date,
+            default: null,
         },
     },
     { timestamps: true }

@@ -1,6 +1,6 @@
-import { USER_ROLE } from '../user/user.constant';
 import express from 'express';
 import auth from '../../middlewares/auth';
+import { USER_ROLE } from '../user/user.constant';
 import notificationController from './notification.controller';
 const router = express.Router();
 
@@ -27,7 +27,12 @@ router.patch(
 
 router.delete(
     '/delete-notification/:id',
-    auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+    auth(
+        USER_ROLE.admin,
+        USER_ROLE.superAdmin,
+        USER_ROLE.customer,
+        USER_ROLE.provider
+    ),
     notificationController.deleteNotification
 );
 //
