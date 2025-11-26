@@ -21,6 +21,7 @@ declare namespace Express {
             conversation_image?: File[];
             conversation_video?: File[];
             conversation_pdf?: File[];
+            identification_document?: File[];
         };
     }
 }

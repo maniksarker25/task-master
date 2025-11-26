@@ -11,7 +11,7 @@ import { createToken, verifyToken } from '../user/user.utils';
 import { TLoginUser } from './auth.interface';
 // const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // const GOOGLE_CLIENT_IDS = (process.env.GOOGLE_CLIENT_IDS || '').split(',');
-import sendSMS from '../../helper/sendSms';
+import { sendSMS } from '../../helper/sendSms';
 import { Customer } from '../customer/customer.model';
 import { Provider } from '../provider/provider.model';
 import { USER_ROLE } from '../user/user.constant';
