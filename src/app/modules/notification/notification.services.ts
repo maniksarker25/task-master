@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable no-undef */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { JwtPayload } from 'jsonwebtoken';
-import { USER_ROLE } from '../user/user.constant';
-import QueryBuilder from '../../builder/QueryBuilder';
-import Notification from './notification.model';
-import getAdminNotificationCount from '../../helper/getAdminNotification';
-import { getIO } from '../../socket/socket';
-import getNotificationCount from '../../helper/getUnseenNotification';
-import AppError from '../../error/appError';
 import httpStatus from 'http-status';
+import { JwtPayload } from 'jsonwebtoken';
+import QueryBuilder from '../../builder/QueryBuilder';
+import AppError from '../../error/appError';
+import getAdminNotificationCount from '../../helper/getAdminNotification';
+import getNotificationCount from '../../helper/getUnseenNotification';
+import { getIO } from '../../socket/socket';
+import { USER_ROLE } from '../user/user.constant';
+import Notification from './notification.model';
 
 const getAllNotificationFromDB = async (
     query: Record<string, any>,
@@ -34,7 +34,7 @@ const getAllNotificationFromDB = async (
     } else {
         const notificationQuery = new QueryBuilder(
             Notification.find({
-                $or: [{ receiver: user?.id }, { receiver: 'all' }],
+                $or: [{ receiver: user?.profileId }, { receiver: 'all' }],
                 deleteBy: { $ne: user?.profileId },
             }),
 

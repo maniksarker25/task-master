@@ -1,17 +1,23 @@
 import express from 'express';
 import auth from '../../middlewares/auth';
-import { USER_ROLE } from '../user/user.constant';
 import validateRequest from '../../middlewares/validateRequest';
-import referralUseValidations from './referralUse.validation';
+import { USER_ROLE } from '../user/user.constant';
 import referralUseController from './referralUse.controller';
+import referralUseValidations from './referralUse.validation';
 
 const router = express.Router();
 
 router.post(
-    '/verify-referral-code',
+    '/apply-referral-code',
     validateRequest(referralUseValidations.verifyReferralCodeZodSchema),
     auth(USER_ROLE.customer, USER_ROLE.provider),
     referralUseController.verifyReferralCode
+);
+
+router.get(
+    '/my-referral',
+    auth(USER_ROLE.customer, USER_ROLE.provider),
+    referralUseController.getMyReferral
 );
 
 export const referralUseRoutes = router;
