@@ -1,8 +1,10 @@
 import express from 'express';
 
+import { NextFunction, Request, Response } from 'express';
 import validateRequest from '../../middlewares/validateRequest';
 import ProviderController from './provider.controller';
 
+import { uploadFile } from '../../helper/multer-s3-uploader';
 import auth from '../../middlewares/auth';
 import { USER_ROLE } from '../user/user.constant';
 import ProviderValidations from './provider.validation';
@@ -28,5 +30,25 @@ router.get(
     '/metaData',
     auth(USER_ROLE.provider),
     ProviderController.getProviderMetaData
+);
+
+router.post(
+    '/complete-identity-verification',
+    auth(USER_ROLE.provider),
+    uploadFile(),
+    (req: Request, res: Response, next: NextFunction) => {
+        if (req.body.data) {
+            req.body = JSON.parse(req.body.data);
+        }
+        next();
+    },
+    validateRequest(ProviderValidations.completeIdentityVerificationZodSchema),
+    ProviderController.completeIdentityVerification
+);
+router.post(
+    '/verify-bvn',
+    auth(USER_ROLE.provider),
+    validateRequest(ProviderValidations.verifyBVNZodSchema),
+    ProviderController.verifyBVN
 );
 export const providerRoutes = router;

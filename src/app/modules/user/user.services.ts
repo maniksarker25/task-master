@@ -271,6 +271,7 @@ const updateUserProfile = async (userData: JwtPayload, payload: any) => {
         if (payload.city) {
             payload.isAddressProvided = true;
         }
+
         const result = await Provider.findByIdAndUpdate(
             userData.profileId,
             payload,
