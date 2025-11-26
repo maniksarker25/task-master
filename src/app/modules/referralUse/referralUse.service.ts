@@ -50,6 +50,18 @@ const verifyReferralCodeFromDB = async (
                 'Referral settings not found'
             );
 
+        // CHECK IF ALREADY REFERRED
+        const alreadyReferred = await ReferralUseModel.findOne({
+            referred: referred._id,
+        });
+
+        if (alreadyReferred) {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                'You ARE already referred'
+            );
+        }
+
         // Create referral usage
         const created = await ReferralUseModel.create({
             referrer: referrer._id,
@@ -102,6 +114,18 @@ const verifyReferralCodeFromDB = async (
                 'Referral settings not found'
             );
 
+        // CHECK IF ALREADY REFERRED
+        const alreadyReferred = await ReferralUseModel.findOne({
+            referred: referred._id,
+        });
+
+        if (alreadyReferred) {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                'You ARE already referred'
+            );
+        }
+
         // Create referral usage
         const created = await ReferralUseModel.create({
             referrer: referrer._id,
@@ -126,8 +150,18 @@ const verifyReferralCodeFromDB = async (
 };
 
 const getMyReferralFromDB = async (profileId: string) => {
-    const result = await ReferralUseModel.find({ referrer: profileId });
-    return result;
+    const result = await ReferralUseModel.find({
+        $or: [{ referrer: profileId }, { referred: profileId }],
+    }).populate('referral');
+
+    // Determine myStatus for each referral entry
+    const formatted = result.map((item: any) => ({
+        ...item.toObject(),
+        myStatus:
+            item.referrer.toString() === profileId ? 'referrer' : 'referred',
+    }));
+
+    return formatted;
 };
 
 const ReferralUseServices = {
