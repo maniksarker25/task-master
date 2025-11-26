@@ -32,6 +32,7 @@ export const uploadFile = () => {
             'reject_evidence',
             'conversation_pdf',
             'conversation_image',
+            'identification_document',
         ];
 
         if (file.fieldname === undefined) {
@@ -96,6 +97,8 @@ export const uploadFile = () => {
                 uploadPath = 'uploads/documents/conversation_pdf';
             } else if (file.fieldname === 'conversation_image') {
                 uploadPath = 'uploads/images/conversation_image';
+            } else if (file.fieldname === 'identification_document') {
+                uploadPath = 'uploads/documents/identification_document';
             } else {
                 uploadPath = 'uploads';
             }
@@ -131,6 +134,7 @@ export const uploadFile = () => {
         { name: 'service_image', maxCount: 5 },
         { name: 'conversation_image', maxCount: 5 },
         { name: 'conversation_pdf', maxCount: 2 },
+        { name: 'identification_document', maxCount: 1 },
     ]);
 
     return upload;

@@ -198,10 +198,42 @@ const getProviderMetaDataFromDB = async (profileId: string) => {
     };
 };
 
+const completeIdentityVerificationFromDB = async (
+    profileId: string,
+    payload: Partial<IProvider>
+) => {
+    const provider = await Provider.findById(profileId);
+    if (!provider) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Provider not found');
+    }
+    const result = await Provider.findByIdAndUpdate(
+        profileId,
+        { isIdentificationDocumentApproved: true, ...payload },
+        { new: true }
+    );
+
+    return result;
+};
+
+const verifyBVN = async (profileId: string, bvn: string) => {
+    const provider = await Provider.findById(profileId);
+    if (!provider) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Provider not found');
+    }
+    const result = await Provider.findByIdAndUpdate(
+        profileId,
+        { isBankVerificationNumberApproved: true, bankVerificationNumber: bvn },
+        { new: true }
+    );
+    return result;
+};
+
 const ProviderServices = {
     updateProviderFromDB,
     getAllProviderFromDB,
     getSingleProvider,
     getProviderMetaDataFromDB,
+    completeIdentityVerificationFromDB,
+    verifyBVN,
 };
 export default ProviderServices;
