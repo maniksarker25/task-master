@@ -9,12 +9,6 @@ export enum ENUM_TASK_STATUS {
     OFFERED = 'OFFERED',
 }
 
-export enum ENUM_PAYMENT_STATUS {
-    PAID = 'PAID',
-    UNPAID = 'UNPAID',
-    REFOUND = 'REFUND',
-}
-
 export enum ENUM_DONE_BY {
     IN_PERSON = 'IN_PERSON',
     ONLINE = 'ONLINE',

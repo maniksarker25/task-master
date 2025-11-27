@@ -98,7 +98,7 @@ const acceptTaskByCustomer = catchAsync(async (req, res) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: 'Accept By Customer  successfully',
+        message: 'Payment link generated successfully',
         data: result,
     });
 });
