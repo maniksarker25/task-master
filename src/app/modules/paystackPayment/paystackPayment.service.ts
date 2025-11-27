@@ -13,6 +13,11 @@ import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
 import Notification from '../notification/notification.model';
 import { ENUM_TASK_STATUS } from '../task/task.enum';
 import TaskModel from '../task/task.model';
+import {
+    ENUM_TRANSACTION_REASON,
+    ENUM_TRANSACTION_TYPE,
+} from '../transaction/transaction.enum';
+import Transaction from '../transaction/transaction.model';
 // handle pay-stack webhook
 const handlePaystackWebhook = async (req: any) => {
     console.log('Handling Pay-stack webhook...');
@@ -36,7 +41,9 @@ const handlePaystackWebhook = async (req: any) => {
                             ENUM_PAYMENT_PURPOSE.BID_ACCEPT
                     ) {
                         return await handleBidAcceptPayment(
-                            event.data.metadata
+                            event.data.metadata,
+                            event.data.amount / 100,
+                            event.data.id
                         );
                     }
                     break;
@@ -58,7 +65,11 @@ const handlePaystackWebhook = async (req: any) => {
     }
 };
 
-const handleBidAcceptPayment = async (metaData: any) => {
+const handleBidAcceptPayment = async (
+    metaData: any,
+    amount: number,
+    transactionId: string
+) => {
     const task = await TaskModel.findById(metaData.taskId);
     if (!task) {
         throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
@@ -85,6 +96,15 @@ const handleBidAcceptPayment = async (metaData: any) => {
         },
         { new: true }
     );
+
+    await Transaction.create({
+        amount: amount,
+        type: ENUM_TRANSACTION_TYPE.CREDIT,
+        transactionId,
+        reason: ENUM_TRANSACTION_REASON.BID_ACCEPT_PAYMENT,
+        user: task.customer,
+        userType: 'Customer',
+    });
 
     const taskTitle = task?.title || 'Your task';
 

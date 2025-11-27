@@ -1,6 +1,6 @@
-import transactionModel from './transaction.model';
 import { Customer } from '../customer/customer.model';
 import { Provider } from '../provider/provider.model';
+import Transaction from './transaction.model';
 
 const getMyTransaction = async (id: string, role: 'customer' | 'provider') => {
     let myProfile;
@@ -15,7 +15,7 @@ const getMyTransaction = async (id: string, role: 'customer' | 'provider') => {
         throw new Error('Profile not found');
     }
 
-    const result = await transactionModel.find({
+    const result = await Transaction.find({
         user: myProfile._id,
     });
 
@@ -23,7 +23,7 @@ const getMyTransaction = async (id: string, role: 'customer' | 'provider') => {
 };
 
 const getAllTransaction = async () => {
-    const result = await transactionModel.find();
+    const result = await Transaction.find();
     return result;
 };
 
