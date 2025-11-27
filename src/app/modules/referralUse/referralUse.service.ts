@@ -46,10 +46,7 @@ const verifyReferralCodeFromDB = async (
             status: ENUM_REFERRAL_STATUS.ACTIVE,
         });
         if (!referral)
-            throw new AppError(
-                httpStatus.NOT_FOUND,
-                'Referral settings not found'
-            );
+            throw new AppError(httpStatus.NOT_FOUND, 'Referral  not found');
 
         // CHECK IF ALREADY REFERRED
         const alreadyReferred = await ReferralUseModel.findOne({
@@ -110,10 +107,7 @@ const verifyReferralCodeFromDB = async (
         });
 
         if (!referral)
-            throw new AppError(
-                httpStatus.NOT_FOUND,
-                'Referral settings not found'
-            );
+            throw new AppError(httpStatus.NOT_FOUND, 'Referral  not found');
 
         // CHECK IF ALREADY REFERRED
         const alreadyReferred = await ReferralUseModel.findOne({
