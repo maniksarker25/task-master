@@ -26,6 +26,7 @@ app.use(
             'https://www.taskalley.com',
             'http://localhost:3001',
             'http://10.10.20.48:3000',
+            'https://taskalley-deploy-5lzv.vercel.app',
         ],
         credentials: true,
     })
