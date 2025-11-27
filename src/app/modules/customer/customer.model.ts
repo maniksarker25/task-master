@@ -38,6 +38,10 @@ const customerSchema = new Schema<ICustomer>(
             type: String,
             default: '',
         },
+        address: {
+            type: String,
+            default: '',
+        },
         address_document: {
             type: String,
             default: '',

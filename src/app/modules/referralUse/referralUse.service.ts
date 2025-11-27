@@ -19,17 +19,16 @@ const verifyReferralCodeFromDB = async (
     profileId: string,
     role: TRole
 ) => {
-    // ============================
-    // CUSTOMER → CUSTOMER
-    // ============================
     if (role === USER_ROLE.customer) {
         const referrer = await Customer.findOne({ referralCode: code });
 
         if (!referrer) {
-            throw new AppError(httpStatus.NOT_FOUND, 'Invalid referral code');
+            throw new AppError(
+                httpStatus.NOT_FOUND,
+                'Invalid referral code or you use a provider code'
+            );
         }
 
-        // Prevent self-referral
         if (referrer._id.toString() === profileId) {
             throw new AppError(
                 httpStatus.BAD_REQUEST,
@@ -37,23 +36,16 @@ const verifyReferralCodeFromDB = async (
             );
         }
 
-        const referred = await Customer.findById(profileId).select('_id');
-        if (!referred)
-            throw new AppError(httpStatus.NOT_FOUND, 'Customer not found');
-
         const referral = await ReferralModel.findOne({
             referralFor: ENUM_REFERRAL_FOR.CUSTOMER,
             status: ENUM_REFERRAL_STATUS.ACTIVE,
         });
         if (!referral)
-            throw new AppError(
-                httpStatus.NOT_FOUND,
-                'Referral settings not found'
-            );
+            throw new AppError(httpStatus.NOT_FOUND, 'Referral  not found ');
 
         // CHECK IF ALREADY REFERRED
         const alreadyReferred = await ReferralUseModel.findOne({
-            referred: referred._id,
+            referred: profileId,
         });
 
         if (alreadyReferred) {
@@ -63,34 +55,25 @@ const verifyReferralCodeFromDB = async (
             );
         }
 
-        // Create referral usage
         const created = await ReferralUseModel.create({
             referrer: referrer._id,
             referrerFromModel: 'Customer',
 
-            referred: referred._id,
+            referred: profileId,
             referredFromModel: 'Customer',
             value: referral.value,
             referral: referral._id,
         });
 
-        // POPULATE ALL
-        const populated = await ReferralUseModel.findById(created._id)
-            .populate('referral')
-            .populate('referrer')
-            .populate('referred');
-
-        return populated;
-    }
-
-    // ============================
-    // PROVIDER → PROVIDER
-    // ============================
-    if (role === USER_ROLE.provider) {
+        return created;
+    } else if (role === USER_ROLE.provider) {
         const referrer = await Provider.findOne({ referralCode: code });
 
         if (!referrer) {
-            throw new AppError(httpStatus.NOT_FOUND, 'Invalid referral code');
+            throw new AppError(
+                httpStatus.NOT_FOUND,
+                'Invalid referral code or you use a customer code'
+            );
         }
 
         if (referrer._id.toString() === profileId) {
@@ -99,10 +82,6 @@ const verifyReferralCodeFromDB = async (
                 'You cannot refer yourself'
             );
         }
-
-        const referred = await Provider.findById(profileId);
-        if (!referred)
-            throw new AppError(httpStatus.NOT_FOUND, 'Provider not found');
 
         const referral = await ReferralModel.findOne({
             referralFor: ENUM_REFERRAL_FOR.PROVIDER,
@@ -110,14 +89,10 @@ const verifyReferralCodeFromDB = async (
         });
 
         if (!referral)
-            throw new AppError(
-                httpStatus.NOT_FOUND,
-                'Referral settings not found'
-            );
+            throw new AppError(httpStatus.NOT_FOUND, 'Referral  not found');
 
-        // CHECK IF ALREADY REFERRED
         const alreadyReferred = await ReferralUseModel.findOne({
-            referred: referred._id,
+            referred: profileId,
         });
 
         if (alreadyReferred) {
@@ -127,12 +102,11 @@ const verifyReferralCodeFromDB = async (
             );
         }
 
-        // Create referral usage
         const created = await ReferralUseModel.create({
             referrer: referrer._id,
             referrerFromModel: 'Provider',
 
-            referred: referred._id,
+            referred: profileId,
             referredFromModel: 'Provider',
 
             referral: referral._id,
@@ -140,8 +114,6 @@ const verifyReferralCodeFromDB = async (
 
         return created;
     }
-
-    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid role');
 };
 
 const getMyReferralFromDB = async (
