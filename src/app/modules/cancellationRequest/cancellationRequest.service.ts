@@ -120,126 +120,110 @@ const cancelCancellationRequestByTaskFromDB = async (
     return result;
 };
 
-const acceptCancellationRequestFromDB = async (
+const acceptRejectCancellationRequest = async (
     profileId: string,
-    cancellationId: string
+    cancellationId: string,
+    payload: Partial<ICancellationRequest>
 ) => {
     const session = await mongoose.startSession();
+
     try {
         session.startTransaction();
+
+        // 1. Find cancellation request
         const cancellationRequest =
             await CancellationRequestModel.findById(cancellationId).session(
                 session
             );
+
         if (!cancellationRequest) {
             throw new AppError(
                 httpStatus.NOT_FOUND,
                 'Cancellation Request not found'
             );
         }
+
+        // 2. Find task
         const task = await TaskModel.findById(cancellationRequest.task).session(
             session
         );
         if (!task) {
             throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
         }
+
+        // 3. Authorization check
         const isAuthorized =
-            task?.provider?.toString() === profileId ||
-            task?.customer?.toString() === profileId;
+            task.provider?.toString() === profileId ||
+            task.customer?.toString() === profileId;
+
         if (!isAuthorized) {
             throw new AppError(
                 httpStatus.UNAUTHORIZED,
-                'You are not authorized to process this request'
+                'You are not authorized'
             );
         }
-        const updatedCancellation =
-            await CancellationRequestModel.findByIdAndUpdate(
-                cancellationId,
+
+        let updatedCancellation: any = null;
+        let updatedTask: any = null;
+
+        // -------------------------
+        // ACCEPT LOGIC
+        // -------------------------
+        if (payload.status === ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED) {
+            updatedCancellation =
+                await CancellationRequestModel.findByIdAndUpdate(
+                    cancellationId,
+                    { status: ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED },
+                    { new: true, runValidators: true, session }
+                );
+
+            updatedTask = await TaskModel.findByIdAndUpdate(
+                task._id,
                 {
-                    status: ENUM_CANCELLATION_REQUEST_STATUS.APPROVED,
+                    status: ENUM_TASK_STATUS.CANCELLED,
+                    $push: {
+                        statusWithDate: {
+                            status: ENUM_TASK_STATUS.CANCELLED,
+                            date: new Date(),
+                        },
+                    },
                 },
                 { new: true, runValidators: true, session }
             );
-        const updatedTask = await TaskModel.findByIdAndUpdate(
-            task?._id,
-            {
-                status: ENUM_TASK_STATUS.CANCELLED,
-                $push: {
-                    statusWithDate: {
-                        status: ENUM_TASK_STATUS.CANCELLED,
-                        date: new Date(),
-                    },
-                },
-            },
-            { new: true, runValidators: true, session }
-        );
-        await session.commitTransaction();
+        }
 
+        // -------------------------
+        // REJECT LOGIC
+        // -------------------------
+        else if (payload.status === ENUM_CANCELLATION_REQUEST_STATUS.REJECTED) {
+            updatedCancellation =
+                await CancellationRequestModel.findByIdAndUpdate(
+                    cancellationId,
+                    {
+                        status: ENUM_CANCELLATION_REQUEST_STATUS.REJECTED,
+                        rejectDetails: payload?.rejectDetails,
+                        reject_evidence: payload?.reject_evidence,
+                    },
+                    { new: true, runValidators: true, session }
+                );
+        }
+
+        // Commit transaction only in ACCEPT case (because it updates task also)
+        await session.commitTransaction();
         return { cancellationRequest: updatedCancellation, task: updatedTask };
     } catch (error) {
         await session.abortTransaction();
-        session.endSession();
         throw error;
     } finally {
         session.endSession();
     }
 };
 
-const rejectCancellationRequestFromDB = async (
-    profileId: string,
-    cancellationId: string,
-    payload: Partial<ICancellationRequest>
-) => {
-    const cancellationRequest =
-        await CancellationRequestModel.findById(cancellationId);
-    if (!cancellationRequest) {
-        throw new AppError(
-            httpStatus.NOT_FOUND,
-            'Cancellation Request not found'
-        );
-    }
-
-    const task = await TaskModel.findById(cancellationRequest.task);
-    if (!task) {
-        throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
-    }
-
-    const isAuthorized =
-        task.provider?.toString() === profileId ||
-        task.customer?.toString() === profileId;
-
-    if (!isAuthorized) {
-        throw new AppError(
-            httpStatus.UNAUTHORIZED,
-            'You are not authorized to reject this request'
-        );
-    }
-
-    const updateData: Partial<ICancellationRequest> = {
-        status: ENUM_CANCELLATION_REQUEST_STATUS.REJECTED,
-        rejectDetails: payload.rejectDetails,
-        reject_evidence: payload.reject_evidence,
-    };
-
-    const result = await CancellationRequestModel.findByIdAndUpdate(
-        cancellationId,
-        { $set: updateData },
-        { new: true, runValidators: true }
-    );
-
-    if (!result) {
-        throw new AppError(httpStatus.NOT_FOUND, 'Failed to update rejection');
-    }
-
-    return result;
-};
-
 const CancellationRequestServices = {
     createCancellationRequestIntoDb,
     getCancellationRequestByTaskFromDB,
     cancelCancellationRequestByTaskFromDB,
-    acceptCancellationRequestFromDB,
-    rejectCancellationRequestFromDB,
+    acceptRejectCancellationRequest,
 };
 
 export default CancellationRequestServices;

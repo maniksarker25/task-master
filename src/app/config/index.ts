@@ -36,5 +36,7 @@ export default {
         smtp_pass: process.env.SMTP_PASS,
         name: process.env.SERVICE_NAME,
     },
-    smartsheet_api_key: process.env.SMARTSHEET_API_KEY,
+    payStack: {
+        secretKey: process.env.PAYSTACK_SECRET_KEY,
+    },
 };

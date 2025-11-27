@@ -11,13 +11,14 @@ import { createToken, verifyToken } from '../user/user.utils';
 import { TLoginUser } from './auth.interface';
 // const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // const GOOGLE_CLIENT_IDS = (process.env.GOOGLE_CLIENT_IDS || '').split(',');
-import sendSMS from '../../helper/sendSms';
+import { sendSMS } from '../../helper/sendSms';
 import { Customer } from '../customer/customer.model';
 import { Provider } from '../provider/provider.model';
 import { USER_ROLE } from '../user/user.constant';
 const generateVerifyCode = (): number => {
-    return Math.floor(10000 + Math.random() * 90000);
+    return Math.floor(100000 + Math.random() * 900000);
 };
+
 const loginUserIntoDB = async (payload: TLoginUser) => {
     const user = await User.findOne({ email: payload.email });
     if (!user) {

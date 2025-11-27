@@ -82,6 +82,10 @@ const providerSchema = new Schema<IProvider>(
             default: Math.random().toString(36).substring(2, 7).toUpperCase(),
             unique: true,
         },
+        address: {
+            type: String,
+            default: '',
+        },
     },
     {
         timestamps: true,

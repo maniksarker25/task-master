@@ -21,8 +21,27 @@ export const updateProviderZodSchema = z.object({
     }),
 });
 
+const completeIdentityVerificationZodSchema = z.object({
+    body: z.object({
+        identificationDocumentType: z
+            .string()
+            .min(1, 'Identification document type is required'),
+        identificationDocumentNumber: z
+            .string()
+            .min(1, 'Identification document number is required'),
+    }),
+});
+
+const verifyBVNZodSchema = z.object({
+    body: z.object({
+        bvn: z.string().min(1, 'Bank Verification Number is required'),
+    }),
+});
+
 const ProviderValidations = {
     updateProviderZodSchema,
+    completeIdentityVerificationZodSchema,
+    verifyBVNZodSchema,
 };
 
 export default ProviderValidations;
