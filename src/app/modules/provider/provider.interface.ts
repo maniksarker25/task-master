@@ -21,4 +21,5 @@ export interface IProvider {
     bankName?: string;
     bankAccountNumber?: string;
     referralCode?: string;
+    address?: string;
 }
