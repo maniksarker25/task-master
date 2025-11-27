@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
+import { getCloudFrontUrl } from '../../helper/multer-s3-uploader';
 import catchAsync from '../../utilities/catchasync';
 import sendResponse from '../../utilities/sendResponse';
+import { ENUM_CANCELLATION_REQUEST_STATUS } from './cancellationRequest.enum';
 import cancellationRequestServices from './cancellationRequest.service';
-import { getCloudFrontUrl } from '../../helper/multer-s3-uploader';
 
 const createCancellationRequest = catchAsync(async (req, res) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -52,46 +54,41 @@ const cancelCancellationRequest = catchAsync(async (req, res) => {
     });
 });
 
-const acceptCancellationRequest = catchAsync(async (req, res) => {
-    const result =
-        await cancellationRequestServices.acceptCancellationRequestFromDB(
-            req.user.profileId,
-            req.params.id as string
-        );
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: 'Cancellation request approved successfully',
-        data: result,
-    });
-});
+const handleAcceptRejectCancellationRequest = catchAsync(async (req, res) => {
+    const { status } = req.body;
 
-const rejectCancellationRequest = catchAsync(async (req, res) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const file: any = req.files?.reject_evidence;
-    if (req.files?.reject_evidence) {
+    if (file) {
         req.body.reject_evidence = getCloudFrontUrl(file[0].key);
     }
 
     const result =
-        await cancellationRequestServices.rejectCancellationRequestFromDB(
+        await cancellationRequestServices.acceptRejectCancellationRequest(
             req.user.profileId,
             req.params.id as string,
             req.body
         );
 
+    let message = 'Cancellation request updated successfully';
+
+    if (status === ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED) {
+        message = 'Cancellation request approved successfully';
+    } else if (status === ENUM_CANCELLATION_REQUEST_STATUS.REJECTED) {
+        message = 'Cancellation request rejected successfully';
+    }
+
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: 'Cancellation request rejected successfully',
+        message,
         data: result,
     });
 });
+
 const CancellationRequestController = {
     createCancellationRequest,
     getCancellationRequestByTask,
     cancelCancellationRequest,
-    acceptCancellationRequest,
-    rejectCancellationRequest,
+    handleAcceptRejectCancellationRequest,
 };
 export default CancellationRequestController;

@@ -1,10 +1,10 @@
 import express from 'express';
-import auth from '../../middlewares/auth';
-import { USER_ROLE } from '../user/user.constant';
-import validateRequest from '../../middlewares/validateRequest';
-import cancellationRequestValidations from './cancellationRequest.validation';
-import cancellationRequestController from './cancellationRequest.controller';
 import { uploadFile } from '../../helper/multer-s3-uploader';
+import auth from '../../middlewares/auth';
+import validateRequest from '../../middlewares/validateRequest';
+import { USER_ROLE } from '../user/user.constant';
+import cancellationRequestController from './cancellationRequest.controller';
+import cancellationRequestValidations from './cancellationRequest.validation';
 
 const router = express.Router();
 
@@ -37,13 +37,7 @@ router.delete(
 );
 
 router.patch(
-    '/acceptRequest/:id',
-    auth(USER_ROLE.customer, USER_ROLE.provider),
-    cancellationRequestController.acceptCancellationRequest
-);
-
-router.patch(
-    '/rejectRequest/:id',
+    '/accept-reject/:id',
     auth(USER_ROLE.customer, USER_ROLE.provider),
     uploadFile(),
     (req, res, next) => {
@@ -52,10 +46,8 @@ router.patch(
         }
         next();
     },
-    validateRequest(
-        cancellationRequestValidations.rejectCancellationRequestZodSchema
-    ),
-    cancellationRequestController.rejectCancellationRequest
+    validateRequest(cancellationRequestValidations.acceptRejectZodSchema),
+    cancellationRequestController.handleAcceptRejectCancellationRequest
 );
 
 export const cancellationRequestRoutes = router;
