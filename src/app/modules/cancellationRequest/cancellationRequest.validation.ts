@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { ENUM_CANCELLATION_REQUEST_STATUS } from './cancellationRequest.enum';
 
-// ✅ Create Cancellation Request Zod Schema
 export const createCancellationRequestZodSchema = z.object({
     body: z.object({
         task: z.string({ required_error: 'Task ID is required' }),
@@ -22,7 +21,6 @@ export const createCancellationRequestZodSchema = z.object({
     }),
 });
 
-// ✅ Update Cancellation Request Zod Schema
 export const updateCancellationRequestZodSchema = z.object({
     body: z.object({
         requestedBy: z.string().optional(),
@@ -42,21 +40,41 @@ export const updateCancellationRequestZodSchema = z.object({
     }),
 });
 
-const rejectCancellationRequestZodSchema = z.object({
-    body: z.object({
-        rejectDetails: z.string(),
+const acceptRejectZodSchema = z.object({
+    body: z
+        .object({
+            status: z.enum(
+                [
+                    ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED,
+                    ENUM_CANCELLATION_REQUEST_STATUS.REJECTED,
+                ],
+                {
+                    required_error: 'status is required',
+                }
+            ),
 
-        reject_evidence: z
-            .string()
-            .optional()
-            .describe('Optional image URL or file reference'),
-    }),
+            // For REJECTED case only
+            rejectDetails: z.string().optional(),
+            reject_evidence: z.string().optional(),
+        })
+        .refine(
+            (data) => {
+                if (data.status === ENUM_CANCELLATION_REQUEST_STATUS.REJECTED) {
+                    return !!data.rejectDetails;
+                }
+                return true;
+            },
+            {
+                message: 'rejectDetails is required when status is REJECTED',
+                path: ['rejectDetails'],
+            }
+        ),
 });
 
 const CancellationRequestValidations = {
     createCancellationRequestZodSchema,
     updateCancellationRequestZodSchema,
-    rejectCancellationRequestZodSchema,
+    acceptRejectZodSchema,
 };
 
 export default CancellationRequestValidations;
