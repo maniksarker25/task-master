@@ -40,10 +40,6 @@ const verifyReferralCodeFromDB = async (
             );
         }
 
-        const referred = await Customer.findById(profileId).select('_id');
-        if (!referred)
-            throw new AppError(httpStatus.NOT_FOUND, 'Customer not found');
-
         const referral = await ReferralModel.findOne({
             referralFor: ENUM_REFERRAL_FOR.CUSTOMER,
             status: ENUM_REFERRAL_STATUS.ACTIVE,
@@ -53,7 +49,7 @@ const verifyReferralCodeFromDB = async (
 
         // CHECK IF ALREADY REFERRED
         const alreadyReferred = await ReferralUseModel.findOne({
-            referred: referred._id,
+            referred: profileId,
         });
 
         if (alreadyReferred) {
@@ -68,25 +64,19 @@ const verifyReferralCodeFromDB = async (
             referrer: referrer._id,
             referrerFromModel: 'Customer',
 
-            referred: referred._id,
+            referred: profileId,
             referredFromModel: 'Customer',
             value: referral.value,
             referral: referral._id,
         });
 
-        // POPULATE ALL
-        const populated = await ReferralUseModel.findById(created._id)
-            .populate('referral')
-            .populate('referrer')
-            .populate('referred');
-
-        return populated;
+        return created;
     }
 
     // ============================
     // PROVIDER → PROVIDER
     // ============================
-    if (role === USER_ROLE.provider) {
+    else if (role === USER_ROLE.provider) {
         const referrer = await Provider.findOne({ referralCode: code });
 
         if (!referrer) {
@@ -103,10 +93,6 @@ const verifyReferralCodeFromDB = async (
             );
         }
 
-        const referred = await Provider.findById(profileId);
-        if (!referred)
-            throw new AppError(httpStatus.NOT_FOUND, 'Provider not found');
-
         const referral = await ReferralModel.findOne({
             referralFor: ENUM_REFERRAL_FOR.PROVIDER,
             status: ENUM_REFERRAL_STATUS.ACTIVE,
@@ -117,7 +103,7 @@ const verifyReferralCodeFromDB = async (
 
         // CHECK IF ALREADY REFERRED
         const alreadyReferred = await ReferralUseModel.findOne({
-            referred: referred._id,
+            referred: profileId,
         });
 
         if (alreadyReferred) {
@@ -132,7 +118,7 @@ const verifyReferralCodeFromDB = async (
             referrer: referrer._id,
             referrerFromModel: 'Provider',
 
-            referred: referred._id,
+            referred: profileId,
             referredFromModel: 'Provider',
 
             referral: referral._id,
