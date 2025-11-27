@@ -1,9 +1,5 @@
 import { Router } from 'express';
 import { authRoutes } from '../modules/auth/auth.routes';
-import { ManageRoutes } from '../modules/manage-web/manage.routes';
-import { notificationRoutes } from '../modules/notification/notification.routes';
-import { userRoutes } from '../modules/user/user.routes';
-
 import { bidRoutes } from '../modules/bid/bid.routes';
 import { cancellationRequestRoutes } from '../modules/cancellationRequest/cancellationRequest.routes';
 import { categoryRoutes } from '../modules/category/category.routes';
@@ -12,8 +8,11 @@ import { CustomerRoutes } from '../modules/customer/customer.routes';
 import { extensionRequestRoutes } from '../modules/extensionRequest/extensionRequest.routes';
 import { feedbackRoutes } from '../modules/feedback/feedback.routes';
 import { fileUploadRoutes } from '../modules/file-upload/file-upload.routes';
+import { ManageRoutes } from '../modules/manage-web/manage.routes';
 import { messageRoutes } from '../modules/message/message.routes';
 import { metaRoutes } from '../modules/meta/meta.routes';
+import { notificationRoutes } from '../modules/notification/notification.routes';
+import { paystackPaymentRoutes } from '../modules/paystackPayment/paystack.routes';
 import { promoRoutes } from '../modules/promo/promo.routes';
 import { promoUseRoutes } from '../modules/promoUse/promoUse.routes';
 import { providerRoutes } from '../modules/provider/provider.routes';
@@ -24,6 +23,7 @@ import { serviceRoutes } from '../modules/service/service.routes';
 import { subscriberRoutes } from '../modules/subscriber/subscriber.routes';
 import { superAdminRoutes } from '../modules/superAdmin/superAdmin.routes';
 import { taskRoutes } from '../modules/task/task.routes';
+import { userRoutes } from '../modules/user/user.routes';
 
 const router = Router();
 
@@ -125,6 +125,10 @@ const moduleRoutes = [
     {
         path: '/file',
         router: fileUploadRoutes,
+    },
+    {
+        path: '/paystack-payment',
+        router: paystackPaymentRoutes,
     },
 ];
 

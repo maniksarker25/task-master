@@ -3,12 +3,13 @@ import httpStatus from 'http-status';
 import AppError from '../../error/appError';
 import { ITask } from './task.interface';
 
+import axios from 'axios';
 import { JwtPayload } from 'jsonwebtoken';
 import mongoose from 'mongoose';
-import {
-    sendBatchPushNotification,
-    sendSinglePushNotification,
-} from '../../helper/sendPushNotification';
+import config from '../../config';
+import { payStackBaseUrl } from '../../constant';
+import { sendBatchPushNotification } from '../../helper/sendPushNotification';
+import { ENUM_PAYMENT_PURPOSE } from '../../utilities/enum';
 import bidModel from '../bid/bid.model';
 import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
 import Notification from '../notification/notification.model';
@@ -37,7 +38,6 @@ const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
             const title = 'New Task Created';
             const message = `A new task "${payload.title}" has been created`;
 
-            // 🔥 Save only ONE notification for all admins
             await Notification.create({
                 title,
                 message,
@@ -46,7 +46,6 @@ const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
                 redirectLink: `${createdTask?._id}`,
             });
 
-            // 🔥 But still send push notification to all admin devices
             const adminUserIds = admins.map((admin) => admin._id.toString());
             await sendBatchPushNotification(adminUserIds, title, message, {
                 taskId: result?._id.toString(),
@@ -555,63 +554,47 @@ const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
     if (!bidData) {
         throw new AppError(httpStatus.NOT_FOUND, 'Bid not found');
     }
-    const taskData = await TaskModel.findById(bidData.task);
-    if (taskData?.customer.toString() !== profileID) {
+    const taskData: any = await TaskModel.findById(bidData.task).populate({
+        path: 'customer',
+        select: 'email',
+    });
+    if (taskData?.customer?._id.toString() !== profileID) {
         throw new AppError(
             httpStatus.UNAUTHORIZED,
             'You are not authorized to accept this task'
         );
     }
-
-    const result = await TaskModel.findByIdAndUpdate(
-        bidData.task,
+    const amount = bidData.price * 100; // in kobo
+    // --- Initialize Pay-stack transaction ---
+    const headers = {
+        Authorization: `Bearer ${config.payStack.secretKey}`,
+        'Content-Type': 'application/json',
+    };
+    const response: any = await axios.post(
+        `${payStackBaseUrl}/transaction/initialize`,
         {
-            $set: {
-                provider: bidData.provider,
-                status: ENUM_TASK_STATUS.IN_PROGRESS,
-            },
-            statusWithDate: [
-                { status: ENUM_TASK_STATUS.OFFERED, date: bidData.createdAt },
-                { status: ENUM_TASK_STATUS.IN_PROGRESS, date: Date.now() },
-            ],
-        },
-        { new: true }
-    );
-
-    // ============================
-    // 🔥 SEND NOTIFICATION TO PROVIDER
-    // ============================
-
-    // 1. Task title (for message)
-    const taskTitle = taskData?.title || 'Your task';
-
-    // 2. Create notification in DB for provider
-    await Notification.create({
-        title: 'Task Accepted',
-        message: `Your bid has been accepted for task "${taskTitle}"`,
-        receiver: bidData.provider.toString(), // Provider profileId
-        type: ENUM_NOTIFICATION_TYPE.TASK_ACCEPTED,
-        redirectLink: `${bidData?.task}`,
-    });
-
-    // 3. Get provider userId for push notification
-    const providerUser: any = await User.findOne({
-        profileId: bidData.provider,
-    });
-
-    if (providerUser) {
-        await sendSinglePushNotification(
-            providerUser._id.toString(),
-            'Task Accepted',
-            `Your bid has been accepted for task "${taskTitle}"`,
-            {
+            email: taskData.customer.email,
+            amount,
+            // subaccount: partner.payStackSubAccountId,
+            metadata: {
                 taskId: bidData.task.toString(),
-                type: ENUM_NOTIFICATION_TYPE.TASK_ACCEPTED,
-            }
-        );
-    }
-
-    return result;
+                bidId: bidData._id.toString(),
+                customerId: profileID,
+                providerId: bidData.provider.toString(),
+                paymentPurpose: ENUM_PAYMENT_PURPOSE.BID_ACCEPT,
+            },
+            callback_url: `http://localhost:5000`,
+        },
+        {
+            headers,
+        }
+    );
+    const data = response.data.data;
+    return {
+        paymentLink: data.authorization_url,
+        accessCode: data.access_code,
+        reference: data.reference,
+    };
 };
 
 const completeTaskByCustomer = async (

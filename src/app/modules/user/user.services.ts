@@ -21,7 +21,7 @@ import { TUser, TUserRole } from './user.interface';
 import { User } from './user.model';
 import { createToken } from './user.utils';
 const generateVerifyCode = (): number => {
-    return Math.floor(10000 + Math.random() * 90000);
+    return Math.floor(100000 + Math.random() * 900000);
 };
 
 const registerCustomer = async (
@@ -51,7 +51,9 @@ const registerCustomer = async (
 
     try {
         const verifyCode =
-            process.env.NODE_ENV == 'production' ? generateVerifyCode() : 11111;
+            process.env.NODE_ENV == 'production'
+                ? generateVerifyCode()
+                : 111111;
 
         const userDataPayload: Partial<TUser> = {
             email: userData?.email,
