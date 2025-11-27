@@ -99,7 +99,7 @@ const handleBidAcceptPayment = async (
 
     await Transaction.create({
         amount: amount,
-        type: ENUM_TRANSACTION_TYPE.CREDIT,
+        type: ENUM_TRANSACTION_TYPE.DEBIT,
         transactionId,
         reason: ENUM_TRANSACTION_REASON.BID_ACCEPT_PAYMENT,
         user: task.customer,

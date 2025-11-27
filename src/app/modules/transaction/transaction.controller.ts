@@ -6,7 +6,8 @@ import transactionServices from './transaction.service';
 const getMyTransaction = catchAsync(async (req, res) => {
     const result = await transactionServices.getMyTransaction(
         req.user.profileId,
-        req.user.role
+        req.user.role,
+        req.query
     );
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -16,7 +17,7 @@ const getMyTransaction = catchAsync(async (req, res) => {
     });
 });
 const getAllTransaction = catchAsync(async (req, res) => {
-    const result = await transactionServices.getAllTransaction();
+    const result = await transactionServices.getAllTransaction(req.query);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
