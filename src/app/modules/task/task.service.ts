@@ -583,7 +583,7 @@ const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
                 providerId: bidData.provider.toString(),
                 paymentPurpose: ENUM_PAYMENT_PURPOSE.BID_ACCEPT,
             },
-            callback_url: `http://localhost:5000`,
+            callback_url: `http://10.10.20.48:3000/success`,
         },
         {
             headers,

@@ -4,8 +4,9 @@ export const ENUM_PRODUCT_STATUS = {
 } as const;
 
 export const ENUM_PAYMENT_STATUS = {
-    PENDING: 'Pending',
-    SUCCESS: 'Success',
+    PAID: 'PAID',
+    UNPAID: 'UNPAID',
+    REFUND: 'REFUND',
 };
 export const ENUM_PAYMENT_PURPOSE = {
     BID_ACCEPT: 'BID_ACCEPT',

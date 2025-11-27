@@ -1,11 +1,11 @@
 import { model, Schema } from 'mongoose';
 import {
     ENUM_DONE_BY,
-    ENUM_PAYMENT_STATUS,
     ENUM_SCHEDULE_TYPE,
     ENUM_TASK_STATUS,
 } from './task.enum';
 import { IStatusWithDate, ITask } from './task.interface';
+import { ENUM_PAYMENT_STATUS } from '../../utilities/enum';
 
 const statusWithDateSchema = new Schema<IStatusWithDate>({
     status: {

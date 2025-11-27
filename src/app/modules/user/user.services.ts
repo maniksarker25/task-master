@@ -50,10 +50,7 @@ const registerCustomer = async (
     session.startTransaction();
 
     try {
-        const verifyCode =
-            process.env.NODE_ENV == 'production'
-                ? generateVerifyCode()
-                : 111111;
+        const verifyCode = generateVerifyCode();
 
         const userDataPayload: Partial<TUser> = {
             email: userData?.email,
@@ -121,7 +118,8 @@ const verifyCode = async (email: string, verifyCode: number) => {
     if (user.codeExpireIn < new Date(Date.now())) {
         throw new AppError(httpStatus.BAD_REQUEST, 'Verify code is expired');
     }
-    if (verifyCode !== user.verifyCode) {
+    //TODO: remove 111111 after testing
+    if (verifyCode !== user.verifyCode && verifyCode !== 111111) {
         throw new AppError(httpStatus.BAD_REQUEST, "Code doesn't match");
     }
     const result = await User.findOneAndUpdate(
@@ -156,9 +154,23 @@ const verifyCode = async (email: string, verifyCode: number) => {
         config.jwt_refresh_expires_in as string
     );
 
+    const obj: any = {};
+    if (user.role == USER_ROLE.provider) {
+        const provider = await Provider.findById(user.profileId);
+        obj.isBankNumberVerified = provider?.isBankVerificationNumberApproved;
+        obj.isIdentificationDocumentVerified =
+            provider?.isIdentificationDocumentApproved;
+        obj.isAddressProvided = provider?.isAddressProvided;
+    } else {
+        const customer = await Customer.findById(user.profileId);
+        obj.isAddressProvided = customer?.isAddressProvided;
+    }
+
     return {
         accessToken,
         refreshToken,
+        ...obj,
+        role: user?.role,
     };
 };
 

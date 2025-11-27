@@ -4,7 +4,10 @@ import httpStatus from 'http-status';
 import config from '../../config';
 import AppError from '../../error/appError';
 import { sendSinglePushNotification } from '../../helper/sendPushNotification';
-import { ENUM_PAYMENT_PURPOSE } from '../../utilities/enum';
+import {
+    ENUM_PAYMENT_PURPOSE,
+    ENUM_PAYMENT_STATUS,
+} from '../../utilities/enum';
 import BidModel from '../bid/bid.model';
 import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
 import Notification from '../notification/notification.model';
@@ -29,7 +32,7 @@ const handlePaystackWebhook = async (req: any) => {
                     // Then define and call a method to handle the successful charge.
                     if (
                         event.data.metadata &&
-                        event.data.metadata.purpose ===
+                        event.data.metadata.paymentPurpose ===
                             ENUM_PAYMENT_PURPOSE.BID_ACCEPT
                     ) {
                         return await handleBidAcceptPayment(
@@ -73,6 +76,7 @@ const handleBidAcceptPayment = async (metaData: any) => {
             $set: {
                 provider: bid.provider,
                 status: ENUM_TASK_STATUS.IN_PROGRESS,
+                paymentStatus: ENUM_PAYMENT_STATUS.PAID,
             },
             statusWithDate: [
                 { status: ENUM_TASK_STATUS.OFFERED, date: bid.createdAt },
