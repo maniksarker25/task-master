@@ -29,6 +29,9 @@ const taskSchema = new Schema<ITask>(
         },
 
         budget: { type: Number, required: true },
+        acceptedBidAmount: { type: Number, default: null },
+        customerPayingAmount: { type: Number, default: null },
+        providerEarningAmount: { type: Number, default: null },
         status: {
             type: String,
             enum: Object.values(ENUM_TASK_STATUS),
