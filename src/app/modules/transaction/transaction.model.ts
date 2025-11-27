@@ -1,4 +1,8 @@
 import { model, Schema } from 'mongoose';
+import {
+    ENUM_TRANSACTION_REASON,
+    ENUM_TRANSACTION_TYPE,
+} from './transaction.enum';
 import { ITransaction } from './transaction.interface';
 
 const transactionSchema = new Schema<ITransaction>(
@@ -9,17 +13,17 @@ const transactionSchema = new Schema<ITransaction>(
         },
         type: {
             type: String,
-            enum: ['credit', 'debit'],
+            enum: Object.values(ENUM_TRANSACTION_TYPE),
             required: true,
         },
-        transactionID: {
+        transactionId: {
             type: String,
             required: true,
             unique: true,
         },
         reason: {
             type: String,
-            enum: ['bitAccept', 'withdraw', 'order'],
+            enum: Object.values(ENUM_TRANSACTION_REASON),
             required: true,
         },
         user: {
@@ -36,5 +40,5 @@ const transactionSchema = new Schema<ITransaction>(
     { timestamps: true }
 );
 
-const transactionModel = model<ITransaction>('Transaction', transactionSchema);
-export default transactionModel;
+const Transaction = model<ITransaction>('Transaction', transactionSchema);
+export default Transaction;
