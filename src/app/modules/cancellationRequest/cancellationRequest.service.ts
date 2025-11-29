@@ -240,12 +240,50 @@ const makeDisputeForAdmin = async (
     );
     return result;
 };
+
+const resolveByAdmin = async (
+    cancelRequestId: string,
+    status: ENUM_CANCELLATION_REQUEST_STATUS
+) => {
+    if (status === ENUM_CANCELLATION_REQUEST_STATUS.REJECTED) {
+        const cancelRequest =
+            await CancellationRequestModel.findById(cancelRequestId);
+        if (!cancelRequest) {
+            throw new AppError(
+                httpStatus.NOT_FOUND,
+                'Cancellation Request not found'
+            );
+        }
+        const result = await CancellationRequestModel.findByIdAndUpdate(
+            cancelRequestId,
+            { status: ENUM_CANCELLATION_REQUEST_STATUS.REJECTED },
+            { new: true, runValidators: true }
+        );
+        return result;
+    } else if (status === ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED) {
+        const cancelRequest =
+            await CancellationRequestModel.findById(cancelRequestId);
+        if (!cancelRequest) {
+            throw new AppError(
+                httpStatus.NOT_FOUND,
+                'Cancellation Request not found'
+            );
+        }
+    } else {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'Invalid status for resolution'
+        );
+    }
+};
+
 const CancellationRequestServices = {
     createCancellationRequestIntoDb,
     getCancellationRequestByTaskFromDB,
     cancelCancellationRequestByTaskFromDB,
     acceptRejectCancellationRequest,
     makeDisputeForAdmin,
+    resolveByAdmin,
 };
 
 export default CancellationRequestServices;
