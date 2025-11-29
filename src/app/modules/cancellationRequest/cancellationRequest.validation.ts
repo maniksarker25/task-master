@@ -82,6 +82,7 @@ const resolveByAdminZodSchema = z.object({
                 required_error: 'status is required',
             }
         ),
+        payTo: z.enum(['Customer', 'Provider']).optional(),
     }),
 });
 

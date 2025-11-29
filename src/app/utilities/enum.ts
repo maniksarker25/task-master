@@ -6,7 +6,7 @@ export const ENUM_PRODUCT_STATUS = {
 export const ENUM_PAYMENT_STATUS = {
     PAID: 'PAID',
     UNPAID: 'UNPAID',
-    REFUND: 'REFUND',
+    REFUNDED: 'REFUNDED',
 };
 export const ENUM_PAYMENT_PURPOSE = {
     BID_ACCEPT: 'BID_ACCEPT',

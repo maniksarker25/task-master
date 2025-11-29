@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import config from '../../config';
 import { payStackBaseUrl, platformChargePercentage } from '../../constant';
 import AppError from '../../error/appError';
+import { ENUM_PAYMENT_STATUS } from '../../utilities/enum';
 import { ENUM_TASK_STATUS } from '../task/task.enum';
 import TaskModel from '../task/task.model';
 import { ENUM_CANCELLATION_REQUEST_STATUS } from './cancellationRequest.enum';
@@ -133,7 +134,6 @@ const acceptRejectCancellationRequest = async (
     try {
         session.startTransaction();
 
-        // 1. Find cancellation request
         const cancellationRequest =
             await CancellationRequestModel.findById(cancellationId).session(
                 session
@@ -146,7 +146,6 @@ const acceptRejectCancellationRequest = async (
             );
         }
 
-        // 2. Find task
         const task = await TaskModel.findById(cancellationRequest.task).session(
             session
         );
@@ -154,7 +153,6 @@ const acceptRejectCancellationRequest = async (
             throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
         }
 
-        // 3. Authorization check
         const isAuthorized =
             task.provider?.toString() === profileId ||
             task.customer?.toString() === profileId;
@@ -184,6 +182,7 @@ const acceptRejectCancellationRequest = async (
                 task._id,
                 {
                     status: ENUM_TASK_STATUS.CANCELLED,
+                    paymentStatus: ENUM_PAYMENT_STATUS.REFUNDED,
                     $push: {
                         statusWithDate: {
                             status: ENUM_TASK_STATUS.CANCELLED,
@@ -262,11 +261,17 @@ const makeDisputeForAdmin = async (
     return result;
 };
 
-const resolveByAdmin = async (
-    cancelRequestId: string,
-    status: ENUM_CANCELLATION_REQUEST_STATUS
-) => {
-    if (status === ENUM_CANCELLATION_REQUEST_STATUS.REJECTED) {
+const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
+    if (
+        payload.status == ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED &&
+        !payload.payTo
+    ) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'payTo is required when accepting the cancellation request'
+        );
+    }
+    if (payload.status === ENUM_CANCELLATION_REQUEST_STATUS.REJECTED) {
         const cancelRequest =
             await CancellationRequestModel.findById(cancelRequestId);
         if (!cancelRequest) {
@@ -281,7 +286,7 @@ const resolveByAdmin = async (
             { new: true, runValidators: true }
         );
         return result;
-    } else if (status === ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED) {
+    } else if (payload.status === ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED) {
         const cancelRequest =
             await CancellationRequestModel.findById(cancelRequestId);
         if (!cancelRequest) {
@@ -289,6 +294,46 @@ const resolveByAdmin = async (
                 httpStatus.NOT_FOUND,
                 'Cancellation Request not found'
             );
+        }
+
+        const task = await TaskModel.findById(cancelRequest.task);
+        if (!task) {
+            throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+        }
+
+        const updatedTask = await TaskModel.findByIdAndUpdate(
+            task._id,
+            {
+                status: ENUM_TASK_STATUS.CANCELLED,
+                paymentStatus: ENUM_PAYMENT_STATUS.REFUNDED,
+            },
+            { new: true, runValidators: true }
+        );
+        if (payload.payTo === 'Customer') {
+            const platformCharge =
+                task.customerPayingAmount * platformChargePercentage;
+            const refundableAmount = task.customerPayingAmount - platformCharge;
+            const response = await axios.post(
+                `${payStackBaseUrl}/refund`,
+                {
+                    transaction: task.transactionId,
+                    amount: refundableAmount * 100,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${config.payStack.secretKey}`,
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+            console.log('Refund Response:', response.data);
+            return { updatedTask: updatedTask, refundResponse: response.data };
+        } else if (payload.payTo === 'Provider') {
+            //TODO: Logic for paying to provider can be implemented here
+            return {
+                updatedTask: updatedTask,
+                message: 'Payment to provider logic not implemented yet',
+            };
         }
     } else {
         throw new AppError(
