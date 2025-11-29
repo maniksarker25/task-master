@@ -97,6 +97,18 @@ const makeDisputeForAdmin = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const resolveByAdmin = catchAsync(async (req, res) => {
+    const result = await cancellationRequestServices.resolveByAdmin(
+        req.params.id as string,
+        req.body.status
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Resolved by admin',
+        data: result,
+    });
+});
 
 const CancellationRequestController = {
     createCancellationRequest,
@@ -104,5 +116,6 @@ const CancellationRequestController = {
     cancelCancellationRequest,
     handleAcceptRejectCancellationRequest,
     makeDisputeForAdmin,
+    resolveByAdmin,
 };
 export default CancellationRequestController;
