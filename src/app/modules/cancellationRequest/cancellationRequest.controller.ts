@@ -85,10 +85,24 @@ const handleAcceptRejectCancellationRequest = catchAsync(async (req, res) => {
     });
 });
 
+const makeDisputeForAdmin = catchAsync(async (req, res) => {
+    const result = await cancellationRequestServices.makeDisputeForAdmin(
+        req.user.profileId,
+        req.params.id as string
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Dispute made successfully',
+        data: result,
+    });
+});
+
 const CancellationRequestController = {
     createCancellationRequest,
     getCancellationRequestByTask,
     cancelCancellationRequest,
     handleAcceptRejectCancellationRequest,
+    makeDisputeForAdmin,
 };
 export default CancellationRequestController;

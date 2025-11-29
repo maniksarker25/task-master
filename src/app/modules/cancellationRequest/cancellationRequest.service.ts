@@ -219,11 +219,33 @@ const acceptRejectCancellationRequest = async (
     }
 };
 
+const makeDisputeForAdmin = async (
+    profileId: string,
+    cancelRequestId: string
+) => {
+    const cancelRequest: any = await CancellationRequestModel.findOne({
+        _id: cancelRequestId,
+        requestTo: profileId,
+    });
+    if (!cancelRequest) {
+        throw new AppError(
+            httpStatus.NOT_FOUND,
+            'Cancellation Request not found'
+        );
+    }
+    const result = await CancellationRequestModel.findByIdAndUpdate(
+        cancelRequestId,
+        { status: ENUM_CANCELLATION_REQUEST_STATUS.DISPUTED },
+        { new: true, runValidators: true }
+    );
+    return result;
+};
 const CancellationRequestServices = {
     createCancellationRequestIntoDb,
     getCancellationRequestByTaskFromDB,
     cancelCancellationRequestByTaskFromDB,
     acceptRejectCancellationRequest,
+    makeDisputeForAdmin,
 };
 
 export default CancellationRequestServices;
