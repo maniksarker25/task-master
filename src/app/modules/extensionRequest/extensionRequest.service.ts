@@ -146,119 +146,115 @@ const cancelExtensionRequestByTaskFromDB = async (
     return result;
 };
 
-const acceptRequestFromDB = async (profileId: string, extensionID: string) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
-    try {
-        const extensionRequest = await extensionRequestModel
-            .findById(extensionID)
-            .session(session);
-
-        if (!extensionRequest) {
-            throw new AppError(
-                httpStatus.NOT_FOUND,
-                'Extension Request not found'
-            );
-        }
-
-        const task = await TaskModel.findById(extensionRequest.task).session(
-            session
-        );
-
-        const isAuthorized =
-            task?.provider?.toString() === profileId ||
-            task?.customer?.toString() === profileId;
-
-        if (!isAuthorized) {
-            throw new AppError(
-                httpStatus.UNAUTHORIZED,
-                'You are not authorized to view this request'
-            );
-        }
-
-        const updatedExtension = await extensionRequestModel.findByIdAndUpdate(
-            extensionID,
-            {
-                status: ENUM_EXTENSION_REQUEST_STATUS.APPROVED,
-            },
-            { new: true, runValidators: true, session }
-        );
-
-        if (!updatedExtension) {
-            throw new AppError(
-                httpStatus.NOT_FOUND,
-                'No extension request found for this task'
-            );
-        }
-
-        await TaskModel.findByIdAndUpdate(
-            extensionRequest.task,
-            {
-                preferredDeliveryDateTime: extensionRequest.requestedDateTime,
-            },
-            { session }
-        );
-
-        await session.commitTransaction();
-        session.endSession();
-
-        return updatedExtension;
-    } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
-        throw error;
-    }
-};
-
-const rejectRequestFromDB = async (
+const extensionRequestAcceptReject = async (
     profileId: string,
     extensionID: string,
-    payload: Partial<IExtensionRequest>
+    payload: {
+        status: ENUM_EXTENSION_REQUEST_STATUS;
+        rejectDetails?: string;
+        reject_evidence?: string;
+    }
 ) => {
-    const extensionRequest: any = await extensionRequestModel
+    // Fetch extension request with task info
+    const extensionRequest = await extensionRequestModel
         .findById(extensionID)
         .populate({
             path: 'task',
-            select: 'provider customer',
+            select: 'provider customer preferredDeliveryDateTime',
         });
 
     if (!extensionRequest) {
         throw new AppError(httpStatus.NOT_FOUND, 'Extension Request not found');
     }
 
-    if (!extensionRequest.task) {
+    const task: any = extensionRequest.task;
+    if (!task) {
         throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
     }
 
+    // Authorization check
     const isAuthorized =
-        extensionRequest.task.provider?.toString() === profileId ||
-        extensionRequest.task.customer?.toString() === profileId;
+        task.provider?.toString() === profileId ||
+        task.customer?.toString() === profileId;
 
     if (!isAuthorized) {
         throw new AppError(
             httpStatus.UNAUTHORIZED,
-            'You are not authorized to reject this request'
+            'You are not authorized to update this request'
         );
     }
 
-    const updateData: Partial<IExtensionRequest> = {
-        status: ENUM_EXTENSION_REQUEST_STATUS.REJECTED,
-        rejectDetails: payload.rejectDetails,
-        reject_evidence: payload.reject_evidence,
-    };
+    // APPROVE FLOW (Requires Transaction)
+    if (payload.status === ENUM_EXTENSION_REQUEST_STATUS.APPROVED) {
+        const session = await mongoose.startSession();
+        session.startTransaction();
 
-    const result = await extensionRequestModel.findByIdAndUpdate(
-        extensionID,
-        { $set: updateData },
-        { new: true, runValidators: true }
-    );
+        try {
+            // Update request status
+            const updatedExtension =
+                await extensionRequestModel.findByIdAndUpdate(
+                    extensionID,
+                    { status: ENUM_EXTENSION_REQUEST_STATUS.APPROVED },
+                    { new: true, runValidators: true, session }
+                );
 
-    if (!result) {
-        throw new AppError(httpStatus.NOT_FOUND, 'Failed to update rejection');
+            if (!updatedExtension) {
+                throw new AppError(
+                    httpStatus.NOT_FOUND,
+                    'Failed to approve extension request'
+                );
+            }
+
+            // Update task delivery date
+            await TaskModel.findByIdAndUpdate(
+                task._id,
+                {
+                    preferredDeliveryDateTime:
+                        extensionRequest.requestedDateTime,
+                },
+                { session }
+            );
+
+            await session.commitTransaction();
+            session.endSession();
+
+            return updatedExtension;
+        } catch (err) {
+            await session.abortTransaction();
+            session.endSession();
+            throw err;
+        }
     }
 
-    return result;
+    // REJECT FLOW (Simple update)
+    if (payload.status === ENUM_EXTENSION_REQUEST_STATUS.REJECTED) {
+        const updateData: Partial<IExtensionRequest> = {
+            status: ENUM_EXTENSION_REQUEST_STATUS.REJECTED,
+            rejectDetails: payload.rejectDetails,
+            reject_evidence: payload.reject_evidence,
+        };
+
+        const result = await extensionRequestModel.findByIdAndUpdate(
+            extensionID,
+            { $set: updateData },
+            { new: true, runValidators: true }
+        );
+
+        if (!result) {
+            throw new AppError(
+                httpStatus.NOT_FOUND,
+                'Failed to reject request'
+            );
+        }
+
+        return result;
+    }
+
+    // If status is not supported
+    throw new AppError(
+        httpStatus.BAD_REQUEST,
+        `Invalid status: ${payload.status}`
+    );
 };
 
 const makeDisputeForAdmin = async (profileId: string, extensionID: string) => {
@@ -269,17 +265,21 @@ const makeDisputeForAdmin = async (profileId: string, extensionID: string) => {
     if (!extensionRequest) {
         throw new AppError(httpStatus.NOT_FOUND, 'Extension Request not found');
     }
-    extensionRequest.isDisputed = true;
-    await extensionRequest.save();
-    return extensionRequest;
+    const result = await ExtensionRequestModel.findByIdAndUpdate(
+        extensionID,
+        {
+            status: ENUM_EXTENSION_REQUEST_STATUS.DISPUTED,
+        },
+        { new: true, runValidators: true }
+    );
+    return result;
 };
 
 const ExtensionRequestServices = {
     extensionRequestIntoDb,
     getExtensionRequestByTaskFromDB,
     cancelExtensionRequestByTaskFromDB,
-    acceptRequestFromDB,
-    rejectRequestFromDB,
+    extensionRequestAcceptReject,
     makeDisputeForAdmin,
 };
 export default ExtensionRequestServices;

@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
 import { getCloudFrontUrl } from '../../helper/multer-s3-uploader';
 import catchAsync from '../../utilities/catchasync';
 import sendResponse from '../../utilities/sendResponse';
+import { ENUM_EXTENSION_REQUEST_STATUS } from './extensionRequest.enum';
 import extensionRequestServices from './extensionRequest.service';
 
 const createExtensionRequest = catchAsync(async (req, res) => {
@@ -42,26 +44,18 @@ const cancelExtensionRequestByTask = catchAsync(async (req, res) => {
         data: result,
     });
 });
-const acceptRequest = catchAsync(async (req, res) => {
-    const result = await extensionRequestServices.acceptRequestFromDB(
-        req.user.profileId,
-        req.params.id as string
-    );
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: 'Accept Request successfully',
-        data: result,
-    });
-});
+const extensionRequestAcceptReject = catchAsync(async (req, res) => {
+    const { status } = req.body;
 
-const rejectRequest = catchAsync(async (req, res) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const file: any = req.files?.reject_evidence;
-    if (req.files?.reject_evidence) {
+    if (
+        status === ENUM_EXTENSION_REQUEST_STATUS.REJECTED &&
+        req.files?.reject_evidence
+    ) {
+        const file: any = req.files.reject_evidence;
         req.body.reject_evidence = getCloudFrontUrl(file[0].key);
     }
-    const result = await extensionRequestServices.rejectRequestFromDB(
+
+    const result = await extensionRequestServices.extensionRequestAcceptReject(
         req.user.profileId,
         req.params.id as string,
         req.body
@@ -70,10 +64,14 @@ const rejectRequest = catchAsync(async (req, res) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: 'Reject Request successfully',
+        message:
+            status === ENUM_EXTENSION_REQUEST_STATUS.APPROVED
+                ? 'Extension request approved successfully'
+                : 'Extension request rejected successfully',
         data: result,
     });
 });
+
 const makeDisputeForAdmin = catchAsync(async (req, res) => {
     const result = await extensionRequestServices.makeDisputeForAdmin(
         req.user.profileId,
@@ -92,8 +90,7 @@ const ExtensionRequestController = {
     createExtensionRequest,
     extensionRequestByTask,
     cancelExtensionRequestByTask,
-    acceptRequest,
-    rejectRequest,
+    extensionRequestAcceptReject,
     makeDisputeForAdmin,
 };
 export default ExtensionRequestController;

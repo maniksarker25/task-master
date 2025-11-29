@@ -101,6 +101,7 @@ const handleChat = async (
             { conversationId: conversationId, msgByUserId: msgByUserId },
             { $set: { seen: true } }
         );
+
         //send conversation --------------
         const conversationSender = await getSingleConversation(
             conversationId,
@@ -110,7 +111,6 @@ const handleChat = async (
             conversationId,
             currentUserId
         );
-
         io.to(currentUserId as string).emit('conversation', conversationSender);
         io.to(msgByUserId).emit('conversation', conversationReceiver);
     });
