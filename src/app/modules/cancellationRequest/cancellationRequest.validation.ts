@@ -71,10 +71,26 @@ const acceptRejectZodSchema = z.object({
         ),
 });
 
+const resolveByAdminZodSchema = z.object({
+    body: z.object({
+        status: z.enum(
+            [
+                ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED,
+                ENUM_CANCELLATION_REQUEST_STATUS.REJECTED,
+            ],
+            {
+                required_error: 'status is required',
+            }
+        ),
+        payTo: z.enum(['Customer', 'Provider']).optional(),
+    }),
+});
+
 const CancellationRequestValidations = {
     createCancellationRequestZodSchema,
     updateCancellationRequestZodSchema,
     acceptRejectZodSchema,
+    resolveByAdminZodSchema,
 };
 
 export default CancellationRequestValidations;
