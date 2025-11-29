@@ -100,7 +100,7 @@ const makeDisputeForAdmin = catchAsync(async (req, res) => {
 const resolveByAdmin = catchAsync(async (req, res) => {
     const result = await cancellationRequestServices.resolveByAdmin(
         req.params.id as string,
-        req.body.status
+        req.body
     );
     sendResponse(res, {
         statusCode: httpStatus.OK,
