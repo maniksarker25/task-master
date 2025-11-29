@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
+import { ENUM_PAYMENT_STATUS } from '../../utilities/enum';
 import {
     ENUM_DONE_BY,
-    ENUM_PAYMENT_STATUS,
     ENUM_SCHEDULE_TYPE,
     ENUM_TASK_STATUS,
 } from './task.enum';
@@ -38,4 +38,5 @@ export interface ITask {
     description: string;
     task_attachments?: string[];
     statusWithDate: IStatusWithDate[];
+    transactionId?: string;
 }

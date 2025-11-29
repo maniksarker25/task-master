@@ -50,4 +50,17 @@ router.patch(
     cancellationRequestController.handleAcceptRejectCancellationRequest
 );
 
+router.patch(
+    '/make-dispute/:id',
+    auth(USER_ROLE.customer, USER_ROLE.provider),
+    cancellationRequestController.makeDisputeForAdmin
+);
+
+router.patch(
+    '/resolve-by-admin/:id',
+    auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+    validateRequest(cancellationRequestValidations.resolveByAdminZodSchema),
+    cancellationRequestController.resolveByAdmin
+);
+
 export const cancellationRequestRoutes = router;
