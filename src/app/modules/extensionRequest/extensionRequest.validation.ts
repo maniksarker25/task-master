@@ -36,9 +36,15 @@ export const updateExtensionRequestZodSchema = z.object({
     }),
 });
 
-const rejectExtensionRequestZodSchema = z.object({
+const extensionRequestActionZodSchema = z.object({
     body: z.object({
-        rejectDetails: z.string(),
+        status: z.enum([
+            ENUM_EXTENSION_REQUEST_STATUS.APPROVED,
+            ENUM_EXTENSION_REQUEST_STATUS.REJECTED,
+        ]),
+
+        // Only required when rejecting
+        rejectDetails: z.string().optional(),
 
         reject_evidence: z
             .string()
@@ -50,7 +56,7 @@ const rejectExtensionRequestZodSchema = z.object({
 const ExtensionRequestValidations = {
     createExtensionRequestZodSchema,
     updateExtensionRequestZodSchema,
-    rejectExtensionRequestZodSchema,
+    extensionRequestActionZodSchema,
 };
 
 export default ExtensionRequestValidations;
