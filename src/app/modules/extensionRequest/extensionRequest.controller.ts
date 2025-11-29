@@ -65,8 +65,8 @@ const extensionRequestAcceptReject = catchAsync(async (req, res) => {
         statusCode: httpStatus.OK,
         success: true,
         message:
-            status === ENUM_EXTENSION_REQUEST_STATUS.APPROVED
-                ? 'Extension request approved successfully'
+            status === ENUM_EXTENSION_REQUEST_STATUS.ACCEPTED
+                ? 'Extension request accepted successfully'
                 : 'Extension request rejected successfully',
         data: result,
     });

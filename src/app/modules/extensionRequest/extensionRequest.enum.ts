@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 export enum ENUM_EXTENSION_REQUEST_STATUS {
     PENDING = 'PENDING',
-    APPROVED = 'APPROVED',
+    ACCEPTED = 'ACCEPTED',
     REJECTED = 'REJECTED',
     RESOLVED = 'RESOLVED',
     DISPUTED = 'DISPUTED',

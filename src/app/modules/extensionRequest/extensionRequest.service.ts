@@ -185,7 +185,7 @@ const extensionRequestAcceptReject = async (
     }
 
     // APPROVE FLOW (Requires Transaction)
-    if (payload.status === ENUM_EXTENSION_REQUEST_STATUS.APPROVED) {
+    if (payload.status === ENUM_EXTENSION_REQUEST_STATUS.ACCEPTED) {
         const session = await mongoose.startSession();
         session.startTransaction();
 
@@ -194,7 +194,7 @@ const extensionRequestAcceptReject = async (
             const updatedExtension =
                 await extensionRequestModel.findByIdAndUpdate(
                     extensionID,
-                    { status: ENUM_EXTENSION_REQUEST_STATUS.APPROVED },
+                    { status: ENUM_EXTENSION_REQUEST_STATUS.ACCEPTED },
                     { new: true, runValidators: true, session }
                 );
 

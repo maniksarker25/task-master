@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { ENUM_EXTENSION_REQUEST_STATUS } from './extensionRequest.enum';
 
-// ✅ Create Extension Request Zod Schema
 export const createExtensionRequestZodSchema = z.object({
     body: z.object({
         task: z.string({ required_error: 'Task ID is required' }),
@@ -39,11 +38,10 @@ export const updateExtensionRequestZodSchema = z.object({
 const extensionRequestActionZodSchema = z.object({
     body: z.object({
         status: z.enum([
-            ENUM_EXTENSION_REQUEST_STATUS.APPROVED,
+            ENUM_EXTENSION_REQUEST_STATUS.ACCEPTED,
             ENUM_EXTENSION_REQUEST_STATUS.REJECTED,
         ]),
 
-        // Only required when rejecting
         rejectDetails: z.string().optional(),
 
         reject_evidence: z
