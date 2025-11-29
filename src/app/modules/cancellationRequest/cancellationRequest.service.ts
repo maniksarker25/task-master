@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import axios from 'axios';
 import httpStatus from 'http-status';
 import mongoose from 'mongoose';
+import config from '../../config';
+import { payStackBaseUrl, platformChargePercentage } from '../../constant';
 import AppError from '../../error/appError';
 import { ENUM_TASK_STATUS } from '../task/task.enum';
 import TaskModel from '../task/task.model';
@@ -190,6 +193,24 @@ const acceptRejectCancellationRequest = async (
                 },
                 { new: true, runValidators: true, session }
             );
+            const platformCharge =
+                task.customerPayingAmount * platformChargePercentage;
+            const refundableAmount = task.customerPayingAmount - platformCharge;
+            const response = await axios.post(
+                `${payStackBaseUrl}/refund`,
+                {
+                    transaction: task.transactionId,
+                    amount: refundableAmount * 100,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${config.payStack.secretKey}`,
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+            console.log('Refund Response:', response.data);
+            return { updatedTask: updatedTask, refundResponse: response.data };
         }
 
         // -------------------------
