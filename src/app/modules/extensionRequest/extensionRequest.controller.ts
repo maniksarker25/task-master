@@ -3,6 +3,7 @@ import httpStatus from 'http-status';
 import { getCloudFrontUrl } from '../../helper/multer-s3-uploader';
 import catchAsync from '../../utilities/catchasync';
 import sendResponse from '../../utilities/sendResponse';
+import { ENUM_CANCELLATION_REQUEST_STATUS } from '../cancellationRequest/cancellationRequest.enum';
 import { ENUM_EXTENSION_REQUEST_STATUS } from './extensionRequest.enum';
 import extensionRequestServices from './extensionRequest.service';
 
@@ -86,11 +87,37 @@ const makeDisputeForAdmin = catchAsync(async (req, res) => {
     });
 });
 
+const resolveByAdmin = catchAsync(async (req, res) => {
+    const { status } = req.body;
+    const file: any = req.files?.reject_evidence;
+    if (file) {
+        req.body.reject_evidence = getCloudFrontUrl(file[0].key);
+    }
+    const result = await extensionRequestServices.resolveByAdmin(
+        req.params.id as string,
+        req.body
+    );
+    let message = 'Cancellation request updated successfully';
+
+    if (status === ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED) {
+        message = 'Cancellation request approved successfully';
+    } else if (status === ENUM_CANCELLATION_REQUEST_STATUS.REJECTED) {
+        message = 'Cancellation request rejected successfully';
+    }
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: message,
+        data: result,
+    });
+});
+
 const ExtensionRequestController = {
     createExtensionRequest,
     extensionRequestByTask,
     cancelExtensionRequestByTask,
     extensionRequestAcceptReject,
     makeDisputeForAdmin,
+    resolveByAdmin,
 };
 export default ExtensionRequestController;

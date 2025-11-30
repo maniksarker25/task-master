@@ -256,6 +256,103 @@ const extensionRequestAcceptReject = async (
         `Invalid status: ${payload.status}`
     );
 };
+const resolveByAdmin = async (
+    extensionID: string,
+    payload: {
+        status: ENUM_EXTENSION_REQUEST_STATUS;
+        rejectDetails?: string;
+        reject_evidence?: string;
+    }
+) => {
+    // Fetch extension request with task info
+    const extensionRequest = await extensionRequestModel
+        .findById(extensionID)
+        .populate({
+            path: 'task',
+            select: 'provider customer preferredDeliveryDateTime',
+        });
+
+    if (!extensionRequest) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Extension Request not found');
+    }
+
+    const task: any = extensionRequest.task;
+    if (!task) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+    }
+
+    // APPROVE FLOW (Requires Transaction)
+    if (payload.status === ENUM_EXTENSION_REQUEST_STATUS.ACCEPTED) {
+        const session = await mongoose.startSession();
+        session.startTransaction();
+
+        try {
+            // Update request status
+            const updatedExtension =
+                await extensionRequestModel.findByIdAndUpdate(
+                    extensionID,
+                    { status: ENUM_EXTENSION_REQUEST_STATUS.RESOLVED },
+                    { new: true, runValidators: true, session }
+                );
+
+            if (!updatedExtension) {
+                throw new AppError(
+                    httpStatus.NOT_FOUND,
+                    'Failed to approve extension request'
+                );
+            }
+
+            // Update task delivery date
+            await TaskModel.findByIdAndUpdate(
+                task._id,
+                {
+                    preferredDeliveryDateTime:
+                        extensionRequest.requestedDateTime,
+                },
+                { session }
+            );
+
+            await session.commitTransaction();
+            session.endSession();
+
+            return updatedExtension;
+        } catch (err) {
+            await session.abortTransaction();
+            session.endSession();
+            throw err;
+        }
+    }
+
+    // REJECT FLOW (Simple update)
+    else if (payload.status === ENUM_EXTENSION_REQUEST_STATUS.REJECTED) {
+        const updateData: Partial<IExtensionRequest> = {
+            status: ENUM_EXTENSION_REQUEST_STATUS.RESOLVED,
+            rejectDetails: payload.rejectDetails,
+            reject_evidence: payload.reject_evidence,
+        };
+
+        const result = await extensionRequestModel.findByIdAndUpdate(
+            extensionID,
+            { $set: updateData },
+            { new: true, runValidators: true }
+        );
+
+        if (!result) {
+            throw new AppError(
+                httpStatus.NOT_FOUND,
+                'Failed to reject request'
+            );
+        }
+
+        return result;
+    }
+
+    // If status is not supported
+    throw new AppError(
+        httpStatus.BAD_REQUEST,
+        `Invalid status: ${payload.status}`
+    );
+};
 
 const makeDisputeForAdmin = async (profileId: string, extensionID: string) => {
     const extensionRequest: any = await ExtensionRequestModel.findOne({
@@ -281,5 +378,6 @@ const ExtensionRequestServices = {
     cancelExtensionRequestByTaskFromDB,
     extensionRequestAcceptReject,
     makeDisputeForAdmin,
+    resolveByAdmin,
 };
 export default ExtensionRequestServices;

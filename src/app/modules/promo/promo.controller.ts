@@ -14,7 +14,7 @@ const createPromo = catchAsync(async (req, res) => {
 });
 
 const getAllPromo = catchAsync(async (req, res) => {
-    const result = await promoServices.getAllPromoFromDB();
+    const result = await promoServices.getAllPromoFromDB(req.query);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
