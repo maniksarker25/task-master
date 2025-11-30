@@ -27,27 +27,23 @@ router.delete(
     extensionRequestController.cancelExtensionRequestByTask
 );
 router.patch(
-    '/acceptRequest/:id',
-    auth(USER_ROLE.customer, USER_ROLE.provider),
-    extensionRequestController.acceptRequest
-);
-
-router.patch(
-    '/rejectRequest/:id',
+    '/accept-reject/:id',
     auth(USER_ROLE.customer, USER_ROLE.provider),
 
     uploadFile(),
+
     (req, res, next) => {
         if (req.body.data) {
             req.body = JSON.parse(req.body.data);
         }
         next();
     },
+
     validateRequest(
-        extensionRequestValidations.rejectExtensionRequestZodSchema
+        extensionRequestValidations.extensionRequestActionZodSchema
     ),
 
-    extensionRequestController.rejectRequest
+    extensionRequestController.extensionRequestAcceptReject
 );
 
 router.post(
