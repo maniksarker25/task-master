@@ -8,12 +8,28 @@ const createPromoIntoDB = async (payload: IPromo) => {
     return result;
 };
 
-const getAllPromoFromDB = async () => {
-    const result = await PromoModel.find();
+const getAllPromoFromDB = async (query: Record<string, unknown>) => {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const result = await PromoModel.find().skip(skip).limit(limit).sort({
+        createdAt: -1,
+    });
+
+    const total = await PromoModel.countDocuments();
+    const totalPage = Math.ceil(total / limit);
     if (!result) {
         throw new AppError(httpStatus.NOT_FOUND, 'Promos not found');
     }
-    return result;
+    return {
+        meta: {
+            page,
+            limit,
+            total,
+            totalPage,
+        },
+        result,
+    };
 };
 const getSinglePromoFromDB = async (id: string) => {
     const result = await PromoModel.findById(id);

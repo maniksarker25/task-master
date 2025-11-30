@@ -2,6 +2,7 @@ import express from 'express';
 import { uploadFile } from '../../helper/multer-s3-uploader';
 import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
+import CancellationRequestValidations from '../cancellationRequest/cancellationRequest.validation';
 import { USER_ROLE } from '../user/user.constant';
 import extensionRequestController from './extensionRequest.controller';
 import extensionRequestValidations from './extensionRequest.validation';
@@ -51,5 +52,11 @@ router.post(
     auth(USER_ROLE.customer, USER_ROLE.provider),
     extensionRequestController.makeDisputeForAdmin
 );
+router.patch(
+    'resolve-by-admin/:id',
+    auth(USER_ROLE.superAdmin, USER_ROLE.admin),
+    validateRequest(CancellationRequestValidations.resolveByAdminZodSchema),
 
+    extensionRequestController.resolveByAdmin
+);
 export const extensionRequestRoutes = router;
