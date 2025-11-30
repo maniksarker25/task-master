@@ -351,12 +351,19 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
             }
 
             if (payload.payTo === 'Provider') {
-                const referralUse = await ReferralUseModel.findOne({
-                    referred: task.provider,
-                    status: ENUM_REFERRAL_USE_STATUS.ACTIVE,
-                })
-                    .sort({ createdAt: 1 })
-                    .session(session);
+                const referralUse = await ReferralUseModel.findOneAndUpdate(
+                    {
+                        referred: task.provider,
+                        status: ENUM_REFERRAL_USE_STATUS.ACTIVE,
+                    },
+                    { status: ENUM_REFERRAL_USE_STATUS.USED },
+                    {
+                        new: true,
+                        sort: { createdAt: 1 },
+                        runValidators: true,
+                        session,
+                    }
+                );
 
                 const amount = referralUse
                     ? (task.acceptedBidAmount ?? 0) + referralUse.value
