@@ -1,6 +1,5 @@
 import { model, Schema } from 'mongoose';
 import { IPayment } from './payment.interface';
-import { ENUM_PAYMENT_STATUS } from './payment.enum';
 
 const paymentSchema = new Schema<IPayment>(
     {
@@ -9,35 +8,22 @@ const paymentSchema = new Schema<IPayment>(
             ref: 'Provider',
             required: true,
         },
-        email: {
-            type: String,
-            required: true,
-            trim: true,
-        },
-        amount: {
-            type: Number,
+        task: {
+            type: Schema.Types.ObjectId,
+            ref: 'Task',
             required: true,
         },
-        bankName: {
-            type: String,
-            required: true,
-        },
-        acNumber: {
-            type: String,
-            required: true,
-        },
-        completeDate: {
-            type: Date,
-            required: true,
-        },
-        status: {
-            type: String,
-            enum: Object.values(ENUM_PAYMENT_STATUS),
-            default: ENUM_PAYMENT_STATUS.PENDING,
-        },
+        // amount:{
+        //     type:S
+        // }
+        // status: {
+        //     type: String,
+        //     enum: Object.values(ENUM_PAYMENT_STATUS),
+        //     default: ENUM_PAYMENT_STATUS.PENDING,
+        // },
     },
     { timestamps: true }
 );
 
-const PaymentModel = model<IPayment>('Payment', paymentSchema);
-export default PaymentModel;
+const Payment = model<IPayment>('Payment', paymentSchema);
+export default Payment;
