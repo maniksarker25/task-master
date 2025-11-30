@@ -6,6 +6,9 @@ import config from '../../config';
 import { payStackBaseUrl, platformChargePercentage } from '../../constant';
 import AppError from '../../error/appError';
 import { ENUM_PAYMENT_STATUS } from '../../utilities/enum';
+import Payment from '../payment/payment.model';
+import { ENUM_REFERRAL_USE_STATUS } from '../referralUse/referralUse.enum';
+import ReferralUseModel from '../referralUse/referralUse.model';
 import { ENUM_TASK_STATUS } from '../task/task.enum';
 import TaskModel from '../task/task.model';
 import { ENUM_CANCELLATION_REQUEST_STATUS } from './cancellationRequest.enum';
@@ -267,7 +270,7 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
 
     try {
         if (
-            payload.status == ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED &&
+            payload.status === ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED &&
             !payload.payTo
         ) {
             throw new AppError(
@@ -288,7 +291,6 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
             );
         }
 
-        // ----- CASE 1: Rejected -----
         if (payload.status === ENUM_CANCELLATION_REQUEST_STATUS.REJECTED) {
             const result = await CancellationRequestModel.findByIdAndUpdate(
                 cancelRequestId,
@@ -297,15 +299,14 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
             );
 
             await session.commitTransaction();
-            session.endSession();
             return result;
         }
 
-        // ----- CASE 2: Accepted -----
         if (payload.status === ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED) {
             const task = await TaskModel.findById(cancelRequest.task).session(
                 session
             );
+
             if (!task) {
                 throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
             }
@@ -325,15 +326,12 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
                 { new: true, runValidators: true, session }
             );
 
-            // ----- REFUND CASE: Pay to Customer -----
             if (payload.payTo === 'Customer') {
                 const platformCharge =
                     task.customerPayingAmount * platformChargePercentage;
-
                 const refundableAmount =
                     task.customerPayingAmount - platformCharge;
 
-                // ---- IMPORTANT: Call refund API AFTER UPDATES but BEFORE COMMIT ----
                 const response = await axios.post(
                     `${payStackBaseUrl}/refund`,
                     {
@@ -348,26 +346,42 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
                     }
                 );
 
-                // If refund fails → catch block → rollback
-                console.log('Refund Response:', response.data);
-
                 await session.commitTransaction();
-                session.endSession();
-
                 return { updatedTask, refundResponse: response.data };
             }
 
-            // ----- PAY TO PROVIDER CASE -----
             if (payload.payTo === 'Provider') {
-                // Implement later...
+                const referralUse = await ReferralUseModel.findOneAndUpdate(
+                    {
+                        referred: task.provider,
+                        status: ENUM_REFERRAL_USE_STATUS.ACTIVE,
+                    },
+                    { status: ENUM_REFERRAL_USE_STATUS.USED },
+                    {
+                        new: true,
+                        sort: { createdAt: 1 },
+                        runValidators: true,
+                        session,
+                    }
+                );
+
+                const amount = referralUse
+                    ? (task.acceptedBidAmount ?? 0) + referralUse.value
+                    : task.acceptedBidAmount ?? 0;
+
+                await Payment.create(
+                    [
+                        {
+                            provider: task.provider,
+                            task: task._id,
+                            amount,
+                        },
+                    ],
+                    { session }
+                );
 
                 await session.commitTransaction();
-                session.endSession();
-
-                return {
-                    updatedTask,
-                    message: 'Payment to provider logic not implemented yet',
-                };
+                return { updatedTask, message: 'Provider payment processed' };
             }
         }
 
@@ -376,10 +390,10 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
             'Invalid status for resolution'
         );
     } catch (error) {
-        //ROLLBACK EVERYTHING IF ANY ERROR OCCURS
         await session.abortTransaction();
-        session.endSession();
         throw error;
+    } finally {
+        session.endSession();
     }
 };
 

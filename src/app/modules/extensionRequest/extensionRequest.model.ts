@@ -55,10 +55,6 @@ const extensionRequestSchema = new Schema<IExtensionRequest>(
             type: Date,
             default: null,
         },
-        isDisputed: {
-            type: Boolean,
-            default: false,
-        },
     },
     { timestamps: true }
 );
