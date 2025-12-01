@@ -10,10 +10,6 @@ const userSchema = new Schema<TUser>(
             type: String,
             default: null,
         },
-        promo: {
-            type: Schema.Types.ObjectId,
-            ref: 'Promo',
-        },
         email: {
             type: String,
             required: true,

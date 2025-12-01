@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Schema, model } from 'mongoose';
 import { ICustomer } from './customer.interface';
 
@@ -60,7 +61,7 @@ const customerSchema = new Schema<ICustomer>(
         },
         referralCode: {
             type: String,
-            default: Math.random().toString(36).substring(2, 7).toUpperCase(),
+            // default: Math.random().toString(36).substring(2, 7).toUpperCase(),
             unique: true,
         },
     },
@@ -69,5 +70,29 @@ const customerSchema = new Schema<ICustomer>(
         versionKey: false,
     }
 );
+
+customerSchema.statics.generateUniqueReferralCode = async function () {
+    const generate = () =>
+        Math.random().toString(36).substring(2, 7).toUpperCase();
+
+    let code = generate();
+    let exists = await this.findOne({ referralCode: code });
+
+    while (exists) {
+        code = generate();
+        exists = await this.findOne({ referralCode: code });
+    }
+
+    return code;
+};
+
+customerSchema.pre('save', async function (next) {
+    if (!this.referralCode) {
+        this.referralCode = await (
+            this.constructor as any
+        ).generateUniqueReferralCode();
+    }
+    next();
+});
 
 export const Customer = model<ICustomer>('Customer', customerSchema);
