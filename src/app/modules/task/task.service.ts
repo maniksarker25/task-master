@@ -646,6 +646,12 @@ const completeTaskByCustomer = async (
             {
                 status: ENUM_TASK_STATUS.COMPLETED,
                 providerEarningAmount: providerEarning,
+                $push: {
+                    statusWithDate: {
+                        status: ENUM_TASK_STATUS.COMPLETED,
+                        date: new Date(),
+                    },
+                },
             },
             {
                 new: true,
