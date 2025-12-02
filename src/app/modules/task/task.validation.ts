@@ -1,7 +1,7 @@
 import { z } from 'zod';
+import { ENUM_PAYMENT_STATUS } from '../../utilities/enum';
 import {
     ENUM_DONE_BY,
-    ENUM_PAYMENT_STATUS,
     ENUM_SCHEDULE_TYPE,
     ENUM_TASK_STATUS,
 } from './task.enum';
@@ -34,15 +34,7 @@ export const createTaskZodSchema = z.object({
         doneBy: z.nativeEnum(ENUM_DONE_BY).optional(),
         location: locationSchema,
         scheduleType: z.nativeEnum(ENUM_SCHEDULE_TYPE).optional(),
-        preferredDate: z.coerce.date().optional(),
-
-        // ✅ 24-hour time format validation
-        preferredTime: z
-            .string()
-            .regex(timeRegex, {
-                message: 'Preferred time must be in 24-hour format (HH:mm)',
-            })
-            .optional(),
+        preferredDeliveryDateTime: z.coerce.date(),
 
         description: z
             .string({ required_error: 'Description is required' })
