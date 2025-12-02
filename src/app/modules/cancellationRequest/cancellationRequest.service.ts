@@ -330,16 +330,21 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
                 { new: true, runValidators: true, session }
             );
 
-            const updatedTask = await TaskModel.findByIdAndUpdate(
-                task._id,
-                {
-                    status: ENUM_TASK_STATUS.CANCELLED,
-                    paymentStatus: ENUM_PAYMENT_STATUS.REFUNDED,
-                },
-                { new: true, runValidators: true, session }
-            );
-
             if (payload.payTo === 'Customer') {
+                const updatedTask = await TaskModel.findByIdAndUpdate(
+                    task._id,
+                    {
+                        status: ENUM_TASK_STATUS.CANCELLED,
+                        paymentStatus: ENUM_PAYMENT_STATUS.REFUNDED,
+                        $push: {
+                            statusWithDate: {
+                                status: ENUM_TASK_STATUS.CANCELLED,
+                                date: new Date(),
+                            },
+                        },
+                    },
+                    { new: true, runValidators: true, session }
+                );
                 const platformCharge =
                     task.customerPayingAmount * platformChargePercentage;
                 const refundableAmount =
@@ -378,9 +383,27 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
                     }
                 );
 
-                const amount = referralUse
+                const platformCharge =
+                    task.acceptedBidAmount * platformChargePercentage;
+                const initialAmount = referralUse
                     ? (task.acceptedBidAmount ?? 0) + referralUse.value
                     : task.acceptedBidAmount ?? 0;
+                const amount = initialAmount - platformCharge;
+                const updatedTask = await TaskModel.findByIdAndUpdate(
+                    task._id,
+                    {
+                        status: ENUM_TASK_STATUS.CANCELLED,
+                        paymentStatus: ENUM_PAYMENT_STATUS.PAID_TO_PROVIDER,
+                        providerEarningAmount: amount,
+                        $push: {
+                            statusWithDate: {
+                                status: ENUM_TASK_STATUS.CANCELLED,
+                                date: new Date(),
+                            },
+                        },
+                    },
+                    { new: true, runValidators: true, session }
+                );
 
                 await Payment.create(
                     [

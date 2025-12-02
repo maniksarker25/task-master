@@ -15,9 +15,9 @@ export interface ITask {
     title: string;
     category: Types.ObjectId;
     budget: number;
-    acceptedBidAmount?: number;
+    acceptedBidAmount: number;
     customerPayingAmount: number;
-    providerEarningAmount?: number;
+    providerEarningAmount: number;
     status: (typeof ENUM_TASK_STATUS)[keyof typeof ENUM_TASK_STATUS];
     isDeleted: boolean;
     paymentStatus: (typeof ENUM_PAYMENT_STATUS)[keyof typeof ENUM_PAYMENT_STATUS];
