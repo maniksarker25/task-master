@@ -19,6 +19,19 @@ const createCancellationRequestIntoDb = async (
     profileId: string,
     payload: Partial<ICancellationRequest>
 ) => {
+    const requestExists = await CancellationRequestModel.findOne({
+        requestFrom: profileId,
+        $or: [
+            { status: ENUM_CANCELLATION_REQUEST_STATUS.PENDING },
+            { status: ENUM_CANCELLATION_REQUEST_STATUS.DISPUTED },
+        ],
+    });
+    if (!requestExists) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'You have already submitted an cancellation request that has not been resolved yet. Once it is resolved, you can submit another request.'
+        );
+    }
     let currentUserRole;
     let requestToUserRole;
     let requestTo: any;

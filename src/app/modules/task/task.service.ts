@@ -13,7 +13,10 @@ import { ENUM_PAYMENT_PURPOSE } from '../../utilities/enum';
 import bidModel from '../bid/bid.model';
 import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
 import Notification from '../notification/notification.model';
+import Payment from '../payment/payment.model';
 import QuestionModel from '../question/question.model';
+import { ENUM_REFERRAL_USE_STATUS } from '../referralUse/referralUse.enum';
+import ReferralUseModel from '../referralUse/referralUse.model';
 import { USER_ROLE } from '../user/user.constant';
 import { User } from '../user/user.model';
 import { ENUM_TASK_STATUS } from './task.enum';
@@ -601,50 +604,114 @@ const completeTaskByCustomer = async (
     taskId: string,
     currentUserId: string
 ) => {
-    const task = await TaskModel.findById(taskId);
-    if (!task) {
-        throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
-    }
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    if (task.customer?.toString() !== currentUserId) {
-        throw new AppError(
-            httpStatus.UNAUTHORIZED,
-            'You are not authorized to complete this task'
+    try {
+        //  GET TASK & VALIDATION
+        const task = await TaskModel.findById(taskId).session(session);
+        if (!task) {
+            throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+        }
+
+        if (task.customer?.toString() !== currentUserId) {
+            throw new AppError(
+                httpStatus.UNAUTHORIZED,
+                'You are not authorized to complete this task'
+            );
+        }
+
+        //  HANDLE REFERRAL BONUS (Includes rollback)
+        const referralUse = await ReferralUseModel.findOneAndUpdate(
+            {
+                referred: task.provider,
+                status: ENUM_REFERRAL_USE_STATUS.ACTIVE,
+            },
+            { status: ENUM_REFERRAL_USE_STATUS.USED },
+            {
+                new: true,
+                sort: { createdAt: 1 },
+                runValidators: true,
+                session,
+            }
         );
+
+        const providerEarning = referralUse
+            ? (task.acceptedBidAmount ?? 0) + referralUse.value
+            : task.acceptedBidAmount ?? 0;
+
+        //  UPDATE TASK STATUS + PROVIDER EARNING
+        const updatedTask = await TaskModel.findByIdAndUpdate(
+            taskId,
+            {
+                status: ENUM_TASK_STATUS.COMPLETED,
+                providerEarningAmount: providerEarning,
+                $push: {
+                    statusWithDate: {
+                        status: ENUM_TASK_STATUS.COMPLETED,
+                        date: new Date(),
+                    },
+                },
+            },
+            {
+                new: true,
+                runValidators: true,
+                session,
+            }
+        );
+
+        // CREATE PAYMENT
+        await Payment.create(
+            [
+                {
+                    provider: task.provider,
+                    task: task._id,
+                    amount: providerEarning,
+                },
+            ],
+            { session }
+        );
+
+        // SAVE NOTIFICATION (In transaction)
+        const title = 'Task Completed';
+        const message = `Task "${task.title}" has been completed`;
+        const redirectLink = `${task._id}`;
+
+        await Notification.create(
+            [
+                {
+                    title,
+                    message,
+                    receiver: USER_ROLE.admin,
+                    type: ENUM_NOTIFICATION_TYPE.TASK_COMPLETED,
+                    redirectLink,
+                },
+            ],
+            { session }
+        );
+
+        // COMMIT TRANSACTION
+        await session.commitTransaction();
+        session.endSession();
+
+        //PUSH NOTIFICATION (OUTSIDE TRANSACTION)
+        const admins = await User.find({ role: USER_ROLE.admin }).select('_id');
+
+        if (admins.length > 0) {
+            const adminUserIds = admins.map((a) => a._id.toString());
+
+            await sendBatchPushNotification(adminUserIds, title, message, {
+                type: ENUM_NOTIFICATION_TYPE.TASK_COMPLETED,
+                taskId: task._id.toString(),
+            });
+        }
+
+        return updatedTask;
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
     }
-
-    task.status = ENUM_TASK_STATUS.COMPLETED;
-    await task.save();
-    // ================================
-    // 🔥 SEND NOTIFICATION TO ADMINS
-    // ================================
-
-    const title = 'Task Completed';
-    const message = `Task "${task.title}" has been completed`;
-    const redirectLink = `${task._id}`;
-
-    // 1. Save ONE notification for all admins
-    await Notification.create({
-        title,
-        message,
-        receiver: USER_ROLE.admin, // All admins
-        type: ENUM_NOTIFICATION_TYPE.TASK_COMPLETED,
-        redirectLink,
-    });
-
-    // 2. Push notification to all admin userIds
-    const admins = await User.find({ role: USER_ROLE.admin }).select('_id');
-
-    if (admins.length > 0) {
-        const adminUserIds = admins.map((a) => a._id.toString());
-
-        await sendBatchPushNotification(adminUserIds, title, message, {
-            type: ENUM_NOTIFICATION_TYPE.TASK_COMPLETED,
-            taskId: task._id.toString(),
-        });
-    }
-
-    return task;
 };
 
 const TaskServices = {

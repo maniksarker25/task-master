@@ -1,11 +1,10 @@
 /* eslint-disable no-unused-vars */
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { USER_ROLE } from './user.constant';
 
 export interface TUser {
     _id: string;
     profileId: string;
-    promo: Types.ObjectId;
     email: string;
     phone: string;
     password: string;
