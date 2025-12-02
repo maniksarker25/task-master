@@ -7,7 +7,7 @@ import axios from 'axios';
 import { JwtPayload } from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import config from '../../config';
-import { payStackBaseUrl } from '../../constant';
+import { payStackBaseUrl, platformChargePercentage } from '../../constant';
 import { sendBatchPushNotification } from '../../helper/sendPushNotification';
 import { ENUM_PAYMENT_PURPOSE } from '../../utilities/enum';
 import bidModel from '../bid/bid.model';
@@ -636,10 +636,12 @@ const completeTaskByCustomer = async (
             }
         );
 
-        const providerEarning = referralUse
+        const platformCharge =
+            task.acceptedBidAmount * platformChargePercentage;
+        const earning = referralUse
             ? (task.acceptedBidAmount ?? 0) + referralUse.value
             : task.acceptedBidAmount ?? 0;
-
+        const providerEarning = earning - platformCharge;
         //  UPDATE TASK STATUS + PROVIDER EARNING
         const updatedTask = await TaskModel.findByIdAndUpdate(
             taskId,
