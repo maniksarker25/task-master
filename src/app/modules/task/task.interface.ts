@@ -32,8 +32,6 @@ export interface ITask {
     address: string;
     city: string;
     scheduleType: (typeof ENUM_SCHEDULE_TYPE)[keyof typeof ENUM_SCHEDULE_TYPE];
-    preferredDate?: Date;
-    preferredTime?: string;
     preferredDeliveryDateTime?: Date;
     description: string;
     task_attachments?: string[];

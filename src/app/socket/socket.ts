@@ -26,6 +26,7 @@ const initializeSocket = (server: HTTPServer) => {
                     'https://admin.bankybondy.com',
                     'http://admin.bankybondy.com',
                     'http://192.168.0.100:3000',
+                    'http://10.10.20.48:3000',
                 ],
             },
         });
