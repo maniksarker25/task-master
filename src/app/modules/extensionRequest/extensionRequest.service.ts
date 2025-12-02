@@ -19,6 +19,19 @@ const extensionRequestIntoDb = async (
     profileId: string,
     payload: Partial<IExtensionRequest>
 ) => {
+    const requestExists = await ExtensionRequestModel.findOne({
+        requestFrom: profileId,
+        $or: [
+            { status: ENUM_EXTENSION_REQUEST_STATUS.PENDING },
+            { status: ENUM_EXTENSION_REQUEST_STATUS.DISPUTED },
+        ],
+    });
+    if (!requestExists) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'You have already submitted an extension request that has not been resolved yet. Once it is resolved, you can submit another request.'
+        );
+    }
     let currentUserRole;
     let requestToUserRole;
     let requestTo: any;
