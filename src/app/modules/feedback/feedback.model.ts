@@ -11,7 +11,7 @@ const feedbackSchema = new Schema<IFeedback>(
         service: {
             type: Schema.Types.ObjectId,
             ref: 'Service',
-            required: true,
+            default: null,
         },
         provider: {
             type: Schema.Types.ObjectId,
