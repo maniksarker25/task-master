@@ -8,6 +8,11 @@ const feedbackSchema = new Schema<IFeedback>(
             ref: 'Task',
             required: true,
         },
+        service: {
+            type: Schema.Types.ObjectId,
+            ref: 'Service',
+            default: null,
+        },
         provider: {
             type: Schema.Types.ObjectId,
             ref: 'Provider',
