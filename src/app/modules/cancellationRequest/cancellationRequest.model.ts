@@ -33,10 +33,7 @@ const extensionRequestSchema = new Schema<ICancellationRequest>(
             type: Date,
             required: true,
         },
-        requestedDateTime: {
-            type: Date,
-            required: true,
-        },
+
         reason: {
             type: String,
             required: true,

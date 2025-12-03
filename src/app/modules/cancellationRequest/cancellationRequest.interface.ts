@@ -8,7 +8,6 @@ export interface ICancellationRequest {
     requestTo: Types.ObjectId;
     requestToModel: 'Customer' | 'Provider';
     currentDate: Date;
-    requestedDateTime: Date;
     reason: string;
     status: (typeof ENUM_CANCELLATION_REQUEST_STATUS)[keyof typeof ENUM_CANCELLATION_REQUEST_STATUS];
     rejectDetails?: string;

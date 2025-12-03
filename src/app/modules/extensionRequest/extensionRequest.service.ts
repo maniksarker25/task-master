@@ -26,13 +26,12 @@ const extensionRequestIntoDb = async (
             { status: ENUM_EXTENSION_REQUEST_STATUS.DISPUTED },
         ],
     });
-    //!TODO: need to uncommented that thing
-    // if (!requestExists) {
-    //     throw new AppError(
-    //         httpStatus.BAD_REQUEST,
-    //         'You have already submitted an extension request that has not been resolved yet. Once it is resolved, you can submit another request.'
-    //     );
-    // }
+    if (!requestExists) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'You have already submitted an extension request that has not been resolved yet. Once it is resolved, you can submit another request.'
+        );
+    }
     let currentUserRole;
     let requestToUserRole;
     let requestTo: any;
