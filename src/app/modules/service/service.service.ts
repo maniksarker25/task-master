@@ -291,8 +291,8 @@ const getSingleServiceFromDB = async (serviceId: string) => {
         {
             $lookup: {
                 from: 'feedbacks',
-                localField: 'provider',
-                foreignField: 'provider',
+                localField: '_id',
+                foreignField: 'service',
                 as: 'feedbacks',
             },
         },
