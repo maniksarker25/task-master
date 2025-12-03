@@ -6,9 +6,7 @@ export const createCancellationRequestZodSchema = z.object({
         task: z.string({ required_error: 'Task ID is required' }),
         requestedBy: z.string().optional(),
         currentDate: z.coerce.date().optional(),
-        requestedDateTime: z.coerce.date({
-            required_error: 'Requested date is required',
-        }),
+
         reason: z
             .string({ required_error: 'Reason is required' })
             .min(1, 'Reason cannot be empty'),
@@ -25,11 +23,7 @@ export const updateCancellationRequestZodSchema = z.object({
     body: z.object({
         requestedBy: z.string().optional(),
         currentDate: z.coerce.date().optional(),
-        requestedDateTime: z.coerce
-            .date({
-                required_error: 'Requested date is required',
-            })
-            .optional(),
+
         reason: z
             .string({ required_error: 'Reason is required' })
             .min(1, 'Reason cannot be empty')

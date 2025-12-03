@@ -68,7 +68,6 @@ const createCancellationRequestIntoDb = async (
         requestedFromModel: currentUserRole,
         requestToModel: requestToUserRole,
         currentDate: task.preferredDeliveryDateTime,
-        requestedDateTime: payload.requestedDateTime,
         reason: payload.reason,
     };
     const result = await CancellationRequestModel.create(extensionRequestData);
