@@ -24,7 +24,7 @@ router.post(
 router.get('/all-service', serviceController.getAllService);
 router.get(
     '/my-service',
-    auth(USER_ROLE.provider),
+    auth(USER_ROLE.provider, USER_ROLE.customer),
     serviceController.getMyService
 );
 router.delete(

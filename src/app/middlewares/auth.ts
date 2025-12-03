@@ -49,7 +49,7 @@ const auth = (...requiredRoles: TUserRole[]) => {
             if (!user) {
                 throw new AppError(
                     httpStatus.UNAUTHORIZED,
-                    'Unauthorized access 1'
+                    'Unauthorized access'
                 );
             }
             if (user.isDeleted) {
