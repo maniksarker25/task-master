@@ -174,8 +174,14 @@ const getMyReferralFromDB = async (
     };
 };
 
+const getAllReferralUseFromDB = async () => {
+    const result = await ReferralUseModel.find().populate();
+    return result;
+};
+
 const ReferralUseServices = {
     verifyReferralCodeFromDB,
     getMyReferralFromDB,
+    getAllReferralUseFromDB,
 };
 export default ReferralUseServices;

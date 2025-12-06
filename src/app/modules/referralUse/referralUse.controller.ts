@@ -29,8 +29,19 @@ const getMyReferral = catchAsync(async (req, res) => {
     });
 });
 
+const getAllReferral = catchAsync(async (req, res) => {
+    const result = await referralUseServices.getAllReferralUseFromDB();
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'referral get successfully',
+        data: result,
+    });
+});
+
 const ReferralUseController = {
     verifyReferralCode,
     getMyReferral,
+    getAllReferral,
 };
 export default ReferralUseController;
