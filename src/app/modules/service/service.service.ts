@@ -57,6 +57,46 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
         },
         {
             $lookup: {
+                from: 'categories',
+                localField: 'category',
+                foreignField: '_id',
+                as: 'category',
+            },
+        },
+        {
+            $unwind: {
+                path: '$category',
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+
+        {
+            $lookup: {
+                from: 'providers',
+                localField: 'provider',
+                foreignField: '_id',
+                as: 'provider',
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            user: 1,
+                            name: 1,
+                            email: 1,
+                            phone: 1,
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $unwind: {
+                path: '$provider',
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
                 from: 'feedbacks',
                 localField: '_id',
                 foreignField: 'service',
@@ -144,6 +184,47 @@ const getMyService = async (userId: string, query: Record<string, unknown>) => {
                 ...filters,
                 ...searchMatchStage,
                 provider: new mongoose.Types.ObjectId(userId),
+            },
+        },
+
+        {
+            $lookup: {
+                from: 'categories',
+                localField: 'category',
+                foreignField: '_id',
+                as: 'category',
+            },
+        },
+        {
+            $unwind: {
+                path: '$category',
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+
+        {
+            $lookup: {
+                from: 'providers',
+                localField: 'provider',
+                foreignField: '_id',
+                as: 'provider',
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            user: 1,
+                            name: 1,
+                            email: 1,
+                            phone: 1,
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $unwind: {
+                path: '$provider',
+                preserveNullAndEmptyArrays: true,
             },
         },
         {
