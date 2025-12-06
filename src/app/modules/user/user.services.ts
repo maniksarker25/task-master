@@ -11,7 +11,6 @@ import registrationSuccessEmailBody from '../../mailTemplate/registerSucessEmail
 import sendEmail from '../../utilities/sendEmail';
 
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
-import { sendSMS } from '../../helper/sendSms';
 import { ICustomer } from '../customer/customer.interface';
 import { Customer } from '../customer/customer.model';
 import { Provider } from '../provider/provider.model';
@@ -20,6 +19,7 @@ import { USER_ROLE } from './user.constant';
 import { TUser, TUserRole } from './user.interface';
 import { User } from './user.model';
 import { createToken } from './user.utils';
+
 const generateVerifyCode = (): number => {
     return Math.floor(100000 + Math.random() * 900000);
 };
@@ -96,7 +96,7 @@ const registerCustomer = async (
 The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
 
         //!TODO: need to send sms to phone
-        await sendSMS(userData.phone, smsMessage);
+        // await sendSMS(userData.phone, smsMessage);
 
         // If SMS sent successfully, commit transaction
         await session.commitTransaction();
