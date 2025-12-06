@@ -30,7 +30,7 @@ const getMyReferral = catchAsync(async (req, res) => {
 });
 
 const getAllReferral = catchAsync(async (req, res) => {
-    const result = await referralUseServices.getAllReferralUseFromDB();
+    const result = await referralUseServices.getAllReferralUseFromDB(req.query);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
