@@ -112,6 +112,29 @@ const resolveByAdmin = catchAsync(async (req, res) => {
     });
 });
 
+const getAllExtensionRequest = catchAsync(async (req, res) => {
+    const result = await extensionRequestServices.getAllExtensionRequestFromDB(
+        req.query
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Extension requests retrieved successfully',
+        data: result,
+    });
+});
+const getSingleExtensionRequest = catchAsync(async (req, res) => {
+    const result = await extensionRequestServices.getSingleExtensionRequest(
+        req.params.id
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Single cancel requests retrieved successfully',
+        data: result,
+    });
+});
+
 const ExtensionRequestController = {
     createExtensionRequest,
     extensionRequestByTask,
@@ -119,5 +142,7 @@ const ExtensionRequestController = {
     extensionRequestAcceptReject,
     makeDisputeForAdmin,
     resolveByAdmin,
+    getAllExtensionRequest,
+    getSingleExtensionRequest,
 };
 export default ExtensionRequestController;

@@ -109,6 +109,28 @@ const resolveByAdmin = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const getAllCancelRequest = catchAsync(async (req, res) => {
+    const result = await cancellationRequestServices.getAllCancelRequestFromDB(
+        req.query
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Cancel requests retrieved successfully',
+        data: result,
+    });
+});
+const getSingleCancelRequest = catchAsync(async (req, res) => {
+    const result = await cancellationRequestServices.getSingleCancelRequest(
+        req.params.id
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Single cancel requests retrieved successfully',
+        data: result,
+    });
+});
 
 const CancellationRequestController = {
     createCancellationRequest,
@@ -117,5 +139,7 @@ const CancellationRequestController = {
     handleAcceptRejectCancellationRequest,
     makeDisputeForAdmin,
     resolveByAdmin,
+    getAllCancelRequest,
+    getSingleCancelRequest,
 };
 export default CancellationRequestController;
