@@ -59,4 +59,15 @@ router.patch(
 
     extensionRequestController.resolveByAdmin
 );
+router.get(
+    '/get-all',
+    auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+    extensionRequestController.getAllExtensionRequest
+);
+router.get(
+    '/get-single/:id',
+    auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+    extensionRequestController.getSingleExtensionRequest
+);
+
 export const extensionRequestRoutes = router;

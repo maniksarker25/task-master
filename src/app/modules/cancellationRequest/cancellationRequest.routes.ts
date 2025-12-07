@@ -62,5 +62,15 @@ router.patch(
     validateRequest(cancellationRequestValidations.resolveByAdminZodSchema),
     cancellationRequestController.resolveByAdmin
 );
+router.get(
+    '/get-all',
+    auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+    cancellationRequestController.getAllCancelRequest
+);
+router.get(
+    '/get-single/:id',
+    auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+    cancellationRequestController.getSingleCancelRequest
+);
 
 export const cancellationRequestRoutes = router;
