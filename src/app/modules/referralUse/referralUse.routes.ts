@@ -19,5 +19,10 @@ router.get(
     auth(USER_ROLE.customer, USER_ROLE.provider),
     referralUseController.getMyReferral
 );
+router.get(
+    '/all-referral',
+    auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+    referralUseController.getAllReferral
+);
 
 export const referralUseRoutes = router;

@@ -96,6 +96,7 @@ const taskSchema = new Schema<ITask>(
             type: [statusWithDateSchema],
         },
         transactionId: { type: String, default: null },
+        paymentReferenceId: { type: String, default: null },
     },
 
     { timestamps: true }

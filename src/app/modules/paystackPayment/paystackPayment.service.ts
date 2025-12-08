@@ -43,7 +43,8 @@ const handlePaystackWebhook = async (req: any) => {
                         return await handleBidAcceptPayment(
                             event.data.metadata,
                             event.data.amount / 100,
-                            event.data.id
+                            event.data.id,
+                            event.data.reference
                         );
                     }
                     break;
@@ -68,7 +69,8 @@ const handlePaystackWebhook = async (req: any) => {
 const handleBidAcceptPayment = async (
     metaData: any,
     amount: number,
-    transactionId: string
+    transactionId: string,
+    referenceId: string
 ) => {
     const task = await TaskModel.findById(metaData.taskId);
     if (!task) {
@@ -88,6 +90,9 @@ const handleBidAcceptPayment = async (
                 provider: bid.provider,
                 status: ENUM_TASK_STATUS.IN_PROGRESS,
                 paymentStatus: ENUM_PAYMENT_STATUS.PAID,
+                transactionId,
+                customerPayingAmount: amount,
+                paymentReferenceId: referenceId,
             },
             statusWithDate: [
                 { status: ENUM_TASK_STATUS.OFFERED, date: bid.createdAt },
