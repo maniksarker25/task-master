@@ -38,4 +38,5 @@ export interface ITask {
     task_attachments?: string[];
     statusWithDate: IStatusWithDate[];
     transactionId?: string;
+    paymentReferenceId?: string;
 }
