@@ -10,6 +10,7 @@ export interface TUser {
     password: string;
     passwordChangedAt?: Date;
     role: (typeof USER_ROLE)[keyof typeof USER_ROLE];
+    roles: Array<(typeof USER_ROLE)[keyof typeof USER_ROLE]>;
     isBlocked: boolean;
     verifyCode: number;
     resetCode: number;
