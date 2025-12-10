@@ -22,6 +22,7 @@ declare namespace Express {
             conversation_video?: File[];
             conversation_pdf?: File[];
             identification_document?: File[];
+            cancellationEvidence?: File[];
         };
     }
 }

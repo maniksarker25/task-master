@@ -44,7 +44,7 @@ const extensionRequestSchema = new Schema<ICancellationRequest>(
             default: ENUM_CANCELLATION_REQUEST_STATUS.PENDING,
         },
         rejectDetails: { type: String, default: '' },
-        reject_evidence: { type: String, default: '' },
+        reject_evidence: { type: [String], default: [] },
 
         reviewedRequestAt: {
             type: Date,

@@ -411,7 +411,7 @@ const getAllExtensionRequestFromDB = async (query: Record<string, unknown>) => {
           }
         : {};
 
-    const sortBy = query.sortBy || 'createdAt';
+    const sortBy: any = query.sortBy || 'createdAt';
     const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
     const sortStage = { [sortBy]: sortOrder };
 
@@ -453,7 +453,7 @@ const getSingleExtensionRequest = async (id: string) => {
         .populate({ path: 'requestTo', select: 'name profile_image email' })
         .populate({
             path: 'task',
-            select: 'title budget description doneBy location preferredDeliveryDateTime statusWithDate address provider customer customerPayingAmount acceptedBidAmount',
+            select: 'title budget task_attachments description doneBy location preferredDeliveryDateTime statusWithDate address provider customer customerPayingAmount acceptedBidAmount',
             populate: [
                 { path: 'customer', select: 'name profile_image email' },
                 { path: 'provider', select: 'name profile_image email' },
