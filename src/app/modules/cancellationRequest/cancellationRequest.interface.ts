@@ -11,7 +11,7 @@ export interface ICancellationRequest {
     reason: string;
     status: (typeof ENUM_CANCELLATION_REQUEST_STATUS)[keyof typeof ENUM_CANCELLATION_REQUEST_STATUS];
     rejectDetails?: string;
-    reject_evidence: string;
+    reject_evidence: string[];
     reviewedRequestAt?: Date;
     cancellationReason?: string;
     cancellationEvidence?: string[];
