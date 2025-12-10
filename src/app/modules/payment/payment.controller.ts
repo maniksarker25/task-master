@@ -1,24 +1,17 @@
-import httpStatus from "http-status";
-import catchAsync from "../../utilities/catchasync";
-import sendResponse from "../../utilities/sendResponse";
-import paymentServices from "./payment.service";
+import httpStatus from 'http-status';
+import catchAsync from '../../utilities/catchasync';
+import sendResponse from '../../utilities/sendResponse';
+import paymentServices from './payment.service';
 
-const updateUserProfile = catchAsync(async (req, res) => {
-    const { files } = req;
-    if (files && typeof files === "object" && "profile_image" in files) {
-        req.body.profile_image = files["profile_image"][0].path;
-    }
-    const result = await paymentServices.updateUserProfile(
-        req.user.profileId,
-        req.body
-    );
+const getAllPayments = catchAsync(async (req, res) => {
+    const result = await paymentServices.getAllPayments(req.query);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Profile updated successfully",
+        message: 'Payments retrieved successfully',
         data: result,
     });
 });
 
-const PaymentController = { updateUserProfile };
+const PaymentController = { getAllPayments };
 export default PaymentController;
