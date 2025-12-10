@@ -37,6 +37,13 @@ const getAllPayments = async (query: Record<string, unknown>) => {
                 localField: 'task',
                 foreignField: '_id',
                 as: 'task',
+                pipeline: [
+                    {
+                        $project: {
+                            title: 1,
+                        },
+                    },
+                ],
             },
         },
         { $unwind: { path: '$task', preserveNullAndEmptyArrays: true } },
@@ -53,6 +60,8 @@ const getAllPayments = async (query: Record<string, unknown>) => {
                             _id: 1,
                             name: 1,
                             profile_image: 1,
+                            bankName: 1,
+                            bankAccountNumber: 1,
                         },
                     },
                 ],
