@@ -7,10 +7,12 @@ import { ENUM_CANCELLATION_REQUEST_STATUS } from './cancellationRequest.enum';
 import cancellationRequestServices from './cancellationRequest.service';
 
 const createCancellationRequest = catchAsync(async (req, res) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const file: any = req.files?.reject_evidence;
     if (req.files?.reject_evidence) {
-        req.body.reject_evidence = getCloudFrontUrl(file[0].key);
+        req.body.cancellationEvidence = req.files.reject_evidence.map(
+            (file: any) => {
+                return getCloudFrontUrl(file.key);
+            }
+        );
     }
     const result =
         await cancellationRequestServices.createCancellationRequestIntoDb(
@@ -57,11 +59,13 @@ const cancelCancellationRequest = catchAsync(async (req, res) => {
 const handleAcceptRejectCancellationRequest = catchAsync(async (req, res) => {
     const { status } = req.body;
 
-    const file: any = req.files?.reject_evidence;
-    if (file) {
-        req.body.reject_evidence = getCloudFrontUrl(file[0].key);
+    if (req.files?.reject_evidence) {
+        req.body.reject_evidence = req.files.reject_evidence.map(
+            (file: any) => {
+                return getCloudFrontUrl(file.key);
+            }
+        );
     }
-
     const result =
         await cancellationRequestServices.acceptRejectCancellationRequest(
             req.user.profileId,
