@@ -1,8 +1,9 @@
 import { Types } from 'mongoose';
-import { ENUM_PAYMENT_STATUS } from './payment.enum';
+import { ENUM_PAYMENT_STATUS } from '../../utilities/enum';
 
 export interface IPayment {
     provider: Types.ObjectId;
     status: (typeof ENUM_PAYMENT_STATUS)[keyof typeof ENUM_PAYMENT_STATUS];
     task: Types.ObjectId;
+    amount: number;
 }
