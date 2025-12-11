@@ -72,4 +72,10 @@ router.patch(
     userControllers.adminVerifyUser
 );
 
+router.post(
+    '/upgrade-account',
+    auth(USER_ROLE.customer, USER_ROLE.provider),
+    userControllers.upgradeAccount
+);
+
 export const userRoutes = router;

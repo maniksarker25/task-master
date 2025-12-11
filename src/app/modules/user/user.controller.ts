@@ -101,6 +101,16 @@ const adminVerifyUser = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const upgradeAccount = catchAsync(async (req, res) => {
+    const result = await userServices.upgradeAccount(req.user);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Your account upgraded successfully',
+        data: result,
+    });
+});
 
 const userController = {
     registerUser,
@@ -111,5 +121,6 @@ const userController = {
     deleteUserAccount,
     updateUserProfile,
     adminVerifyUser,
+    upgradeAccount,
 };
 export default userController;
