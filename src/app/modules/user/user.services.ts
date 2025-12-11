@@ -58,6 +58,7 @@ const registerCustomer = async (
             phone: userData?.phone,
             password,
             role,
+            roles: [role],
             verifyCode,
             codeExpireIn: new Date(Date.now() + 5 * 60000), // 5 minutes expiry
         };
@@ -368,6 +369,126 @@ const adminVerifyUserFromDB = async (id: string) => {
     return result;
 };
 
+// upgrade account
+const upgradeAccount = async (userData: JwtPayload) => {
+    const user = await User.findById(userData.id);
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+    }
+
+    if (user?.roles && user.roles.length == 2) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'You already have both account with that credentials'
+        );
+    }
+
+    if (userData.role == USER_ROLE.customer) {
+        const customer = await Customer.findById(userData.profileId);
+
+        const providerData = {
+            user: user?._id,
+            name: customer?.name,
+            email: customer?.email,
+            phone: customer?.phone,
+            city: customer?.city,
+            street: customer?.street,
+            address_document: customer?.address_document,
+            address: customer?.address,
+            isAddressProvided: customer?.isAddressProvided,
+        };
+
+        const result = await Provider.create(providerData);
+
+        await User.findByIdAndUpdate(
+            userData.id,
+            {
+                $push: { roles: USER_ROLE.provider },
+            },
+            { new: true }
+        );
+
+        const jwtPayload = {
+            id: user?._id,
+            profileId: result._id.toString(),
+            email: user?.email,
+            role: USER_ROLE.provider,
+        };
+        const accessToken = createToken(
+            jwtPayload,
+            config.jwt_access_secret as string,
+            config.jwt_access_expires_in as string
+        );
+        const refreshToken = createToken(
+            jwtPayload,
+            config.jwt_refresh_secret as string,
+            config.jwt_refresh_expires_in as string
+        );
+
+        return {
+            accessToken,
+            refreshToken,
+            role: USER_ROLE.provider,
+            isAddressProvided: true,
+            isIdentificationDocumentVerified: true,
+            isBankNumberVerified: true,
+        };
+    } else if (userData.role == USER_ROLE.provider) {
+        const provider = await Provider.findById(userData.profileId);
+
+        const customerData = {
+            user: user?._id,
+            name: provider?.name,
+            email: provider?.email,
+            phone: provider?.phone,
+            city: provider?.city,
+            street: provider?.street,
+            address_document: provider?.address_document,
+            address: provider?.address,
+            isAddressProvided: provider?.isAddressProvided,
+        };
+
+        const result = await Customer.create(customerData);
+
+        await User.findByIdAndUpdate(
+            userData.id,
+            {
+                $push: { roles: USER_ROLE.customer },
+            },
+            { new: true }
+        );
+
+        const jwtPayload = {
+            id: user?._id,
+            profileId: result._id.toString(),
+            email: user?.email,
+            role: USER_ROLE.customer,
+        };
+        const accessToken = createToken(
+            jwtPayload,
+            config.jwt_access_secret as string,
+            config.jwt_access_expires_in as string
+        );
+        const refreshToken = createToken(
+            jwtPayload,
+            config.jwt_refresh_secret as string,
+            config.jwt_refresh_expires_in as string
+        );
+
+        return {
+            accessToken,
+            refreshToken,
+            role: USER_ROLE.customer,
+            isAddressProvided: true,
+        };
+    } else {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'You are not able to upgrade your account'
+        );
+    }
+};
+
 const userServices = {
     registerCustomer,
     verifyCode,
@@ -377,6 +498,7 @@ const userServices = {
     deleteUserAccount,
     updateUserProfile,
     adminVerifyUserFromDB,
+    upgradeAccount,
 };
 
 export default userServices;
