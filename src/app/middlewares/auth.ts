@@ -3,6 +3,7 @@
 import { NextFunction, Request, Response } from 'express';
 import httpStatus from 'http-status';
 import jwt, { JwtPayload } from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import config from '../config';
 import AppError from '../error/appError';
 import { Customer } from '../modules/customer/customer.model';
@@ -48,6 +49,8 @@ const auth = (...requiredRoles: TUserRole[]) => {
             if (!decoded) {
                 throw new AppError(httpStatus.UNAUTHORIZED, 'Token is expired');
             }
+
+            console.log('decode', decoded);
             // get the user if that here ---------
             // const user = await User.findById(id);
             let profileData: any;
@@ -61,15 +64,26 @@ const auth = (...requiredRoles: TUserRole[]) => {
                         select: '_id isDeleted isBlocked isVerified passwordChangedAt',
                     });
             } else if (role == USER_ROLE.provider) {
-                profileData = await Provider.findOne({ user: id }).populate({
-                    path: 'user',
-                });
+                profileData = await Provider.findOne({
+                    user: new mongoose.Types.ObjectId(id),
+                })
+                    .select('user _id')
+                    .populate({
+                        path: 'user',
+                        select: '_id isDeleted isBlocked isVerified passwordChangedAt',
+                    });
             } else if (USER_ROLE.superAdmin) {
-                profileData = await SuperAdmin.findOne({ user: id }).populate({
-                    path: 'user',
-                });
+                profileData = await SuperAdmin.findOne({ user: id })
+                    .select('_id user')
+                    .populate({
+                        path: 'user',
+                        select: '_id isDeleted isBlocked isVerified passwordChangedAt',
+                    });
             }
-
+            if (!profileData) {
+                throw new AppError(httpStatus.NOT_FOUND, 'Unauthorized access');
+            }
+            console.log('profileData', profileData);
             const { user } = profileData;
             if (!user) {
                 throw new AppError(
