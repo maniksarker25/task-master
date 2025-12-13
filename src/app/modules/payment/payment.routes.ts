@@ -11,4 +11,10 @@ router.get(
     paymentController.getAllPayments
 );
 
+router.patch(
+    '/make-paid-unpaid/:id',
+    auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+    paymentController.makePaidUnPaid
+);
+
 export const paymentRoutes = router;

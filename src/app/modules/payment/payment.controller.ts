@@ -1,5 +1,6 @@
 import httpStatus from 'http-status';
 import catchAsync from '../../utilities/catchasync';
+import { ENUM_PAYMENT_STATUS } from '../../utilities/enum';
 import sendResponse from '../../utilities/sendResponse';
 import paymentServices from './payment.service';
 
@@ -12,6 +13,18 @@ const getAllPayments = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const makePaidUnPaid = catchAsync(async (req, res) => {
+    const result = await paymentServices.makePaidUnPaid(req.params.id);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message:
+            result?.status == ENUM_PAYMENT_STATUS.PAID
+                ? 'Payment mark as paid'
+                : 'Payment mark as unpaid',
+        data: result,
+    });
+});
 
-const PaymentController = { getAllPayments };
+const PaymentController = { getAllPayments, makePaidUnPaid };
 export default PaymentController;

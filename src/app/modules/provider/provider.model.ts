@@ -67,7 +67,7 @@ const providerSchema = new Schema<IProvider>(
             default: false,
         },
         isAddressProvided: {
-            type: String,
+            type: Boolean,
             default: false,
         },
         bankAccountNumber: {

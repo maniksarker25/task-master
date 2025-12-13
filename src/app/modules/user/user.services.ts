@@ -207,12 +207,20 @@ const resendVerifyCode = async (email: string) => {
 const getMyProfile = async (userData: JwtPayload) => {
     let result = null;
     if (userData.role === USER_ROLE.customer) {
-        result = await Customer.findOne({ email: userData.email });
+        result = await Customer.findOne({ email: userData.email }).populate({
+            path: 'user',
+            select: 'isMultiRole',
+        });
     }
     if (userData.role === USER_ROLE.provider) {
-        result = await Provider.findOne({ email: userData.email });
+        result = await Provider.findOne({ email: userData.email }).populate({
+            path: 'user',
+            select: 'isMultiRole',
+        });
     } else if (userData.role === USER_ROLE.superAdmin) {
         result = await SuperAdmin.findOne({ email: userData.email });
+    } else if (userData.role === USER_ROLE.admin) {
+        result = await Admin.findOne({ email: userData.email });
     }
     return result;
 };
@@ -470,7 +478,7 @@ const upgradeAccount = async (userData: JwtPayload) => {
             );
         }
     } else {
-        if (userData.role == USER_ROLE.customer) {
+        if (userData.role == USER_ROLE.provider) {
             const customer = await Customer.findById(userData.profileId);
 
             const providerData = {
@@ -490,6 +498,7 @@ const upgradeAccount = async (userData: JwtPayload) => {
             await User.findByIdAndUpdate(
                 userData.id,
                 {
+                    isMultiRole: true,
                     $push: { roles: USER_ROLE.provider },
                 },
                 { new: true }
@@ -523,7 +532,7 @@ const upgradeAccount = async (userData: JwtPayload) => {
                 },
                 message: 'Your account successfully upgrade to provider',
             };
-        } else if (userData.role == USER_ROLE.provider) {
+        } else if (userData.role == USER_ROLE.customer) {
             const provider = await Provider.findById(userData.profileId);
 
             const customerData = {
@@ -543,6 +552,7 @@ const upgradeAccount = async (userData: JwtPayload) => {
             await User.findByIdAndUpdate(
                 userData.id,
                 {
+                    isMultiRole: true,
                     $push: { roles: USER_ROLE.customer },
                 },
                 { new: true }

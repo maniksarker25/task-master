@@ -23,6 +23,7 @@ export interface TUser {
     googleId: string;
     playerIds: string[];
     isAdminVerified: boolean;
+    isMultiRole: boolean;
 }
 
 export interface TLoginUser {
