@@ -12,6 +12,7 @@ import sendEmail from '../../utilities/sendEmail';
 
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 import { sendSMS } from '../../helper/sendSms';
+import Admin from '../admin/admin.model';
 import { ICustomer } from '../customer/customer.interface';
 import { Customer } from '../customer/customer.model';
 import { Provider } from '../provider/provider.model';
@@ -269,6 +270,21 @@ const updateUserProfile = async (userData: JwtPayload, payload: any) => {
             throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
         }
         const result = await SuperAdmin.findByIdAndUpdate(
+            userData.profileId,
+            payload,
+            { new: true, runValidators: true }
+        );
+        if (payload.profile_image && admin.profile_image) {
+            deleteFileFromS3(admin.profile_image);
+        }
+
+        return result;
+    } else if (userData.role == USER_ROLE.admin) {
+        const admin = await Admin.findById(userData.profileId);
+        if (!admin) {
+            throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
+        }
+        const result = await Admin.findByIdAndUpdate(
             userData.profileId,
             payload,
             { new: true, runValidators: true }

@@ -5,7 +5,7 @@ export interface IAdmin {
     user: Types.ObjectId;
     name: string;
     email: string;
-    phoneNumber: string;
+    phone: string;
     profile_image: string;
     status: 'active' | 'inactive';
 }

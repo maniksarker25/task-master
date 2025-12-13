@@ -17,7 +17,7 @@ const adminSchema = new Schema<IAdmin>(
             required: true,
             unique: true,
         },
-        phoneNumber: {
+        phone: {
             type: String,
             default: '',
         },
