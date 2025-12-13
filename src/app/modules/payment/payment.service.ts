@@ -119,5 +119,5 @@ const makePaidUnPaid = async (id: string) => {
     return result;
 };
 
-const PaymentServices = { getAllPayments };
+const PaymentServices = { getAllPayments, makePaidUnPaid };
 export default PaymentServices;
