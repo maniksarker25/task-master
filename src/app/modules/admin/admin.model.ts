@@ -25,12 +25,9 @@ const adminSchema = new Schema<IAdmin>(
             type: String,
             default: '',
         },
-
-        status: {
-            type: String,
-            enum: ['active', 'inactive'],
-            default: 'active',
-            required: true,
+        isActive: {
+            type: Boolean,
+            default: true,
         },
     },
     {

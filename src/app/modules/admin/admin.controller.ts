@@ -47,14 +47,13 @@ const deleteAdmin = catchAsync(async (req, res) => {
 
 // update shop status
 const updateAdminStatus = catchAsync(async (req, res) => {
-    const result = await AdminServices.updateAdminStatus(
-        req?.params?.id,
-        req?.body?.status
-    );
+    const result = await AdminServices.updateAdminStatus(req?.params?.id);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: 'Admin status updated successfully',
+        message: result.isActive
+            ? 'Admin activated successfully'
+            : 'Admin deactivated successfully',
         data: result,
     });
 });
