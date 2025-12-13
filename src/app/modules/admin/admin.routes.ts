@@ -8,6 +8,20 @@ import AdminValidations from './admin.validation';
 
 const router = Router();
 
+router.post(
+    '/create-admin',
+    auth(USER_ROLE.superAdmin),
+    uploadFile(),
+    (req: Request, res: Response, next: NextFunction) => {
+        if (req.body.data) {
+            req.body = JSON.parse(req.body.data);
+        }
+
+        next();
+    },
+    validateRequest(AdminValidations.createAdminProfileValidationSchema),
+    AdminController.updateAdminProfile
+);
 router.patch(
     '/update-admin',
     auth(USER_ROLE.superAdmin),

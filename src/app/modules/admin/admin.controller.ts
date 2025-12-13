@@ -5,6 +5,19 @@ import catchAsync from '../../utilities/catchasync';
 import sendResponse from '../../utilities/sendResponse';
 import AdminServices from './admin.services';
 
+const createAdmin = catchAsync(async (req, res) => {
+    const file: any = req.files?.profile_image;
+    if (req.files?.profile_image) {
+        req.body.profile_image = getCloudFrontUrl(file[0].key);
+    }
+    const result = await AdminServices.createAdminIntoDB(req?.body);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Admin profile created successfully',
+        data: result,
+    });
+});
 const updateAdminProfile = catchAsync(async (req, res) => {
     const file: any = req.files?.profile_image;
     if (req.files?.profile_image) {
@@ -60,6 +73,7 @@ const AdminController = {
     updateShopStatus: updateAdminStatus,
     getAllAdmin,
     deleteAdmin,
+    createAdmin,
 };
 
 export default AdminController;
