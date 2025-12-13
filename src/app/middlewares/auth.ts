@@ -127,7 +127,8 @@ const auth = (...requiredRoles: TUserRole[]) => {
             }
             // add those properties in req
             req.user = decoded as JwtPayload;
-            req.user.profileId = profileData._id;
+            req.user.profileId = profileData._id.toString();
+            console.log('req.user', req.user);
             next();
         }
     );

@@ -561,7 +561,9 @@ const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
         path: 'customer',
         select: 'email',
     });
-    if (taskData?.customer?._id.toString() !== profileID) {
+    console.log('task', taskData, 'profileId', profileID);
+
+    if (taskData?.customer?._id.toString() !== profileID.toString()) {
         throw new AppError(
             httpStatus.UNAUTHORIZED,
             'You are not authorized to accept this task'
