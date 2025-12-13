@@ -125,26 +125,31 @@ const deleteAdminFromDB = async (id: string) => {
 };
 
 // update Admin status
-const updateAdminStatus = async (id: string, status: string) => {
+const updateAdminStatus = async (id: string) => {
     const session = await Admin.startSession();
     session.startTransaction();
 
     try {
+        const admin = await Admin.findById(id);
+        if (!admin) {
+            throw new AppError(httpStatus.NOT_FOUND, 'Admin not found');
+        }
         const result = await Admin.findByIdAndUpdate(
             id,
-            { status: status },
+            { isActive: !admin.isActive },
             { runValidators: true, new: true, session: session }
         );
 
         if (!result) {
-            throw new AppError(httpStatus.NOT_FOUND, 'Admin not found');
+            throw new AppError(
+                httpStatus.NOT_FOUND,
+                'Failed to updated status'
+            );
         }
-
-        const isActive = status === 'active';
 
         await User.findOneAndUpdate(
             { _id: result.user },
-            { isActive: isActive },
+            { isActive: result.isActive },
             { runValidators: true, new: true, session: session }
         );
 
