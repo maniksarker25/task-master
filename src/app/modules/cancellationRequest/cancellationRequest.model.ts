@@ -52,6 +52,10 @@ const extensionRequestSchema = new Schema<ICancellationRequest>(
         },
         cancellationReason: { type: String, default: '' },
         cancellationEvidence: { type: [String], default: [] },
+        type: {
+            type: String,
+            default: 'extension',
+        },
     },
     { timestamps: true }
 );

@@ -20,7 +20,7 @@ router.post(
         next();
     },
     validateRequest(AdminValidations.createAdminProfileValidationSchema),
-    AdminController.updateAdminProfile
+    AdminController.createAdmin
 );
 router.patch(
     '/update-admin',

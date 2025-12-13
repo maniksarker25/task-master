@@ -95,6 +95,7 @@ const updateAdminProfile = async (userId: string, payload: Partial<IAdmin>) => {
         new: true,
         runValidators: true,
     });
+
     return result;
 };
 
