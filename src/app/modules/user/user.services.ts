@@ -393,115 +393,193 @@ const upgradeAccount = async (userData: JwtPayload) => {
     }
 
     if (user?.roles && user.roles.length == 2) {
-        throw new AppError(
-            httpStatus.BAD_REQUEST,
-            'You already have both account with that credentials'
-        );
-    }
+        if (userData.role == USER_ROLE.customer) {
+            const provider = await Provider.findOne({
+                user: userData.id,
+            });
+            if (!provider) {
+                throw new AppError(httpStatus.NOT_FOUND, 'Provider not found');
+            }
+            const jwtPayload = {
+                id: user?._id,
+                profileId: provider._id.toString(),
+                email: user?.email,
+                role: USER_ROLE.provider,
+            };
+            const accessToken = createToken(
+                jwtPayload,
+                config.jwt_access_secret as string,
+                config.jwt_access_expires_in as string
+            );
+            const refreshToken = createToken(
+                jwtPayload,
+                config.jwt_refresh_secret as string,
+                config.jwt_refresh_expires_in as string
+            );
 
-    if (userData.role == USER_ROLE.customer) {
-        const customer = await Customer.findById(userData.profileId);
+            return {
+                data: {
+                    accessToken,
+                    refreshToken,
+                    role: USER_ROLE.provider,
+                    isAddressProvided: provider.isAddressProvided,
+                    isIdentificationDocumentVerified:
+                        provider.isIdentificationDocumentApproved,
+                    isBankNumberVerified:
+                        provider.isBankVerificationNumberApproved,
+                },
+                message: 'Your account switched to provider',
+            };
+        } else if (userData.role == USER_ROLE.provider) {
+            const customer = await Customer.findOne({
+                user: userData.id,
+            }).select('_id');
+            if (!customer) {
+                throw new AppError(httpStatus.NOT_FOUND, 'Provider not found');
+            }
+            const jwtPayload = {
+                id: user?._id,
+                profileId: customer._id.toString(),
+                email: user?.email,
+                role: USER_ROLE.customer,
+            };
+            const accessToken = createToken(
+                jwtPayload,
+                config.jwt_access_secret as string,
+                config.jwt_access_expires_in as string
+            );
+            const refreshToken = createToken(
+                jwtPayload,
+                config.jwt_refresh_secret as string,
+                config.jwt_refresh_expires_in as string
+            );
 
-        const providerData = {
-            user: user?._id,
-            name: customer?.name,
-            email: customer?.email,
-            phone: customer?.phone,
-            city: customer?.city,
-            street: customer?.street,
-            address_document: customer?.address_document,
-            address: customer?.address,
-            isAddressProvided: customer?.isAddressProvided,
-        };
-
-        const result = await Provider.create(providerData);
-
-        await User.findByIdAndUpdate(
-            userData.id,
-            {
-                $push: { roles: USER_ROLE.provider },
-            },
-            { new: true }
-        );
-
-        const jwtPayload = {
-            id: user?._id,
-            profileId: result._id.toString(),
-            email: user?.email,
-            role: USER_ROLE.provider,
-        };
-        const accessToken = createToken(
-            jwtPayload,
-            config.jwt_access_secret as string,
-            config.jwt_access_expires_in as string
-        );
-        const refreshToken = createToken(
-            jwtPayload,
-            config.jwt_refresh_secret as string,
-            config.jwt_refresh_expires_in as string
-        );
-
-        return {
-            accessToken,
-            refreshToken,
-            role: USER_ROLE.provider,
-            isAddressProvided: true,
-            isIdentificationDocumentVerified: true,
-            isBankNumberVerified: true,
-        };
-    } else if (userData.role == USER_ROLE.provider) {
-        const provider = await Provider.findById(userData.profileId);
-
-        const customerData = {
-            user: user?._id,
-            name: provider?.name,
-            email: provider?.email,
-            phone: provider?.phone,
-            city: provider?.city,
-            street: provider?.street,
-            address_document: provider?.address_document,
-            address: provider?.address,
-            isAddressProvided: provider?.isAddressProvided,
-        };
-
-        const result = await Customer.create(customerData);
-
-        await User.findByIdAndUpdate(
-            userData.id,
-            {
-                $push: { roles: USER_ROLE.customer },
-            },
-            { new: true }
-        );
-
-        const jwtPayload = {
-            id: user?._id,
-            profileId: result._id.toString(),
-            email: user?.email,
-            role: USER_ROLE.customer,
-        };
-        const accessToken = createToken(
-            jwtPayload,
-            config.jwt_access_secret as string,
-            config.jwt_access_expires_in as string
-        );
-        const refreshToken = createToken(
-            jwtPayload,
-            config.jwt_refresh_secret as string,
-            config.jwt_refresh_expires_in as string
-        );
-
-        return {
-            accessToken,
-            refreshToken,
-            role: USER_ROLE.customer,
-            isAddressProvided: true,
-        };
+            return {
+                data: {
+                    accessToken,
+                    refreshToken,
+                    role: USER_ROLE.customer,
+                    isAddressProvided: customer.isAddressProvided,
+                },
+                message: 'Your account switched to customer',
+            };
+        } else {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                'You are not able to switch account'
+            );
+        }
     } else {
-        throw new AppError(
-            httpStatus.BAD_REQUEST,
-            'You are not able to upgrade your account'
-        );
+        if (userData.role == USER_ROLE.customer) {
+            const customer = await Customer.findById(userData.profileId);
+
+            const providerData = {
+                user: user?._id,
+                name: customer?.name,
+                email: customer?.email,
+                phone: customer?.phone,
+                city: customer?.city,
+                street: customer?.street,
+                address_document: customer?.address_document,
+                address: customer?.address,
+                isAddressProvided: customer?.isAddressProvided,
+            };
+
+            const result = await Provider.create(providerData);
+
+            await User.findByIdAndUpdate(
+                userData.id,
+                {
+                    $push: { roles: USER_ROLE.provider },
+                },
+                { new: true }
+            );
+
+            const jwtPayload = {
+                id: user?._id,
+                profileId: result._id.toString(),
+                email: user?.email,
+                role: USER_ROLE.provider,
+            };
+            const accessToken = createToken(
+                jwtPayload,
+                config.jwt_access_secret as string,
+                config.jwt_access_expires_in as string
+            );
+            const refreshToken = createToken(
+                jwtPayload,
+                config.jwt_refresh_secret as string,
+                config.jwt_refresh_expires_in as string
+            );
+
+            return {
+                data: {
+                    accessToken,
+                    refreshToken,
+                    role: USER_ROLE.provider,
+                    isAddressProvided: true,
+                    isIdentificationDocumentVerified: true,
+                    isBankNumberVerified: true,
+                },
+                message: 'Your account successfully upgrade to provider',
+            };
+        } else if (userData.role == USER_ROLE.provider) {
+            const provider = await Provider.findById(userData.profileId);
+
+            const customerData = {
+                user: user?._id,
+                name: provider?.name,
+                email: provider?.email,
+                phone: provider?.phone,
+                city: provider?.city,
+                street: provider?.street,
+                address_document: provider?.address_document,
+                address: provider?.address,
+                isAddressProvided: provider?.isAddressProvided,
+            };
+
+            const result = await Customer.create(customerData);
+
+            await User.findByIdAndUpdate(
+                userData.id,
+                {
+                    $push: { roles: USER_ROLE.customer },
+                },
+                { new: true }
+            );
+
+            const jwtPayload = {
+                id: user?._id,
+                profileId: result._id.toString(),
+                email: user?.email,
+                role: USER_ROLE.customer,
+            };
+            const accessToken = createToken(
+                jwtPayload,
+                config.jwt_access_secret as string,
+                config.jwt_access_expires_in as string
+            );
+            const refreshToken = createToken(
+                jwtPayload,
+                config.jwt_refresh_secret as string,
+                config.jwt_refresh_expires_in as string
+            );
+
+            return {
+                data: {
+                    accessToken,
+                    refreshToken,
+                    role: USER_ROLE.customer,
+                    isAddressProvided: true,
+                },
+                message: 'Your account successfully upgrade to customer',
+            };
+        } else {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                'You are not able to upgrade your account'
+            );
+        }
     }
 };
 

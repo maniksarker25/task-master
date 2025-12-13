@@ -97,7 +97,9 @@ const getCancellationRequestByTaskFromDB = async (
 
     const result = await CancellationRequestModel.findOne({
         task: taskId,
-    }).populate('requestFrom', 'name profile_image');
+    })
+        .sort({ createdAt: -1 })
+        .populate('requestFrom', 'name profile_image');
 
     if (!result) {
         throw new AppError(

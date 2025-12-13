@@ -107,8 +107,8 @@ const upgradeAccount = catchAsync(async (req, res) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: 'Your account upgraded successfully',
-        data: result,
+        message: result.message,
+        data: result.data,
     });
 });
 
