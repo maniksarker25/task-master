@@ -29,8 +29,13 @@ const getAllPayments = async (query: Record<string, unknown>) => {
     const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
     const sortStage = { [sortBy]: sortOrder };
 
+    const searchMatchStage = searchTerm
+        ? {
+              $or: [{ _id: { $regex: searchTerm, $options: 'i' } }],
+          }
+        : {};
     const pipeline: any[] = [
-        { $match: { ...filters } },
+        { $match: { ...filters, ...searchMatchStage } },
         {
             $lookup: {
                 from: 'tasks',
