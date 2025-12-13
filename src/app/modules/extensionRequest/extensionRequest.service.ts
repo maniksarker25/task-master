@@ -25,8 +25,9 @@ const extensionRequestIntoDb = async (
             { status: ENUM_EXTENSION_REQUEST_STATUS.PENDING },
             { status: ENUM_EXTENSION_REQUEST_STATUS.DISPUTED },
         ],
+        task: payload.task,
     });
-    if (!requestExists) {
+    if (requestExists) {
         throw new AppError(
             httpStatus.BAD_REQUEST,
             'You have already submitted an extension request that has not been resolved yet. Once it is resolved, you can submit another request.'
@@ -128,7 +129,8 @@ const getExtensionRequestByTaskFromDB = async (
     const result = await extensionRequestModel
         .find({ task: taskId })
         .populate('requestTo', 'name profile_image')
-        .populate({ path: 'requestFrom', select: 'name profile_image' });
+        .populate({ path: 'requestFrom', select: 'name profile_image' })
+        .sort({ createdAt: -1 });
 
     return result;
 };
