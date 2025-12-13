@@ -105,7 +105,10 @@ const getCancellationRequestByTaskFromDB = async (
             'No cancellation request found for this task'
         );
     }
-    return result;
+    return {
+        ...result.toObject(),
+        type: 'extension',
+    };
 };
 
 const cancelCancellationRequestByTaskFromDB = async (

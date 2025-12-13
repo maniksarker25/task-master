@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { AdminRoutes } from '../modules/admin/admin.routes';
 import { authRoutes } from '../modules/auth/auth.routes';
 import { bidRoutes } from '../modules/bid/bid.routes';
 import { cancellationRequestRoutes } from '../modules/cancellationRequest/cancellationRequest.routes';
@@ -139,6 +140,10 @@ const moduleRoutes = [
     {
         path: '/payment',
         router: paymentRoutes,
+    },
+    {
+        path: '/admin',
+        router: AdminRoutes,
     },
 ];
 

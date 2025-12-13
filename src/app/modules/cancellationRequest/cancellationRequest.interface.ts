@@ -15,4 +15,5 @@ export interface ICancellationRequest {
     reviewedRequestAt?: Date;
     cancellationReason?: string;
     cancellationEvidence?: string[];
+    type: string;
 }
