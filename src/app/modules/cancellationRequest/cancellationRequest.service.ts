@@ -410,6 +410,17 @@ const makeDisputeForAdmin = async (
         { status: ENUM_CANCELLATION_REQUEST_STATUS.DISPUTED },
         { new: true, runValidators: true }
     );
+
+    await TaskModel.findByIdAndUpdate(
+        cancelRequest.task,
+        {
+            status: ENUM_TASK_STATUS.DISPUTE,
+        },
+        {
+            new: true,
+            runValidators: true,
+        }
+    );
     return result;
 };
 
