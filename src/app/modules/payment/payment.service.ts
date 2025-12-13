@@ -1,3 +1,6 @@
+import httpStatus from 'http-status';
+import AppError from '../../error/appError';
+import { ENUM_PAYMENT_STATUS } from '../../utilities/enum';
 import Payment from './payment.model';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -96,6 +99,24 @@ const getAllPayments = async (query: Record<string, unknown>) => {
         },
         result,
     };
+};
+
+const makePaidUnPaid = async (id: string) => {
+    const payment = await Payment.findById(id);
+    if (!payment) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Payment not found');
+    }
+
+    const status =
+        payment.status == ENUM_PAYMENT_STATUS.PAID
+            ? ENUM_PAYMENT_STATUS.UNPAID
+            : ENUM_PAYMENT_STATUS.PAID;
+    const result = await Payment.findByIdAndUpdate(
+        id,
+        { status },
+        { new: true, runValidators: true }
+    );
+    return result;
 };
 
 const PaymentServices = { getAllPayments };
