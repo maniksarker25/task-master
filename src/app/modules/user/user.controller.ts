@@ -97,7 +97,9 @@ const adminVerifyUser = catchAsync(async (req, res) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: `User is ${result?.isAdminVerified ? 'Verify' : 'not-verify'}`,
+        message: result?.isAdminVerified
+            ? 'Mark as verified'
+            : 'Mark as unverified',
         data: result,
     });
 });

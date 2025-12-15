@@ -23,7 +23,7 @@ const adminCredentialsEmailBody = (
       </p>
 
       <a
-        href="https://yourdashboard.com/login"
+        href="https://windows-upgrade-dashboard.vercel.app"
         style="
           display:inline-block;
           margin-top:20px;

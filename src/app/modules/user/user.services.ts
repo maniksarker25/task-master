@@ -254,7 +254,7 @@ const updateUserProfile = async (userData: JwtPayload, payload: any) => {
         if (!user) {
             throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
         }
-        if (payload.city) {
+        if (payload.city || payload.address) {
             payload.isAddressProvided = true;
         }
         const result = await Customer.findByIdAndUpdate(
@@ -307,7 +307,7 @@ const updateUserProfile = async (userData: JwtPayload, payload: any) => {
         if (!provider) {
             throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
         }
-        if (payload.city) {
+        if (payload.city || payload.address) {
             payload.isAddressProvided = true;
         }
 
@@ -396,6 +396,7 @@ const adminVerifyUserFromDB = async (id: string) => {
 // upgrade account
 const upgradeAccount = async (userData: JwtPayload) => {
     const user = await User.findById(userData.id);
+    console.log('user', user);
     if (!user) {
         throw new AppError(httpStatus.NOT_FOUND, 'User not found');
     }
@@ -478,7 +479,7 @@ const upgradeAccount = async (userData: JwtPayload) => {
             );
         }
     } else {
-        if (userData.role == USER_ROLE.provider) {
+        if (userData.role == USER_ROLE.customer) {
             const customer = await Customer.findById(userData.profileId);
 
             const providerData = {
@@ -499,7 +500,7 @@ const upgradeAccount = async (userData: JwtPayload) => {
                 userData.id,
                 {
                     isMultiRole: true,
-                    $push: { roles: USER_ROLE.provider },
+                    roles: [USER_ROLE.customer, USER_ROLE.provider],
                 },
                 { new: true }
             );
@@ -532,7 +533,7 @@ const upgradeAccount = async (userData: JwtPayload) => {
                 },
                 message: 'Your account successfully upgrade to provider',
             };
-        } else if (userData.role == USER_ROLE.customer) {
+        } else if (userData.role == USER_ROLE.provider) {
             const provider = await Provider.findById(userData.profileId);
 
             const customerData = {
@@ -553,7 +554,7 @@ const upgradeAccount = async (userData: JwtPayload) => {
                 userData.id,
                 {
                     isMultiRole: true,
-                    $push: { roles: USER_ROLE.customer },
+                    roles: [USER_ROLE.provider, USER_ROLE.customer],
                 },
                 { new: true }
             );

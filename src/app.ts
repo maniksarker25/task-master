@@ -30,6 +30,7 @@ app.use(
             'http://localhost:3001',
             'http://10.10.20.48:3000',
             'https://taskalley-deploy-5lzv.vercel.app',
+            'https://windows-upgrade-dashboard.vercel.app',
         ],
         credentials: true,
     })
@@ -81,7 +82,7 @@ app.post('/api/v1/nin-verify', async (req, res) => {
             last_name,
             middle_name,
             gender,
-            id_type: 'NIN',
+            id_type: 'DRIVERS_LICENSE',
             id_number,
             partner_id: process.env.SMILE_PARTNER_ID,
             partner_params: {
@@ -94,6 +95,12 @@ app.post('/api/v1/nin-verify', async (req, res) => {
             source_sdk_version: '2.0.0',
             timestamp,
         };
+        console.log({
+            partnerId: process.env.SMILE_PARTNER_ID,
+            baseUrl: process.env.SMILE_BASE_URL,
+            timestamp,
+            signature,
+        });
 
         const response = await axios.post(
             `${process.env.SMILE_BASE_URL}/v2/verify`,
