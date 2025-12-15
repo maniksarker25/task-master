@@ -50,7 +50,6 @@ const auth = (...requiredRoles: TUserRole[]) => {
                 throw new AppError(httpStatus.UNAUTHORIZED, 'Token is expired');
             }
 
-            console.log('decode', decoded);
             // get the user if that here ---------
             // const user = await User.findById(id);
             let profileData: any;
@@ -83,7 +82,6 @@ const auth = (...requiredRoles: TUserRole[]) => {
             if (!profileData) {
                 throw new AppError(httpStatus.NOT_FOUND, 'Unauthorized access');
             }
-            console.log('profileData', profileData);
             const { user } = profileData;
             if (!user) {
                 throw new AppError(
@@ -128,7 +126,6 @@ const auth = (...requiredRoles: TUserRole[]) => {
             // add those properties in req
             req.user = decoded as JwtPayload;
             req.user.profileId = profileData._id.toString();
-            console.log('req.user', req.user);
             next();
         }
     );
