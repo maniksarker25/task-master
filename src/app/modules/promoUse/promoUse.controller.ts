@@ -3,20 +3,6 @@ import catchAsync from '../../utilities/catchasync';
 import sendResponse from '../../utilities/sendResponse';
 import promoUseServices from './promoUse.service';
 
-const createPromoUse = catchAsync(async (req, res) => {
-    const payload = req.body;
-    const result = await promoUseServices.createPromoUseIntoDB(
-        payload,
-        req.user.profileId
-    );
-    sendResponse(res, {
-        statusCode: httpStatus.CREATED,
-        success: true,
-        message: 'PromoUse created successfully',
-        data: result,
-    });
-});
-
 const getAllPromoUses = catchAsync(async (req, res) => {
     const result = await promoUseServices.getAllPromoUsesFromDB(req.query);
     sendResponse(res, {
@@ -28,8 +14,6 @@ const getAllPromoUses = catchAsync(async (req, res) => {
 });
 
 const PromoUseController = {
-    createPromoUse,
-
     getAllPromoUses,
 };
 export default PromoUseController;
