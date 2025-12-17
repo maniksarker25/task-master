@@ -15,6 +15,9 @@ import { default as bidModel, default as BidModel } from '../bid/bid.model';
 import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
 import Notification from '../notification/notification.model';
 import Payment from '../payment/payment.model';
+import { ENUM_DISCOUNT_TYPE } from '../promo/promo.enum';
+import PromoModel from '../promo/promo.model';
+import PromoUseModel from '../promoUse/promoUse.model';
 import QuestionModel from '../question/question.model';
 import { ENUM_REFERRAL_USE_STATUS } from '../referralUse/referralUse.enum';
 import ReferralUseModel from '../referralUse/referralUse.model';
@@ -595,7 +598,51 @@ const acceptOfferByProvider = async (taskId: string, currentUserId: string) => {
     return task;
 };
 
-const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
+const acceptTaskByCustomerFromDB = async (
+    profileID: string,
+    bidID: string,
+    promoCode?: string
+) => {
+    let promo;
+    if (promoCode) {
+        promo = await PromoModel.findOne({ promoCode });
+
+        if (!promo) {
+            throw new AppError(httpStatus.NOT_FOUND, 'Promo code is not valid');
+        }
+
+        const now = new Date();
+
+        if (promo.startDate > now) {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                'Promo is not active yet'
+            );
+        }
+
+        if (promo.endDate < now) {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                'Promo code has expired'
+            );
+        }
+
+        if (promo.status !== 'ACTIVE') {
+            throw new AppError(httpStatus.BAD_REQUEST, 'Promo is not active');
+        }
+        const promoUse = await PromoUseModel.countDocuments({
+            promo: promo._id,
+        });
+        if (promoUse >= promo.limit) {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                'Promo uses limit reached,this code is not valid now'
+            );
+        }
+    }
+    if (!promo) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Promo code is not valid');
+    }
     const bidData: any = await bidModel.findById(bidID);
     if (!bidData) {
         throw new AppError(httpStatus.NOT_FOUND, 'Bid not found');
@@ -604,7 +651,6 @@ const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
         path: 'customer',
         select: 'email',
     });
-    console.log('task', taskData, 'profileId', profileID);
 
     if (taskData?.customer?._id.toString() !== profileID.toString()) {
         throw new AppError(
@@ -612,7 +658,32 @@ const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
             'You are not authorized to accept this task'
         );
     }
-    const amount = bidData.price * 100; // in kobo
+    let discount = 0;
+
+    if (promo?.discountType == ENUM_DISCOUNT_TYPE.FIXED) {
+        discount = promo.discountNum;
+    } else {
+        discount = (bidData.price * promo.discountNum) / 100;
+    }
+
+    //  HANDLE REFERRAL BONUS (Includes rollback)
+    const referralUse = await ReferralUseModel.findOneAndUpdate(
+        {
+            $or: [{ referred: profileID }, { referrer: profileID }],
+            status: ENUM_REFERRAL_USE_STATUS.ACTIVE,
+        },
+        { status: ENUM_REFERRAL_USE_STATUS.USED },
+        {
+            new: true,
+            sort: { createdAt: 1 },
+            runValidators: true,
+        }
+    );
+    let finalAmount = bidData.price - discount;
+    if (referralUse) {
+        finalAmount = finalAmount - referralUse.value;
+    }
+    const amount = finalAmount * 100; // in kobo
     // --- Initialize Pay-stack transaction ---
     const headers = {
         Authorization: `Bearer ${config.payStack.secretKey}`,
@@ -669,7 +740,7 @@ const completeTaskByCustomer = async (
         //  HANDLE REFERRAL BONUS (Includes rollback)
         const referralUse = await ReferralUseModel.findOneAndUpdate(
             {
-                referred: task.provider,
+                $or: [{ referred: task.provider }, { referrer: task.provider }],
                 status: ENUM_REFERRAL_USE_STATUS.ACTIVE,
             },
             { status: ENUM_REFERRAL_USE_STATUS.USED },
