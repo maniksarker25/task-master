@@ -11,6 +11,9 @@ import {
 import BidModel from '../bid/bid.model';
 import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
 import Notification from '../notification/notification.model';
+import PromoUseModel from '../promoUse/promoUse.model';
+import { ENUM_REFERRAL_USE_STATUS } from '../referralUse/referralUse.enum';
+import ReferralUseModel from '../referralUse/referralUse.model';
 import { ENUM_TASK_STATUS } from '../task/task.enum';
 import TaskModel from '../task/task.model';
 import {
@@ -93,6 +96,7 @@ const handleBidAcceptPayment = async (
                 transactionId,
                 customerPayingAmount: amount,
                 paymentReferenceId: referenceId,
+                acceptedBidAmount: bid.price,
             },
             statusWithDate: [
                 { status: ENUM_TASK_STATUS.OFFERED, date: bid.createdAt },
@@ -102,6 +106,20 @@ const handleBidAcceptPayment = async (
         { new: true }
     );
 
+    if (metaData.promoId) {
+        await PromoUseModel.create({
+            customer: task.customer,
+            task: task._id,
+            promo: metaData.promoId,
+        });
+    }
+    if (metaData.referralUseId) {
+        await ReferralUseModel.findByIdAndUpdate(
+            metaData.referralUseId,
+            { status: ENUM_REFERRAL_USE_STATUS.USED },
+            { new: true, runValidators: true }
+        );
+    }
     await Transaction.create({
         amount: amount,
         type: ENUM_TRANSACTION_TYPE.DEBIT,
