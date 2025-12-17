@@ -1,5 +1,6 @@
 import httpStatus from 'http-status';
 import AppError from '../../error/appError';
+import PromoUseModel from '../promoUse/promoUse.model';
 import { IPromo } from './promo.interface';
 import PromoModel from './promo.model';
 
@@ -78,16 +79,13 @@ const verifyPromoFromDB = async (promoCode: string) => {
     if (promo.status !== 'ACTIVE') {
         throw new AppError(httpStatus.BAD_REQUEST, 'Promo is not active');
     }
-
-    // If usedCount is null/undefined → treat as 0
-    const used = promo.usedCount ?? 0;
-
-    // Check usage limit
-    if (used >= promo.limit) {
-        throw new AppError(httpStatus.BAD_REQUEST, 'Promo usage limit reached');
+    const promoUse = await PromoUseModel.countDocuments({ promo: promo._id });
+    if (promoUse >= promo.limit) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'Promo uses limit reached,this code is not valid now'
+        );
     }
-
-    // Return only safe/public data
     return promo;
 };
 
