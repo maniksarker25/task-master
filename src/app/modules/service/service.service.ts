@@ -3,6 +3,7 @@ import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import AppError from '../../error/appError';
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
+import CategoryModel from '../category/category.model';
 import { IService } from './service.interface';
 import {
     default as ServiceModel,
@@ -10,12 +11,9 @@ import {
 } from './service.model';
 
 const createServiceIntoDB = async (userId: string, payload: IService) => {
-    const isExist = await ServiceModel.findOne({ provider: userId });
-    if (isExist) {
-        throw new AppError(
-            httpStatus.BAD_GATEWAY,
-            'You already have a service'
-        );
+    const category = await CategoryModel.findById(payload.category);
+    if (!category) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Category not found');
     }
     const result = await serviceModel.create({ ...payload, provider: userId });
     return result;
@@ -59,9 +57,49 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
         },
         {
             $lookup: {
-                from: 'feedbacks',
+                from: 'categories',
+                localField: 'category',
+                foreignField: '_id',
+                as: 'category',
+            },
+        },
+        {
+            $unwind: {
+                path: '$category',
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+
+        {
+            $lookup: {
+                from: 'providers',
                 localField: 'provider',
-                foreignField: 'provider',
+                foreignField: '_id',
+                as: 'provider',
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            user: 1,
+                            name: 1,
+                            email: 1,
+                            phone: 1,
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $unwind: {
+                path: '$provider',
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: 'feedbacks',
+                localField: '_id',
+                foreignField: 'service',
                 as: 'feedbacks',
             },
         },
@@ -107,10 +145,44 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
         result,
     };
 };
-const getMyService = async (userId: string) => {
-    const service = await ServiceModel.aggregate([
+
+const getMyService = async (userId: string, query: Record<string, unknown>) => {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const searchTerm = query.searchTerm || '';
+
+    const filters: any = {};
+
+    Object.keys(query).forEach((key) => {
+        if (
+            !['searchTerm', 'page', 'limit', 'sortBy', 'sortOrder'].includes(
+                key
+            )
+        ) {
+            filters[key] = query[key];
+        }
+    });
+    if (query.category) {
+        filters.category = new mongoose.Types.ObjectId(
+            query.category as string
+        );
+    }
+
+    const searchMatchStage = searchTerm
+        ? {
+              $or: [
+                  { title: { $regex: searchTerm, $options: 'i' } },
+                  { description: { $regex: searchTerm, $options: 'i' } },
+              ],
+          }
+        : {};
+
+    const pipeline: any[] = [
         {
             $match: {
+                ...filters,
+                ...searchMatchStage,
                 provider: new mongoose.Types.ObjectId(userId),
             },
         },
@@ -124,27 +196,54 @@ const getMyService = async (userId: string) => {
             },
         },
         {
-            $addFields: {
-                category: { $arrayElemAt: ['$category', 0] },
+            $unwind: {
+                path: '$category',
+                preserveNullAndEmptyArrays: true,
             },
         },
 
         {
             $lookup: {
-                from: 'feedbacks',
+                from: 'providers',
                 localField: 'provider',
-                foreignField: 'provider',
-                as: 'feedbacks',
+                foreignField: '_id',
+                as: 'provider',
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            user: 1,
+                            name: 1,
+                            email: 1,
+                            phone: 1,
+                        },
+                    },
+                ],
             },
         },
         {
+            $unwind: {
+                path: '$provider',
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: 'feedbacks',
+                localField: '_id',
+                foreignField: 'service',
+                as: 'feedbacks',
+            },
+        },
+
+        {
             $addFields: {
                 averageRating: {
-                    $cond: [
-                        { $gt: [{ $size: '$feedbacks' }, 0] },
-                        { $avg: '$feedbacks.rating' },
-                        0,
-                    ],
+                    $cond: {
+                        if: { $gt: [{ $size: '$feedbacks' }, 0] },
+                        then: { $avg: '$feedbacks.rating' },
+                        else: 0,
+                    },
                 },
                 totalRating: { $size: '$feedbacks' },
             },
@@ -154,9 +253,29 @@ const getMyService = async (userId: string) => {
                 feedbacks: 0,
             },
         },
-    ]);
+        { $sort: { createdAt: -1 } },
+        {
+            $facet: {
+                result: [{ $skip: skip }, { $limit: limit }],
+                totalCount: [{ $count: 'total' }],
+            },
+        },
+    ];
 
-    return service[0] || [];
+    const aggResult = await ServiceModel.aggregate(pipeline);
+    const result = aggResult[0]?.result || [];
+    const total = aggResult[0]?.totalCount[0]?.total || 0;
+    const totalPage = Math.ceil(total / limit);
+
+    return {
+        meta: {
+            page,
+            limit,
+            total,
+            totalPage,
+        },
+        result,
+    };
 };
 
 const deleteServiceFromDB = async (profileId: string, serviceId: string) => {
@@ -253,8 +372,8 @@ const getSingleServiceFromDB = async (serviceId: string) => {
         {
             $lookup: {
                 from: 'feedbacks',
-                localField: 'provider',
-                foreignField: 'provider',
+                localField: '_id',
+                foreignField: 'service',
                 as: 'feedbacks',
             },
         },

@@ -34,6 +34,7 @@ const createFeedbackIntoDB = async (
         ...payload,
         customer: currentUserID,
         provider: task.provider,
+        service: task.service,
     });
 
     return result;

@@ -21,12 +21,13 @@ const createCancellationRequestIntoDb = async (
 ) => {
     const requestExists = await CancellationRequestModel.findOne({
         requestFrom: profileId,
+        task: payload.task,
         $or: [
             { status: ENUM_CANCELLATION_REQUEST_STATUS.PENDING },
             { status: ENUM_CANCELLATION_REQUEST_STATUS.DISPUTED },
         ],
     });
-    if (!requestExists) {
+    if (requestExists) {
         throw new AppError(
             httpStatus.BAD_REQUEST,
             'You have already submitted an cancellation request that has not been resolved yet. Once it is resolved, you can submit another request.'
@@ -68,7 +69,6 @@ const createCancellationRequestIntoDb = async (
         requestedFromModel: currentUserRole,
         requestToModel: requestToUserRole,
         currentDate: task.preferredDeliveryDateTime,
-        requestedDateTime: payload.requestedDateTime,
         reason: payload.reason,
     };
     const result = await CancellationRequestModel.create(extensionRequestData);
@@ -97,7 +97,9 @@ const getCancellationRequestByTaskFromDB = async (
 
     const result = await CancellationRequestModel.findOne({
         task: taskId,
-    }).populate('requestFrom', 'name profile_image');
+    })
+        .sort({ createdAt: -1 })
+        .populate('requestFrom', 'name profile_image');
 
     if (!result) {
         throw new AppError(
@@ -105,7 +107,10 @@ const getCancellationRequestByTaskFromDB = async (
             'No cancellation request found for this task'
         );
     }
-    return result;
+    return {
+        ...result.toObject(),
+        type: 'extension',
+    };
 };
 
 const cancelCancellationRequestByTaskFromDB = async (
@@ -181,51 +186,184 @@ const acceptRejectCancellationRequest = async (
         }
 
         let updatedCancellation: any = null;
-        let updatedTask: any = null;
+        const updatedTask: any = null;
 
         // -------------------------
         // ACCEPT LOGIC
         // -------------------------
-        if (payload.status === ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED) {
-            updatedCancellation =
-                await CancellationRequestModel.findByIdAndUpdate(
-                    cancellationId,
-                    { status: ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED },
-                    { new: true, runValidators: true, session }
-                );
+        // if (payload.status === ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED) {
+        //     updatedCancellation =
+        //         await CancellationRequestModel.findByIdAndUpdate(
+        //             cancellationId,
+        //             { status: ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED },
+        //             { new: true, runValidators: true, session }
+        //         );
 
-            updatedTask = await TaskModel.findByIdAndUpdate(
-                task._id,
-                {
-                    status: ENUM_TASK_STATUS.CANCELLED,
-                    paymentStatus: ENUM_PAYMENT_STATUS.REFUNDED,
-                    $push: {
-                        statusWithDate: {
-                            status: ENUM_TASK_STATUS.CANCELLED,
-                            date: new Date(),
-                        },
-                    },
-                },
-                { new: true, runValidators: true, session }
-            );
+        //     updatedTask = await TaskModel.findByIdAndUpdate(
+        //         task._id,
+        //         {
+        //             status: ENUM_TASK_STATUS.CANCELLED,
+        //             paymentStatus: ENUM_PAYMENT_STATUS.REFUNDED,
+        //             $push: {
+        //                 statusWithDate: {
+        //                     status: ENUM_TASK_STATUS.CANCELLED,
+        //                     date: new Date(),
+        //                 },
+        //             },
+        //         },
+        //         { new: true, runValidators: true, session }
+        //     );
+        //     const platformCharge =
+        //         task.customerPayingAmount * platformChargePercentage;
+        //     const refundableAmount = task.customerPayingAmount - platformCharge;
+        //     try {
+        //         console.log(
+        //             'coollllllllllllll',
+        //             task.transactionId,
+        //             refundableAmount
+        //         );
+
+        //         const response = await axios.post(
+        //             `${payStackBaseUrl}/refund`,
+        //             {
+        //                 // Use reference here, NOT id
+        //                 reference: task.transactionId,
+        //                 amount: refundableAmount * 100, // in kobo
+        //             },
+        //             {
+        //                 headers: {
+        //                     Authorization: `Bearer ${config.payStack.secretKey}`,
+        //                     'Content-Type': 'application/json',
+        //                 },
+        //             }
+        //         );
+
+        //         console.log(
+        //             'Refund Response====================>>>:',
+        //             response.data
+        //         );
+        //         return {
+        //             updatedTask: updatedTask,
+        //             refundResponse: response.data,
+        //         };
+        //     } catch (error: any) {
+        //         if (error.response) {
+        //             // Paystack returned an error
+        //             console.error(
+        //                 '❌ Paystack Refund Error:',
+        //                 error.response.data
+        //             );
+        //         } else if (error.request) {
+        //             // Request was made but no response
+        //             console.error(
+        //                 '❌ No response from Paystack:',
+        //                 error.request
+        //             );
+        //         } else {
+        //             // Something else went wrong
+        //             console.error('❌ Refund Error:', error.message);
+        //         }
+        //     }
+        // }
+
+        if (payload.status === ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED) {
             const platformCharge =
                 task.customerPayingAmount * platformChargePercentage;
             const refundableAmount = task.customerPayingAmount - platformCharge;
-            const response = await axios.post(
-                `${payStackBaseUrl}/refund`,
-                {
-                    transaction: task.transactionId,
-                    amount: refundableAmount * 100,
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${config.payStack.secretKey}`,
-                        'Content-Type': 'application/json',
+
+            try {
+                console.log(
+                    'Attempting refund for transaction:',
+                    task.transactionId,
+                    'reference is',
+                    task.paymentReferenceId,
+                    'Amount:',
+                    refundableAmount
+                );
+
+                // Refund request
+                const response = await axios.post(
+                    `${payStackBaseUrl}/refund`,
+                    {
+                        transaction: task.transactionId, // Ensure this is the Paystack reference
+                        amount: refundableAmount * 100, // in kobo
                     },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${config.payStack.secretKey}`,
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+
+                console.log('Refund Response:', response.data);
+
+                if (response.data.status) {
+                    // Refund successful -> now update the DB
+                    const session = await mongoose.startSession();
+                    session.startTransaction();
+                    try {
+                        await CancellationRequestModel.findByIdAndUpdate(
+                            cancellationId,
+                            {
+                                status: ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED,
+                            },
+                            { new: true, runValidators: true, session }
+                        );
+
+                        const updatedTask = await TaskModel.findByIdAndUpdate(
+                            task._id,
+                            {
+                                status: ENUM_TASK_STATUS.CANCELLED,
+                                paymentStatus: ENUM_PAYMENT_STATUS.REFUNDED,
+                                $push: {
+                                    statusWithDate: {
+                                        status: ENUM_TASK_STATUS.CANCELLED,
+                                        date: new Date(),
+                                    },
+                                },
+                            },
+                            { new: true, runValidators: true, session }
+                        );
+
+                        await session.commitTransaction();
+                        session.endSession();
+
+                        return {
+                            updatedTask,
+                            refundResponse: response.data,
+                        };
+                    } catch (dbError) {
+                        await session.abortTransaction();
+                        session.endSession();
+                        console.error(
+                            '❌ DB update error after refund:',
+                            dbError
+                        );
+                        throw dbError;
+                    }
+                } else {
+                    // Refund failed
+                    console.error('❌ Refund failed:', response.data);
+                    throw new Error('Refund failed, DB not updated');
                 }
-            );
-            console.log('Refund Response:', response.data);
-            return { updatedTask: updatedTask, refundResponse: response.data };
+            } catch (error: any) {
+                // Axios error or refund failure
+                if (error.response) {
+                    console.error(
+                        '❌ Paystack Refund Error:',
+                        error.response.data
+                    );
+                } else if (error.request) {
+                    console.error(
+                        '❌ No response from Paystack:',
+                        error.request
+                    );
+                } else {
+                    console.error('❌ Refund Error:', error.message);
+                }
+                throw error; // Re-throw if you want upper-level handling
+            }
         }
 
         // -------------------------
@@ -273,6 +411,17 @@ const makeDisputeForAdmin = async (
         cancelRequestId,
         { status: ENUM_CANCELLATION_REQUEST_STATUS.DISPUTED },
         { new: true, runValidators: true }
+    );
+
+    await TaskModel.findByIdAndUpdate(
+        cancelRequest.task,
+        {
+            status: ENUM_TASK_STATUS.DISPUTE,
+        },
+        {
+            new: true,
+            runValidators: true,
+        }
     );
     return result;
 };
@@ -330,16 +479,21 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
                 { new: true, runValidators: true, session }
             );
 
-            const updatedTask = await TaskModel.findByIdAndUpdate(
-                task._id,
-                {
-                    status: ENUM_TASK_STATUS.CANCELLED,
-                    paymentStatus: ENUM_PAYMENT_STATUS.REFUNDED,
-                },
-                { new: true, runValidators: true, session }
-            );
-
             if (payload.payTo === 'Customer') {
+                const updatedTask = await TaskModel.findByIdAndUpdate(
+                    task._id,
+                    {
+                        status: ENUM_TASK_STATUS.CANCELLED,
+                        paymentStatus: ENUM_PAYMENT_STATUS.REFUNDED,
+                        $push: {
+                            statusWithDate: {
+                                status: ENUM_TASK_STATUS.CANCELLED,
+                                date: new Date(),
+                            },
+                        },
+                    },
+                    { new: true, runValidators: true, session }
+                );
                 const platformCharge =
                     task.customerPayingAmount * platformChargePercentage;
                 const refundableAmount =
@@ -378,9 +532,27 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
                     }
                 );
 
-                const amount = referralUse
+                const platformCharge =
+                    task.acceptedBidAmount * platformChargePercentage;
+                const initialAmount = referralUse
                     ? (task.acceptedBidAmount ?? 0) + referralUse.value
                     : task.acceptedBidAmount ?? 0;
+                const amount = initialAmount - platformCharge;
+                const updatedTask = await TaskModel.findByIdAndUpdate(
+                    task._id,
+                    {
+                        status: ENUM_TASK_STATUS.CANCELLED,
+                        paymentStatus: ENUM_PAYMENT_STATUS.PAID_TO_PROVIDER,
+                        providerEarningAmount: amount,
+                        $push: {
+                            statusWithDate: {
+                                status: ENUM_TASK_STATUS.CANCELLED,
+                                date: new Date(),
+                            },
+                        },
+                    },
+                    { new: true, runValidators: true, session }
+                );
 
                 await Payment.create(
                     [
@@ -410,6 +582,84 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
     }
 };
 
+// get all cancelRequest
+const getAllCancelRequestFromDB = async (query: Record<string, unknown>) => {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const searchTerm = query.searchTerm || '';
+    const filters: Record<string, any> = {};
+    Object.keys(query).forEach((key) => {
+        if (
+            !['searchTerm', 'page', 'limit', 'sortBy', 'sortOrder'].includes(
+                key
+            )
+        ) {
+            filters[key] = query[key];
+        }
+    });
+
+    const searchMatchStage = searchTerm
+        ? {
+              $or: [
+                  { title: { $regex: searchTerm, $options: 'i' } },
+                  { description: { $regex: searchTerm, $options: 'i' } },
+              ],
+          }
+        : {};
+
+    const sortBy: any = query.sortBy || 'createdAt';
+    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
+    const sortStage = { [sortBy]: sortOrder };
+
+    const pipeline: any[] = [
+        {
+            $match: { ...filters, ...searchMatchStage },
+        },
+        { $sort: sortStage },
+        {
+            $facet: {
+                result: [{ $skip: skip }, { $limit: limit }],
+                totalCount: [{ $count: 'total' }],
+            },
+        },
+    ];
+
+    const aggResult = await CancellationRequestModel.aggregate(pipeline);
+    const result = aggResult[0]?.result || [];
+    const total = aggResult[0]?.totalCount[0]?.total || 0;
+    const totalPage = Math.ceil(total / limit);
+
+    return {
+        meta: {
+            page,
+            limit,
+            total,
+            totalPage,
+        },
+        result,
+    };
+};
+
+const getSingleCancelRequest = async (id: string) => {
+    const result = await CancellationRequestModel.findById(id)
+        .populate({
+            path: 'requestFrom',
+            select: 'name profile_image email',
+        })
+        .populate({ path: 'requestTo', select: 'name profile_image email' })
+        .populate({
+            path: 'task',
+            select: 'title budget task_attachments description doneBy location preferredDeliveryDateTime statusWithDate address provider customer customerPayingAmount acceptedBidAmount',
+            populate: [
+                { path: 'customer', select: 'name profile_image email' },
+                { path: 'provider', select: 'name profile_image email' },
+            ],
+        });
+
+    return result;
+};
+
 const CancellationRequestServices = {
     createCancellationRequestIntoDb,
     getCancellationRequestByTaskFromDB,
@@ -417,6 +667,8 @@ const CancellationRequestServices = {
     acceptRejectCancellationRequest,
     makeDisputeForAdmin,
     resolveByAdmin,
+    getAllCancelRequestFromDB,
+    getSingleCancelRequest,
 };
 
 export default CancellationRequestServices;

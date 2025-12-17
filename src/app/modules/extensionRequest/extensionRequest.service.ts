@@ -25,8 +25,9 @@ const extensionRequestIntoDb = async (
             { status: ENUM_EXTENSION_REQUEST_STATUS.PENDING },
             { status: ENUM_EXTENSION_REQUEST_STATUS.DISPUTED },
         ],
+        task: payload.task,
     });
-    if (!requestExists) {
+    if (requestExists) {
         throw new AppError(
             httpStatus.BAD_REQUEST,
             'You have already submitted an extension request that has not been resolved yet. Once it is resolved, you can submit another request.'
@@ -128,7 +129,8 @@ const getExtensionRequestByTaskFromDB = async (
     const result = await extensionRequestModel
         .find({ task: taskId })
         .populate('requestTo', 'name profile_image')
-        .populate({ path: 'requestFrom', select: 'name profile_image' });
+        .populate({ path: 'requestFrom', select: 'name profile_image' })
+        .sort({ createdAt: -1 });
 
     return result;
 };
@@ -385,6 +387,84 @@ const makeDisputeForAdmin = async (profileId: string, extensionID: string) => {
     return result;
 };
 
+// ------------------------
+const getAllExtensionRequestFromDB = async (query: Record<string, unknown>) => {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const searchTerm = query.searchTerm || '';
+    const filters: Record<string, any> = {};
+    Object.keys(query).forEach((key) => {
+        if (
+            !['searchTerm', 'page', 'limit', 'sortBy', 'sortOrder'].includes(
+                key
+            )
+        ) {
+            filters[key] = query[key];
+        }
+    });
+
+    const searchMatchStage = searchTerm
+        ? {
+              $or: [
+                  { title: { $regex: searchTerm, $options: 'i' } },
+                  { description: { $regex: searchTerm, $options: 'i' } },
+              ],
+          }
+        : {};
+
+    const sortBy: any = query.sortBy || 'createdAt';
+    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
+    const sortStage = { [sortBy]: sortOrder };
+
+    const pipeline: any[] = [
+        {
+            $match: { ...filters, ...searchMatchStage },
+        },
+        { $sort: sortStage },
+        {
+            $facet: {
+                result: [{ $skip: skip }, { $limit: limit }],
+                totalCount: [{ $count: 'total' }],
+            },
+        },
+    ];
+
+    const aggResult = await ExtensionRequestModel.aggregate(pipeline);
+    const result = aggResult[0]?.result || [];
+    const total = aggResult[0]?.totalCount[0]?.total || 0;
+    const totalPage = Math.ceil(total / limit);
+
+    return {
+        meta: {
+            page,
+            limit,
+            total,
+            totalPage,
+        },
+        result,
+    };
+};
+
+const getSingleExtensionRequest = async (id: string) => {
+    const result = await ExtensionRequestModel.findById(id)
+        .populate({
+            path: 'requestFrom',
+            select: 'name profile_image email',
+        })
+        .populate({ path: 'requestTo', select: 'name profile_image email' })
+        .populate({
+            path: 'task',
+            select: 'title budget task_attachments description doneBy location preferredDeliveryDateTime statusWithDate address provider customer customerPayingAmount acceptedBidAmount',
+            populate: [
+                { path: 'customer', select: 'name profile_image email' },
+                { path: 'provider', select: 'name profile_image email' },
+            ],
+        });
+
+    return result;
+};
+
 const ExtensionRequestServices = {
     extensionRequestIntoDb,
     getExtensionRequestByTaskFromDB,
@@ -392,5 +472,7 @@ const ExtensionRequestServices = {
     extensionRequestAcceptReject,
     makeDisputeForAdmin,
     resolveByAdmin,
+    getAllExtensionRequestFromDB,
+    getSingleExtensionRequest,
 };
 export default ExtensionRequestServices;

@@ -3,7 +3,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
-import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../error/appError';
 import getAdminNotificationCount from '../../helper/getAdminNotification';
 import getNotificationCount from '../../helper/getUnseenNotification';
@@ -11,47 +10,103 @@ import { getIO } from '../../socket/socket';
 import { USER_ROLE } from '../user/user.constant';
 import Notification from './notification.model';
 
+// const getAllNotificationFromDB = async (
+//     query: Record<string, any>,
+//     user: JwtPayload
+// ) => {
+//     if (user?.role === USER_ROLE.superAdmin) {
+//         const notificationQuery = new QueryBuilder(
+//             Notification.find({
+//                 $or: [{ receiver: USER_ROLE.superAdmin }, { receiver: 'all' }],
+//                 deleteBy: { $ne: user.profileId },
+//             }),
+//             query
+//         )
+//             .search(['name'])
+//             .filter()
+//             .sort()
+//             .paginate()
+//             .fields();
+//         const result = await notificationQuery.modelQuery;
+//         const meta = await notificationQuery.countTotal();
+//         return { meta, result };
+//     } else {
+//         const notificationQuery = new QueryBuilder(
+//             Notification.find({
+//                 $or: [{ receiver: user?.profileId }, { receiver: 'all' }],
+//                 deleteBy: { $ne: user?.profileId },
+//             }),
+
+//             query
+//         )
+//             .search(['title'])
+//             .filter()
+//             .sort()
+//             .paginate()
+//             .fields();
+//         const result = await notificationQuery.modelQuery;
+//         const meta = await notificationQuery.countTotal();
+//         return { meta, result };
+//     }
+// };
 const getAllNotificationFromDB = async (
-    query: Record<string, any>,
+    query: Record<string, unknown>,
     user: JwtPayload
 ) => {
-    if (user?.role === USER_ROLE.superAdmin) {
-        const notificationQuery = new QueryBuilder(
-            Notification.find({
-                $or: [{ receiver: USER_ROLE.superAdmin }, { receiver: 'all' }],
-                deleteBy: { $ne: user.profileId },
-            }),
-            query
-        )
-            .search(['name'])
-            .filter()
-            .sort()
-            .paginate()
-            .fields();
-        const result = await notificationQuery.modelQuery;
-        const meta = await notificationQuery.countTotal();
-        return { meta, result };
-    } else {
-        const notificationQuery = new QueryBuilder(
-            Notification.find({
-                $or: [{ receiver: user?.profileId }, { receiver: 'all' }],
-                deleteBy: { $ne: user?.profileId },
-            }),
+    const matchStage: any = {
+        deleteBy: { $ne: user.profileId },
+        $or: [{ receiver: 'all' }],
+    };
 
-            query
-        )
-            .search(['title'])
-            .filter()
-            .sort()
-            .paginate()
-            .fields();
-        const result = await notificationQuery.modelQuery;
-        const meta = await notificationQuery.countTotal();
-        return { meta, result };
+    if (user?.role === USER_ROLE.superAdmin) {
+        matchStage.$or.push({ receiver: USER_ROLE.superAdmin });
+    } else {
+        matchStage.$or.push({ receiver: user.profileId });
     }
+
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+
+    const pipeline: any[] = [
+        { $match: matchStage },
+        {
+            $addFields: {
+                isSeen: { $in: [user.profileId, '$seenBy'] },
+            },
+        },
+        {
+            $project: {
+                seenBy: 0,
+                deleteBy: 0,
+                __v: 0,
+            },
+        },
+        { $sort: { createdAt: -1 } }, // default descending sort
+        {
+            $facet: {
+                result: [{ $skip: (page - 1) * limit }, { $limit: limit }],
+                totalCount: [{ $count: 'total' }],
+            },
+        },
+    ];
+
+    const aggResult = await Notification.aggregate(pipeline);
+
+    const result = aggResult[0].result;
+    const total = aggResult[0].totalCount[0]?.total || 0;
+
+    const meta = {
+        page,
+        limit,
+        total,
+        totalPage: Math.ceil(total / limit),
+    };
+
+    return { meta, result };
 };
 
 const seeNotification = async (user: JwtPayload) => {
+    console.log('user', user);
     let result;
     const io = getIO();
     if (user?.role === USER_ROLE.superAdmin) {
@@ -64,13 +119,19 @@ const seeNotification = async (user: JwtPayload) => {
         const notificationCount = await getNotificationCount();
         io.emit('admin-notifications', adminUnseenNotificationCount);
         io.emit('notifications', notificationCount);
-    }
-    if (user?.role !== USER_ROLE.superAdmin) {
+    } else if (user?.role === USER_ROLE.admin) {
         result = await Notification.updateMany(
-            { $or: [{ receiver: user.profileid }, { receiver: 'all' }] },
+            { $or: [{ receiver: USER_ROLE.admin }, { receiver: 'all' }] },
             { $addToSet: { seenBy: user.profileId } },
             { runValidators: true, new: true }
         );
+    } else {
+        result = await Notification.updateMany(
+            { $or: [{ receiver: user.profileId }, { receiver: 'all' }] },
+            { $addToSet: { seenBy: user.profileId } },
+            { runValidators: true, new: true }
+        );
+        console.log('result', result);
     }
     const notificationCount = await getNotificationCount(user.profileId);
     io.to(user.profileId.toString()).emit('notifications', notificationCount);
