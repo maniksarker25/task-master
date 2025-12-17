@@ -7,8 +7,6 @@ import mongoose from 'mongoose';
 import cron from 'node-cron';
 import config from '../../config';
 import AppError from '../../error/appError';
-import registrationSuccessEmailBody from '../../mailTemplate/registerSucessEmail';
-import sendEmail from '../../utilities/sendEmail';
 
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 import { sendSMS } from '../../helper/sendSms';
@@ -95,9 +93,10 @@ const registerCustomer = async (
         );
 
         // Prepare SMS
-        const smsMessage = `Thank you for registering with Task Alley! Please verify your phone using this code: ${verifyCode}. 
-The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
+        //         const smsMessage = `Thank you for registering with Task Alley! Please verify your phone using this code: ${verifyCode}.
+        // The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
 
+        const smsMessage = `Thank you for registering with Task Alley. Your verification code is ${verifyCode}. It expires in 5 minutes. Please verify in time to complete registration.`;
         await sendSMS(userData.phone, smsMessage);
 
         // If SMS sent successfully, commit transaction
@@ -196,11 +195,8 @@ const resendVerifyCode = async (email: string) => {
             'Something went wrong . Please again resend the code after a few second'
         );
     }
-    sendEmail({
-        email: user.email,
-        subject: 'Activate Your Account',
-        html: registrationSuccessEmailBody('Dear', updateUser.verifyCode),
-    });
+    const smsMessage = `Thank you for registering with Task Alley. Your verification code is ${verifyCode}. It expires in 5 minutes. Please verify in time to complete registration.`;
+    await sendSMS(user.phone, smsMessage);
     return null;
 };
 

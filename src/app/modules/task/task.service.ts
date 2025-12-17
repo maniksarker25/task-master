@@ -8,9 +8,10 @@ import { JwtPayload } from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import config from '../../config';
 import { payStackBaseUrl, platformChargePercentage } from '../../constant';
+import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 import { sendBatchPushNotification } from '../../helper/sendPushNotification';
 import { ENUM_PAYMENT_PURPOSE } from '../../utilities/enum';
-import bidModel from '../bid/bid.model';
+import { default as bidModel, default as BidModel } from '../bid/bid.model';
 import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
 import Notification from '../notification/notification.model';
 import Payment from '../payment/payment.model';
@@ -61,6 +62,48 @@ const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
         console.error('Failed to send task create admin notification:', err);
         throw err;
     }
+};
+
+const updateTask = async (profileId: string, id: string, payload: ITask) => {
+    const task = await TaskModel.findOne({ customer: profileId, _id: id });
+
+    if (!task) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+    }
+
+    const bid = await BidModel.findOne({ task: id });
+    if (!bid) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'Freelancer already bid for that task so you are '
+        );
+    }
+    if (payload.task_attachments) {
+        payload.task_attachments = [
+            ...task.task_attachments,
+            ...payload.task_attachments,
+        ];
+    } else {
+        payload.task_attachments = [...task.task_attachments];
+    }
+    if (payload?.deletedImages) {
+        payload.task_attachments = payload.task_attachments.filter(
+            (url) => !payload?.deletedImages?.includes(url)
+        );
+    }
+
+    const result = await TaskModel.findByIdAndUpdate(id, payload, {
+        new: true,
+        runValidators: true,
+    });
+
+    if (payload.deletedImages) {
+        for (const image of payload.deletedImages) {
+            deleteFileFromS3(image);
+        }
+    }
+
+    return result;
 };
 
 const getAllTaskFromDB = async (query: Record<string, any>) => {
@@ -727,5 +770,6 @@ const TaskServices = {
     acceptOfferByProvider,
     completeTaskByCustomer,
     acceptTaskByCustomerFromDB,
+    updateTask,
 };
 export default TaskServices;

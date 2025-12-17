@@ -35,8 +35,9 @@ export interface ITask {
     scheduleType: (typeof ENUM_SCHEDULE_TYPE)[keyof typeof ENUM_SCHEDULE_TYPE];
     preferredDeliveryDateTime?: Date;
     description: string;
-    task_attachments?: string[];
+    task_attachments: string[];
     statusWithDate: IStatusWithDate[];
     transactionId?: string;
     paymentReferenceId?: string;
+    deletedImages: string[];
 }
