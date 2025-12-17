@@ -524,8 +524,8 @@ const upgradeAccount = async (userData: JwtPayload) => {
                     refreshToken,
                     role: USER_ROLE.provider,
                     isAddressProvided: true,
-                    isIdentificationDocumentVerified: true,
-                    isBankNumberVerified: true,
+                    isIdentificationDocumentVerified: false,
+                    isBankNumberVerified: false,
                 },
                 message: 'Your account successfully upgrade to provider',
             };
