@@ -27,6 +27,27 @@ const createTask = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const updateTask = catchAsync(async (req, res) => {
+    if (req.files?.task_attachments) {
+        req.body.task_attachments = req.files.task_attachments.map(
+            (file: any) => {
+                return getCloudFrontUrl(file.key);
+            }
+        );
+    }
+
+    const result = await TaskServices.createTaskIntoDB(
+        req.user.profileId,
+        req?.body
+    );
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Task updated successfully',
+        data: result,
+    });
+});
 
 const getAllTask = catchAsync(async (req, res) => {
     const result = await TaskServices.getAllTaskFromDB(req.query);
@@ -126,5 +147,6 @@ const TaskController = {
     getMyTask,
     completeTask,
     acceptTaskByCustomer,
+    updateTask,
 };
 export default TaskController;
