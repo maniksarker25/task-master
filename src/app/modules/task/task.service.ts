@@ -640,7 +640,7 @@ const acceptTaskByCustomerFromDB = async (
             );
         }
     }
-    if (!promo) {
+    if (promoCode && !promo) {
         throw new AppError(httpStatus.NOT_FOUND, 'Promo code is not valid');
     }
     const bidData: any = await bidModel.findById(bidID);
@@ -660,25 +660,19 @@ const acceptTaskByCustomerFromDB = async (
     }
     let discount = 0;
 
-    if (promo?.discountType == ENUM_DISCOUNT_TYPE.FIXED) {
-        discount = promo.discountNum;
-    } else {
-        discount = (bidData.price * promo.discountNum) / 100;
+    if (promo) {
+        if (promo?.discountType == ENUM_DISCOUNT_TYPE.FIXED) {
+            discount = promo.discountNum;
+        } else {
+            discount = (bidData.price * promo.discountNum) / 100;
+        }
     }
 
     //  HANDLE REFERRAL BONUS (Includes rollback)
-    const referralUse = await ReferralUseModel.findOneAndUpdate(
-        {
-            $or: [{ referred: profileID }, { referrer: profileID }],
-            status: ENUM_REFERRAL_USE_STATUS.ACTIVE,
-        },
-        { status: ENUM_REFERRAL_USE_STATUS.USED },
-        {
-            new: true,
-            sort: { createdAt: 1 },
-            runValidators: true,
-        }
-    );
+    const referralUse = await ReferralUseModel.findOne({
+        $or: [{ referred: profileID }, { referrer: profileID }],
+        status: ENUM_REFERRAL_USE_STATUS.ACTIVE,
+    });
     let finalAmount = bidData.price - discount;
     if (referralUse) {
         finalAmount = finalAmount - referralUse.value;
@@ -701,6 +695,8 @@ const acceptTaskByCustomerFromDB = async (
                 customerId: profileID,
                 providerId: bidData.provider.toString(),
                 paymentPurpose: ENUM_PAYMENT_PURPOSE.BID_ACCEPT,
+                promoId: promo ? promo._id.toString() : null,
+                referralUseId: referralUse ? referralUse._id.toString() : null,
             },
             callback_url: `http://10.10.20.48:3000/success`,
         },

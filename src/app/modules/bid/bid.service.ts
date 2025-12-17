@@ -14,6 +14,13 @@ const createBidIntoDB = async (userId: string, payload: IBid) => {
     if (!task) {
         throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
     }
+    if (task.provider) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'Freelancer already selected , you are not able to place bid'
+        );
+    }
+
     const result = (
         await BidModel.create({ ...payload, provider: userId })
     ).populate('provider task');
