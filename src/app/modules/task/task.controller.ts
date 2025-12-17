@@ -110,11 +110,12 @@ const acceptOffer = catchAsync(async (req, res) => {
     });
 });
 const acceptTaskByCustomer = catchAsync(async (req, res) => {
-    const { bidID } = req.body;
+    const { bidID, promoCode } = req.body;
     const currentUserId = req.user.profileId;
     const result = await TaskServices.acceptTaskByCustomerFromDB(
         currentUserId,
-        bidID
+        bidID,
+        promoCode
     );
     sendResponse(res, {
         statusCode: httpStatus.OK,
