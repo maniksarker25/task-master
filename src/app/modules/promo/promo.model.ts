@@ -1,6 +1,6 @@
 import { model, Schema } from 'mongoose';
-import { IPromo } from './promo.interface';
 import { ENUM_DISCOUNT_TYPE, ENUM_PROMO_STATUS } from './promo.enum';
+import { IPromo } from './promo.interface';
 
 const promoSchema = new Schema<IPromo>(
     {
@@ -39,13 +39,6 @@ const promoSchema = new Schema<IPromo>(
             type: String,
             enum: Object.values(ENUM_PROMO_STATUS),
             default: ENUM_PROMO_STATUS.UPCOMING,
-        },
-        usesDate: {
-            type: Date,
-        },
-        usedCount: {
-            type: Number,
-            default: 0,
         },
     },
     { timestamps: true }
