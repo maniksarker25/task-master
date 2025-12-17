@@ -1,25 +1,20 @@
-import express from "express";
-import auth from "../../middlewares/auth";
-import { USER_ROLE } from "../user/user.constant";
-import validateRequest from "../../middlewares/validateRequest";
-import paymentValidations from "./payment.validation";
-import paymentController from "./payment.controller";
-import { uploadFile } from "../../helper/fileUploader";
+import express from 'express';
+import auth from '../../middlewares/auth';
+import { USER_ROLE } from '../user/user.constant';
+import paymentController from './payment.controller';
 
 const router = express.Router();
 
+router.get(
+    '/get-all',
+    auth(USER_ROLE.superAdmin, USER_ROLE.admin),
+    paymentController.getAllPayments
+);
+
 router.patch(
-    "/update-profile",
-    auth(USER_ROLE.user),
-    uploadFile(),
-    (req, res, next) => {
-        if (req.body.data) {
-            req.body = JSON.parse(req.body.data);
-        }
-        next();
-    },
-    validateRequest(paymentValidations.updatePaymentData),
-    paymentController.updateUserProfile
+    '/make-paid-unpaid/:id',
+    auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+    paymentController.makePaidUnPaid
 );
 
 export const paymentRoutes = router;

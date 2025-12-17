@@ -5,8 +5,7 @@ import { USER_ROLE } from '../modules/user/user.constant';
 import { User } from '../modules/user/user.model';
 
 const superAdminData = {
-    firstName: 'Mr',
-    lastName: 'Admin',
+    name: 'Mr Admin',
     phone: '018938493824',
     email: config.super_admin_email,
 };

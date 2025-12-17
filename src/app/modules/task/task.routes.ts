@@ -1,10 +1,9 @@
 import express from 'express';
+import { uploadFile } from '../../helper/multer-s3-uploader';
 import auth from '../../middlewares/auth';
+import simpleAuth from '../../middlewares/simpleAuth';
 import validateRequest from '../../middlewares/validateRequest';
 import { USER_ROLE } from '../user/user.constant';
-
-import { uploadFile } from '../../helper/multer-s3-uploader';
-import simpleAuth from '../../middlewares/simpleAuth';
 import TaskController from './task.controller';
 import taskValidations from './task.validation';
 
@@ -22,6 +21,19 @@ router.post(
     },
     validateRequest(taskValidations.createTaskZodSchema),
     TaskController.createTask
+);
+router.patch(
+    '/update-task',
+    auth(USER_ROLE.customer),
+    uploadFile(),
+    (req, res, next) => {
+        if (req.body.data) {
+            req.body = JSON.parse(req.body.data);
+        }
+        next();
+    },
+    validateRequest(taskValidations.updateTaskZodSchema),
+    TaskController.updateTask
 );
 router.get('/all-task', TaskController.getAllTask);
 router.get(

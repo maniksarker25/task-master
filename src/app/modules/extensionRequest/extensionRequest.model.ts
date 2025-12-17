@@ -55,6 +55,10 @@ const extensionRequestSchema = new Schema<IExtensionRequest>(
             type: Date,
             default: null,
         },
+        type: {
+            type: String,
+            default: 'extension',
+        },
     },
     { timestamps: true }
 );

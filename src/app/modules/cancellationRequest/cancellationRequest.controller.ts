@@ -7,10 +7,12 @@ import { ENUM_CANCELLATION_REQUEST_STATUS } from './cancellationRequest.enum';
 import cancellationRequestServices from './cancellationRequest.service';
 
 const createCancellationRequest = catchAsync(async (req, res) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const file: any = req.files?.reject_evidence;
     if (req.files?.reject_evidence) {
-        req.body.reject_evidence = getCloudFrontUrl(file[0].key);
+        req.body.cancellationEvidence = req.files.reject_evidence.map(
+            (file: any) => {
+                return getCloudFrontUrl(file.key);
+            }
+        );
     }
     const result =
         await cancellationRequestServices.createCancellationRequestIntoDb(
@@ -57,11 +59,13 @@ const cancelCancellationRequest = catchAsync(async (req, res) => {
 const handleAcceptRejectCancellationRequest = catchAsync(async (req, res) => {
     const { status } = req.body;
 
-    const file: any = req.files?.reject_evidence;
-    if (file) {
-        req.body.reject_evidence = getCloudFrontUrl(file[0].key);
+    if (req.files?.reject_evidence) {
+        req.body.reject_evidence = req.files.reject_evidence.map(
+            (file: any) => {
+                return getCloudFrontUrl(file.key);
+            }
+        );
     }
-
     const result =
         await cancellationRequestServices.acceptRejectCancellationRequest(
             req.user.profileId,
@@ -109,6 +113,28 @@ const resolveByAdmin = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const getAllCancelRequest = catchAsync(async (req, res) => {
+    const result = await cancellationRequestServices.getAllCancelRequestFromDB(
+        req.query
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Cancel requests retrieved successfully',
+        data: result,
+    });
+});
+const getSingleCancelRequest = catchAsync(async (req, res) => {
+    const result = await cancellationRequestServices.getSingleCancelRequest(
+        req.params.id
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Single cancel requests retrieved successfully',
+        data: result,
+    });
+});
 
 const CancellationRequestController = {
     createCancellationRequest,
@@ -117,5 +143,7 @@ const CancellationRequestController = {
     handleAcceptRejectCancellationRequest,
     makeDisputeForAdmin,
     resolveByAdmin,
+    getAllCancelRequest,
+    getSingleCancelRequest,
 };
 export default CancellationRequestController;

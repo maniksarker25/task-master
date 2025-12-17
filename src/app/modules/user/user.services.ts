@@ -7,11 +7,10 @@ import mongoose from 'mongoose';
 import cron from 'node-cron';
 import config from '../../config';
 import AppError from '../../error/appError';
-import registrationSuccessEmailBody from '../../mailTemplate/registerSucessEmail';
-import sendEmail from '../../utilities/sendEmail';
 
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 import { sendSMS } from '../../helper/sendSms';
+import Admin from '../admin/admin.model';
 import { ICustomer } from '../customer/customer.interface';
 import { Customer } from '../customer/customer.model';
 import { Provider } from '../provider/provider.model';
@@ -20,6 +19,7 @@ import { USER_ROLE } from './user.constant';
 import { TUser, TUserRole } from './user.interface';
 import { User } from './user.model';
 import { createToken } from './user.utils';
+
 const generateVerifyCode = (): number => {
     return Math.floor(100000 + Math.random() * 900000);
 };
@@ -57,6 +57,7 @@ const registerCustomer = async (
             phone: userData?.phone,
             password,
             role,
+            roles: [role],
             verifyCode,
             codeExpireIn: new Date(Date.now() + 5 * 60000), // 5 minutes expiry
         };
@@ -92,10 +93,10 @@ const registerCustomer = async (
         );
 
         // Prepare SMS
-        const smsMessage = `Thank you for registering with Task Alley! Please verify your phone using this code: ${verifyCode}. 
-The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
+        //         const smsMessage = `Thank you for registering with Task Alley! Please verify your phone using this code: ${verifyCode}.
+        // The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
 
-        //!TODO: need to send sms to phone
+        const smsMessage = `Thank you for registering with Task Alley. Your verification code is ${verifyCode}. It expires in 5 minutes. Please verify in time to complete registration.`;
         await sendSMS(userData.phone, smsMessage);
 
         // If SMS sent successfully, commit transaction
@@ -194,23 +195,28 @@ const resendVerifyCode = async (email: string) => {
             'Something went wrong . Please again resend the code after a few second'
         );
     }
-    sendEmail({
-        email: user.email,
-        subject: 'Activate Your Account',
-        html: registrationSuccessEmailBody('Dear', updateUser.verifyCode),
-    });
+    const smsMessage = `Thank you for registering with Task Alley. Your verification code is ${verifyCode}. It expires in 5 minutes. Please verify in time to complete registration.`;
+    await sendSMS(user.phone, smsMessage);
     return null;
 };
 
 const getMyProfile = async (userData: JwtPayload) => {
     let result = null;
     if (userData.role === USER_ROLE.customer) {
-        result = await Customer.findOne({ email: userData.email });
+        result = await Customer.findOne({ email: userData.email }).populate({
+            path: 'user',
+            select: 'isMultiRole',
+        });
     }
     if (userData.role === USER_ROLE.provider) {
-        result = await Provider.findOne({ email: userData.email });
+        result = await Provider.findOne({ email: userData.email }).populate({
+            path: 'user',
+            select: 'isMultiRole',
+        });
     } else if (userData.role === USER_ROLE.superAdmin) {
         result = await SuperAdmin.findOne({ email: userData.email });
+    } else if (userData.role === USER_ROLE.admin) {
+        result = await Admin.findOne({ email: userData.email });
     }
     return result;
 };
@@ -244,7 +250,7 @@ const updateUserProfile = async (userData: JwtPayload, payload: any) => {
         if (!user) {
             throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
         }
-        if (payload.city) {
+        if (payload.city || payload.address) {
             payload.isAddressProvided = true;
         }
         const result = await Customer.findByIdAndUpdate(
@@ -277,12 +283,27 @@ const updateUserProfile = async (userData: JwtPayload, payload: any) => {
         }
 
         return result;
+    } else if (userData.role == USER_ROLE.admin) {
+        const admin = await Admin.findById(userData.profileId);
+        if (!admin) {
+            throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
+        }
+        const result = await Admin.findByIdAndUpdate(
+            userData.profileId,
+            payload,
+            { new: true, runValidators: true }
+        );
+        if (payload.profile_image && admin.profile_image) {
+            deleteFileFromS3(admin.profile_image);
+        }
+
+        return result;
     } else if (userData.role == USER_ROLE.provider) {
         const provider = await Provider.findById(userData.profileId);
         if (!provider) {
             throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
         }
-        if (payload.city) {
+        if (payload.city || payload.address) {
             payload.isAddressProvided = true;
         }
 
@@ -368,6 +389,207 @@ const adminVerifyUserFromDB = async (id: string) => {
     return result;
 };
 
+// upgrade account
+const upgradeAccount = async (userData: JwtPayload) => {
+    const user = await User.findById(userData.id);
+    console.log('user', user);
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+    }
+
+    if (user?.roles && user.roles.length == 2) {
+        if (userData.role == USER_ROLE.customer) {
+            const provider = await Provider.findOne({
+                user: userData.id,
+            });
+            if (!provider) {
+                throw new AppError(httpStatus.NOT_FOUND, 'Provider not found');
+            }
+            const jwtPayload = {
+                id: user?._id,
+                profileId: provider._id.toString(),
+                email: user?.email,
+                role: USER_ROLE.provider,
+            };
+            const accessToken = createToken(
+                jwtPayload,
+                config.jwt_access_secret as string,
+                config.jwt_access_expires_in as string
+            );
+            const refreshToken = createToken(
+                jwtPayload,
+                config.jwt_refresh_secret as string,
+                config.jwt_refresh_expires_in as string
+            );
+
+            return {
+                data: {
+                    accessToken,
+                    refreshToken,
+                    role: USER_ROLE.provider,
+                    isAddressProvided: provider.isAddressProvided,
+                    isIdentificationDocumentVerified:
+                        provider.isIdentificationDocumentApproved,
+                    isBankNumberVerified:
+                        provider.isBankVerificationNumberApproved,
+                },
+                message: 'Your account switched to provider',
+            };
+        } else if (userData.role == USER_ROLE.provider) {
+            const customer = await Customer.findOne({
+                user: userData.id,
+            }).select('_id');
+            if (!customer) {
+                throw new AppError(httpStatus.NOT_FOUND, 'Provider not found');
+            }
+            const jwtPayload = {
+                id: user?._id,
+                profileId: customer._id.toString(),
+                email: user?.email,
+                role: USER_ROLE.customer,
+            };
+            const accessToken = createToken(
+                jwtPayload,
+                config.jwt_access_secret as string,
+                config.jwt_access_expires_in as string
+            );
+            const refreshToken = createToken(
+                jwtPayload,
+                config.jwt_refresh_secret as string,
+                config.jwt_refresh_expires_in as string
+            );
+
+            return {
+                data: {
+                    accessToken,
+                    refreshToken,
+                    role: USER_ROLE.customer,
+                    isAddressProvided: customer.isAddressProvided,
+                },
+                message: 'Your account switched to customer',
+            };
+        } else {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                'You are not able to switch account'
+            );
+        }
+    } else {
+        if (userData.role == USER_ROLE.customer) {
+            const customer = await Customer.findById(userData.profileId);
+
+            const providerData = {
+                user: user?._id,
+                name: customer?.name,
+                email: customer?.email,
+                phone: customer?.phone,
+                city: customer?.city,
+                street: customer?.street,
+                address_document: customer?.address_document,
+                address: customer?.address,
+                isAddressProvided: customer?.isAddressProvided,
+            };
+
+            const result = await Provider.create(providerData);
+
+            await User.findByIdAndUpdate(
+                userData.id,
+                {
+                    isMultiRole: true,
+                    roles: [USER_ROLE.customer, USER_ROLE.provider],
+                },
+                { new: true }
+            );
+
+            const jwtPayload = {
+                id: user?._id,
+                profileId: result._id.toString(),
+                email: user?.email,
+                role: USER_ROLE.provider,
+            };
+            const accessToken = createToken(
+                jwtPayload,
+                config.jwt_access_secret as string,
+                config.jwt_access_expires_in as string
+            );
+            const refreshToken = createToken(
+                jwtPayload,
+                config.jwt_refresh_secret as string,
+                config.jwt_refresh_expires_in as string
+            );
+
+            return {
+                data: {
+                    accessToken,
+                    refreshToken,
+                    role: USER_ROLE.provider,
+                    isAddressProvided: true,
+                    isIdentificationDocumentVerified: true,
+                    isBankNumberVerified: true,
+                },
+                message: 'Your account successfully upgrade to provider',
+            };
+        } else if (userData.role == USER_ROLE.provider) {
+            const provider = await Provider.findById(userData.profileId);
+
+            const customerData = {
+                user: user?._id,
+                name: provider?.name,
+                email: provider?.email,
+                phone: provider?.phone,
+                city: provider?.city,
+                street: provider?.street,
+                address_document: provider?.address_document,
+                address: provider?.address,
+                isAddressProvided: provider?.isAddressProvided,
+            };
+
+            const result = await Customer.create(customerData);
+
+            await User.findByIdAndUpdate(
+                userData.id,
+                {
+                    isMultiRole: true,
+                    roles: [USER_ROLE.provider, USER_ROLE.customer],
+                },
+                { new: true }
+            );
+
+            const jwtPayload = {
+                id: user?._id,
+                profileId: result._id.toString(),
+                email: user?.email,
+                role: USER_ROLE.customer,
+            };
+            const accessToken = createToken(
+                jwtPayload,
+                config.jwt_access_secret as string,
+                config.jwt_access_expires_in as string
+            );
+            const refreshToken = createToken(
+                jwtPayload,
+                config.jwt_refresh_secret as string,
+                config.jwt_refresh_expires_in as string
+            );
+
+            return {
+                data: {
+                    accessToken,
+                    refreshToken,
+                    role: USER_ROLE.customer,
+                    isAddressProvided: true,
+                },
+                message: 'Your account successfully upgrade to customer',
+            };
+        } else {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                'You are not able to upgrade your account'
+            );
+        }
+    }
+};
+
 const userServices = {
     registerCustomer,
     verifyCode,
@@ -377,6 +599,7 @@ const userServices = {
     deleteUserAccount,
     updateUserProfile,
     adminVerifyUserFromDB,
+    upgradeAccount,
 };
 
 export default userServices;

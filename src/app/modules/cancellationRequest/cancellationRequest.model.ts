@@ -33,10 +33,7 @@ const extensionRequestSchema = new Schema<ICancellationRequest>(
             type: Date,
             required: true,
         },
-        requestedDateTime: {
-            type: Date,
-            required: true,
-        },
+
         reason: {
             type: String,
             required: true,
@@ -47,7 +44,7 @@ const extensionRequestSchema = new Schema<ICancellationRequest>(
             default: ENUM_CANCELLATION_REQUEST_STATUS.PENDING,
         },
         rejectDetails: { type: String, default: '' },
-        reject_evidence: { type: String, default: '' },
+        reject_evidence: { type: [String], default: [] },
 
         reviewedRequestAt: {
             type: Date,
@@ -55,6 +52,10 @@ const extensionRequestSchema = new Schema<ICancellationRequest>(
         },
         cancellationReason: { type: String, default: '' },
         cancellationEvidence: { type: [String], default: [] },
+        type: {
+            type: String,
+            default: 'extension',
+        },
     },
     { timestamps: true }
 );

@@ -1,12 +1,12 @@
-import { model, Schema } from 'mongoose';
-import { ISuperAdmin } from './superAdmin.interface';
+import { Schema, model } from 'mongoose';
+import { IAdmin } from './admin.interface';
 
-const superAdminSchema = new Schema<ISuperAdmin>(
+const adminSchema = new Schema<IAdmin>(
     {
         user: {
             type: Schema.Types.ObjectId,
-            required: true,
             ref: 'User',
+            required: true,
         },
         name: {
             type: String,
@@ -17,15 +17,24 @@ const superAdminSchema = new Schema<ISuperAdmin>(
             required: true,
             unique: true,
         },
+        phone: {
+            type: String,
+            default: '',
+        },
         profile_image: {
             type: String,
             default: '',
+        },
+        isActive: {
+            type: Boolean,
+            default: true,
         },
     },
     {
         timestamps: true,
     }
 );
-const SuperAdmin = model<ISuperAdmin>('SuperAdmin', superAdminSchema);
 
-export default SuperAdmin;
+const Admin = model<IAdmin>('Admin', adminSchema);
+
+export default Admin;

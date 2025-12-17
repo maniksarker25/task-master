@@ -39,6 +39,12 @@ const loginUserIntoDB = async (payload: TLoginUser) => {
             'You are not verified user . Please verify your email'
         );
     }
+    if (payload.role && !user.roles.includes(payload.role)) {
+        throw new AppError(
+            httpStatus.NOT_FOUND,
+            `${payload.role} account not found`
+        );
+    }
     // checking if the password is correct ----
     if (!(await User.isPasswordMatched(payload?.password, user?.password))) {
         throw new AppError(httpStatus.FORBIDDEN, 'Password do not match');
@@ -67,7 +73,7 @@ const loginUserIntoDB = async (payload: TLoginUser) => {
         id: user?._id,
         profileId: user.profileId,
         email: user?.email,
-        role: user?.role as TUserRole,
+        role: payload.role || user.role,
     };
     const accessToken = createToken(
         jwtPayload,
@@ -215,7 +221,6 @@ const forgetPassword = async (phone: string) => {
             codeExpireIn: new Date(Date.now() + 5 * 60000),
         }
     );
-
     await sendSMS(
         user.phone,
         `Task Alley: Your password reset code is ${resetCode}. This code will expire in 5 minutes. If you didn’t request a password reset, please ignore this message.`

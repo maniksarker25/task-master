@@ -27,6 +27,11 @@ const taskSchema = new Schema<ITask>(
             ref: 'Category',
             required: true,
         },
+        service: {
+            type: Schema.Types.ObjectId,
+            ref: 'Service',
+            default: null,
+        },
 
         budget: { type: Number, required: true },
         acceptedBidAmount: { type: Number, default: null },
@@ -91,6 +96,7 @@ const taskSchema = new Schema<ITask>(
             type: [statusWithDateSchema],
         },
         transactionId: { type: String, default: null },
+        paymentReferenceId: { type: String, default: null },
     },
 
     { timestamps: true }

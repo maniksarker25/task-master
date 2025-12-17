@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { AdminRoutes } from '../modules/admin/admin.routes';
 import { authRoutes } from '../modules/auth/auth.routes';
 import { bidRoutes } from '../modules/bid/bid.routes';
 import { cancellationRequestRoutes } from '../modules/cancellationRequest/cancellationRequest.routes';
@@ -12,6 +13,7 @@ import { ManageRoutes } from '../modules/manage-web/manage.routes';
 import { messageRoutes } from '../modules/message/message.routes';
 import { metaRoutes } from '../modules/meta/meta.routes';
 import { notificationRoutes } from '../modules/notification/notification.routes';
+import { paymentRoutes } from '../modules/payment/payment.routes';
 import { paystackPaymentRoutes } from '../modules/paystackPayment/paystack.routes';
 import { promoRoutes } from '../modules/promo/promo.routes';
 import { promoUseRoutes } from '../modules/promoUse/promoUse.routes';
@@ -23,8 +25,8 @@ import { serviceRoutes } from '../modules/service/service.routes';
 import { subscriberRoutes } from '../modules/subscriber/subscriber.routes';
 import { superAdminRoutes } from '../modules/superAdmin/superAdmin.routes';
 import { taskRoutes } from '../modules/task/task.routes';
-import { userRoutes } from '../modules/user/user.routes';
 import { transactionRoutes } from '../modules/transaction/transaction.routes';
+import { userRoutes } from '../modules/user/user.routes';
 
 const router = Router();
 
@@ -134,6 +136,14 @@ const moduleRoutes = [
     {
         path: '/transaction',
         router: transactionRoutes,
+    },
+    {
+        path: '/payment',
+        router: paymentRoutes,
+    },
+    {
+        path: '/admin',
+        router: AdminRoutes,
     },
 ];
 

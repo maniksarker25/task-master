@@ -33,6 +33,11 @@ const userSchema = new Schema<TUser>(
             enum: Object.values(USER_ROLE),
             required: true,
         },
+        roles: {
+            type: [String],
+            enum: Object.values(USER_ROLE),
+            default: ['customer'],
+        },
         isBlocked: {
             type: Boolean,
             default: false,
@@ -70,6 +75,10 @@ const userSchema = new Schema<TUser>(
         },
         playerIds: { type: [String], default: [] },
         isAdminVerified: { type: Boolean, default: false },
+        isMultiRole: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         timestamps: true,

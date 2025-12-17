@@ -33,7 +33,10 @@ const getAllService = catchAsync(async (req, res) => {
     });
 });
 const getMyService = catchAsync(async (req, res) => {
-    const result = await serviceServices.getMyService(req.user.profileId);
+    const result = await serviceServices.getMyService(
+        req.user.profileId,
+        req.query
+    );
 
     sendResponse(res, {
         statusCode: httpStatus.OK,

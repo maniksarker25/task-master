@@ -97,8 +97,20 @@ const adminVerifyUser = catchAsync(async (req, res) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: `User is ${result?.isAdminVerified ? 'Verify' : 'not-verify'}`,
+        message: result?.isAdminVerified
+            ? 'Mark as verified'
+            : 'Mark as unverified',
         data: result,
+    });
+});
+const upgradeAccount = catchAsync(async (req, res) => {
+    const result = await userServices.upgradeAccount(req.user);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: result.message,
+        data: result.data,
     });
 });
 
@@ -111,5 +123,6 @@ const userController = {
     deleteUserAccount,
     updateUserProfile,
     adminVerifyUser,
+    upgradeAccount,
 };
 export default userController;
