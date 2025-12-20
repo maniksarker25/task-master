@@ -9,7 +9,10 @@ import mongoose from 'mongoose';
 import config from '../../config';
 import { payStackBaseUrl, platformChargePercentage } from '../../constant';
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
-import { sendBatchPushNotification } from '../../helper/sendPushNotification';
+import {
+    sendBatchPushNotification,
+    sendSinglePushNotification,
+} from '../../helper/sendPushNotification';
 import { ENUM_PAYMENT_PURPOSE } from '../../utilities/enum';
 import { default as bidModel, default as BidModel } from '../bid/bid.model';
 import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
@@ -787,6 +790,38 @@ const acceptOfferByProvider = async (taskId: string, currentUserId: string) => {
     return task;
 };
 
+const rejectOfferByProvider = async (taskId: string, currentUserId: string) => {
+    const task = await TaskModel.findOne({
+        _id: taskId,
+        provider: currentUserId,
+    });
+
+    if (!task) {
+        throw new AppError(
+            httpStatus.NOT_FOUND,
+            'Task not found or this is not your task'
+        );
+    }
+
+    task.provider = null;
+    task.status = ENUM_TASK_STATUS.OPEN_FOR_BID;
+    await task.save();
+    await Notification.create({
+        title: 'Offer rejected by Provider',
+        message: `Provider Rejected your offer, now your task is open for bid for other freelancers`,
+        receiver: task.customer,
+        type: ENUM_NOTIFICATION_TYPE.OFFER_REJECTED,
+        redirectLink: `${task._id}`,
+    });
+    sendSinglePushNotification(
+        task!.customer.toString(),
+        'Offer rejected by Provider',
+        `Provider Rejected your offer, now your task is open for bid for other freelancers`,
+        { taskId: task._id.toString() }
+    );
+    return task;
+};
+
 const acceptTaskByCustomerFromDB = async (
     profileID: string,
     bidID: string,
@@ -1034,5 +1069,6 @@ const TaskServices = {
     completeTaskByCustomer,
     acceptTaskByCustomerFromDB,
     updateTask,
+    rejectOfferByProvider,
 };
 export default TaskServices;
