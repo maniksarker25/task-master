@@ -50,7 +50,7 @@ const updateTask = catchAsync(async (req, res) => {
 });
 
 const getAllTask = catchAsync(async (req, res) => {
-    const result = await TaskServices.getAllTaskFromDB(req.query);
+    const result = await TaskServices.getAllTaskFromDB(req?.user, req.query);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
@@ -109,12 +109,26 @@ const acceptOffer = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const rejectOfferByProvider = catchAsync(async (req, res) => {
+    const currentUserId = req.user.profileId;
+    const result = await TaskServices.rejectOfferByProvider(
+        req.params.id,
+        currentUserId
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Offer rejected successfully',
+        data: result,
+    });
+});
 const acceptTaskByCustomer = catchAsync(async (req, res) => {
-    const { bidID } = req.body;
+    const { bidID, promoCode } = req.body;
     const currentUserId = req.user.profileId;
     const result = await TaskServices.acceptTaskByCustomerFromDB(
         currentUserId,
-        bidID
+        bidID,
+        promoCode
     );
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -148,5 +162,6 @@ const TaskController = {
     completeTask,
     acceptTaskByCustomer,
     updateTask,
+    rejectOfferByProvider,
 };
 export default TaskController;

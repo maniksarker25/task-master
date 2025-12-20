@@ -9,12 +9,18 @@ import mongoose from 'mongoose';
 import config from '../../config';
 import { payStackBaseUrl, platformChargePercentage } from '../../constant';
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
-import { sendBatchPushNotification } from '../../helper/sendPushNotification';
+import {
+    sendBatchPushNotification,
+    sendSinglePushNotification,
+} from '../../helper/sendPushNotification';
 import { ENUM_PAYMENT_PURPOSE } from '../../utilities/enum';
 import { default as bidModel, default as BidModel } from '../bid/bid.model';
 import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
 import Notification from '../notification/notification.model';
 import Payment from '../payment/payment.model';
+import { ENUM_DISCOUNT_TYPE } from '../promo/promo.enum';
+import PromoModel from '../promo/promo.model';
+import PromoUseModel from '../promoUse/promoUse.model';
 import QuestionModel from '../question/question.model';
 import { ENUM_REFERRAL_USE_STATUS } from '../referralUse/referralUse.enum';
 import ReferralUseModel from '../referralUse/referralUse.model';
@@ -106,157 +112,346 @@ const updateTask = async (profileId: string, id: string, payload: ITask) => {
     return result;
 };
 
-const getAllTaskFromDB = async (query: Record<string, any>) => {
-    const page = Number(query.page) || 1;
-    const limit = Number(query.limit) || 10;
-    const skip = (page - 1) * limit;
-    const searchTerm = query.searchTerm || '';
-    const maxDistance = Number(query.maxDistance) * 1000 || 5000;
-    const minPrice = Number(query.minPrice) || null;
-    const maxPrice = Number(query.maxPrice) || null;
-    const filters: Record<string, any> = {};
-    Object.keys(query).forEach((key) => {
-        if (
-            ![
-                'searchTerm',
-                'page',
-                'limit',
-                'sortBy',
-                'sortOrder',
-                'minPrice',
-                'maxPrice',
-            ].includes(key)
-        ) {
-            filters[key] = query[key];
+const getAllTaskFromDB = async (
+    userData: JwtPayload,
+    query: Record<string, any>
+) => {
+    if (
+        userData?.role &&
+        (userData.role == USER_ROLE.admin ||
+            userData.role == USER_ROLE.superAdmin)
+    ) {
+        const page = Number(query.page) || 1;
+        const limit = Number(query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const searchTerm = query.searchTerm || '';
+        const maxDistance = Number(query.maxDistance) * 1000 || 5000;
+        const minPrice = Number(query.minPrice) || null;
+        const maxPrice = Number(query.maxPrice) || null;
+        const filters: Record<string, any> = {};
+        Object.keys(query).forEach((key) => {
+            if (
+                ![
+                    'searchTerm',
+                    'page',
+                    'limit',
+                    'sortBy',
+                    'sortOrder',
+                    'minPrice',
+                    'maxPrice',
+                ].includes(key)
+            ) {
+                filters[key] = query[key];
+            }
+        });
+
+        if (query.category) {
+            filters.category = new mongoose.Types.ObjectId(query.category);
         }
-    });
 
-    if (query.category) {
-        filters.category = new mongoose.Types.ObjectId(query.category);
-    }
+        const searchMatchStage = searchTerm
+            ? {
+                  $or: [
+                      { title: { $regex: searchTerm, $options: 'i' } },
+                      { description: { $regex: searchTerm, $options: 'i' } },
+                  ],
+              }
+            : {};
 
-    const searchMatchStage = searchTerm
-        ? {
-              $or: [
-                  { title: { $regex: searchTerm, $options: 'i' } },
-                  { description: { $regex: searchTerm, $options: 'i' } },
-              ],
-          }
-        : {};
+        if (minPrice !== null || maxPrice !== null) {
+            filters.budget = {};
+            if (minPrice !== null) filters.budget.$gte = minPrice;
+            if (maxPrice !== null) filters.budget.$lte = maxPrice;
+        }
 
-    if (minPrice !== null || maxPrice !== null) {
-        filters.budget = {};
-        if (minPrice !== null) filters.budget.$gte = minPrice;
-        if (maxPrice !== null) filters.budget.$lte = maxPrice;
-    }
+        // Sorting
+        const sortBy = query.sortBy || 'createdAt';
+        const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
+        const sortStage = { [sortBy]: sortOrder };
 
-    // Sorting
-    const sortBy = query.sortBy || 'createdAt';
-    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
-    const sortStage = { [sortBy]: sortOrder };
-
-    const pipeline: any[] = [
-        { $match: { ...filters, ...searchMatchStage, isDeleted: false } },
-        {
-            $lookup: {
-                from: 'bids',
-                localField: '_id',
-                foreignField: 'task',
-                as: 'bids',
+        const pipeline: any[] = [
+            {
+                $match: {
+                    ...filters,
+                    ...searchMatchStage,
+                    isDeleted: false,
+                },
             },
-        },
-        {
-            $addFields: {
-                totalOffer: { $size: '$bids' },
+            {
+                $lookup: {
+                    from: 'bids',
+                    localField: '_id',
+                    foreignField: 'task',
+                    as: 'bids',
+                },
             },
-        },
+            {
+                $addFields: {
+                    totalOffer: { $size: '$bids' },
+                },
+            },
 
-        {
-            $lookup: {
-                from: 'customers',
-                localField: 'customer',
-                foreignField: '_id',
-                as: 'customer',
-                pipeline: [
-                    {
-                        $project: {
-                            _id: 1,
-                            name: 1,
-                            profile_image: 1,
+            {
+                $lookup: {
+                    from: 'customers',
+                    localField: 'customer',
+                    foreignField: '_id',
+                    as: 'customer',
+                    pipeline: [
+                        {
+                            $project: {
+                                _id: 1,
+                                name: 1,
+                                profile_image: 1,
+                            },
                         },
-                    },
-                ],
-            },
-        },
-        { $unwind: { path: '$customer', preserveNullAndEmptyArrays: true } },
-        {
-            $lookup: {
-                from: 'categories',
-                localField: 'category',
-                foreignField: '_id',
-                as: 'category',
-                pipeline: [
-                    {
-                        $project: {
-                            _id: 1,
-                            name: 1,
-                        },
-                    },
-                ],
-            },
-        },
-        {
-            $unwind: { path: '$category', preserveNullAndEmptyArrays: true },
-        },
-        {
-            $project: {
-                bids: 0,
-            },
-        },
-        { $sort: sortStage },
-        {
-            $facet: {
-                result: [{ $skip: skip }, { $limit: limit }],
-                totalCount: [{ $count: 'total' }],
-            },
-        },
-    ];
-
-    // 🗺️ Geo filter (if user sends coordinates)
-    if (query.latitude && query.longitude) {
-        pipeline.unshift({
-            $geoNear: {
-                near: {
-                    type: 'Point',
-                    coordinates: [
-                        parseFloat(query.longitude as string),
-                        parseFloat(query.latitude as string),
                     ],
                 },
-                distanceField: 'distance',
-                maxDistance: maxDistance,
-                spherical: true,
             },
+            {
+                $unwind: {
+                    path: '$customer',
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category',
+                    foreignField: '_id',
+                    as: 'category',
+                    pipeline: [
+                        {
+                            $project: {
+                                _id: 1,
+                                name: 1,
+                            },
+                        },
+                    ],
+                },
+            },
+            {
+                $unwind: {
+                    path: '$category',
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $project: {
+                    bids: 0,
+                },
+            },
+            { $sort: sortStage },
+            {
+                $facet: {
+                    result: [{ $skip: skip }, { $limit: limit }],
+                    totalCount: [{ $count: 'total' }],
+                },
+            },
+        ];
+
+        // 🗺️ Geo filter (if user sends coordinates)
+        if (query.latitude && query.longitude) {
+            pipeline.unshift({
+                $geoNear: {
+                    near: {
+                        type: 'Point',
+                        coordinates: [
+                            parseFloat(query.longitude as string),
+                            parseFloat(query.latitude as string),
+                        ],
+                    },
+                    distanceField: 'distance',
+                    maxDistance: maxDistance,
+                    spherical: true,
+                },
+            });
+            pipeline.push({
+                $sort: { distance: 1 },
+            });
+        }
+
+        const aggResult = await TaskModel.aggregate(pipeline);
+        const result = aggResult[0]?.result || [];
+        const total = aggResult[0]?.totalCount[0]?.total || 0;
+        const totalPage = Math.ceil(total / limit);
+
+        return {
+            meta: {
+                page,
+                limit,
+                total,
+                totalPage,
+            },
+            result,
+        };
+    } else {
+        const page = Number(query.page) || 1;
+        const limit = Number(query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const searchTerm = query.searchTerm || '';
+        const maxDistance = Number(query.maxDistance) * 1000 || 5000;
+        const minPrice = Number(query.minPrice) || null;
+        const maxPrice = Number(query.maxPrice) || null;
+        const filters: Record<string, any> = {};
+        Object.keys(query).forEach((key) => {
+            if (
+                ![
+                    'searchTerm',
+                    'page',
+                    'limit',
+                    'sortBy',
+                    'sortOrder',
+                    'minPrice',
+                    'maxPrice',
+                ].includes(key)
+            ) {
+                filters[key] = query[key];
+            }
         });
-        pipeline.push({
-            $sort: { distance: 1 },
-        });
+
+        if (query.category) {
+            filters.category = new mongoose.Types.ObjectId(query.category);
+        }
+
+        const searchMatchStage = searchTerm
+            ? {
+                  $or: [
+                      { title: { $regex: searchTerm, $options: 'i' } },
+                      { description: { $regex: searchTerm, $options: 'i' } },
+                  ],
+              }
+            : {};
+
+        if (minPrice !== null || maxPrice !== null) {
+            filters.budget = {};
+            if (minPrice !== null) filters.budget.$gte = minPrice;
+            if (maxPrice !== null) filters.budget.$lte = maxPrice;
+        }
+
+        // Sorting
+        const sortBy = query.sortBy || 'createdAt';
+        const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
+        const sortStage = { [sortBy]: sortOrder };
+
+        const pipeline: any[] = [
+            {
+                $match: {
+                    ...filters,
+                    ...searchMatchStage,
+                    isDeleted: false,
+                    provider: null,
+                },
+            },
+            {
+                $lookup: {
+                    from: 'bids',
+                    localField: '_id',
+                    foreignField: 'task',
+                    as: 'bids',
+                },
+            },
+            {
+                $addFields: {
+                    totalOffer: { $size: '$bids' },
+                },
+            },
+
+            {
+                $lookup: {
+                    from: 'customers',
+                    localField: 'customer',
+                    foreignField: '_id',
+                    as: 'customer',
+                    pipeline: [
+                        {
+                            $project: {
+                                _id: 1,
+                                name: 1,
+                                profile_image: 1,
+                            },
+                        },
+                    ],
+                },
+            },
+            {
+                $unwind: {
+                    path: '$customer',
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category',
+                    foreignField: '_id',
+                    as: 'category',
+                    pipeline: [
+                        {
+                            $project: {
+                                _id: 1,
+                                name: 1,
+                            },
+                        },
+                    ],
+                },
+            },
+            {
+                $unwind: {
+                    path: '$category',
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $project: {
+                    bids: 0,
+                },
+            },
+            { $sort: sortStage },
+            {
+                $facet: {
+                    result: [{ $skip: skip }, { $limit: limit }],
+                    totalCount: [{ $count: 'total' }],
+                },
+            },
+        ];
+
+        // 🗺️ Geo filter (if user sends coordinates)
+        if (query.latitude && query.longitude) {
+            pipeline.unshift({
+                $geoNear: {
+                    near: {
+                        type: 'Point',
+                        coordinates: [
+                            parseFloat(query.longitude as string),
+                            parseFloat(query.latitude as string),
+                        ],
+                    },
+                    distanceField: 'distance',
+                    maxDistance: maxDistance,
+                    spherical: true,
+                },
+            });
+            pipeline.push({
+                $sort: { distance: 1 },
+            });
+        }
+
+        const aggResult = await TaskModel.aggregate(pipeline);
+        const result = aggResult[0]?.result || [];
+        const total = aggResult[0]?.totalCount[0]?.total || 0;
+        const totalPage = Math.ceil(total / limit);
+
+        return {
+            meta: {
+                page,
+                limit,
+                total,
+                totalPage,
+            },
+            result,
+        };
     }
-
-    const aggResult = await TaskModel.aggregate(pipeline);
-    const result = aggResult[0]?.result || [];
-    const total = aggResult[0]?.totalCount[0]?.total || 0;
-    const totalPage = Math.ceil(total / limit);
-
-    return {
-        meta: {
-            page,
-            limit,
-            total,
-            totalPage,
-        },
-        result,
-    };
 };
 const getMyTaskFromDB = async (
     userData: JwtPayload,
@@ -595,7 +790,83 @@ const acceptOfferByProvider = async (taskId: string, currentUserId: string) => {
     return task;
 };
 
-const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
+const rejectOfferByProvider = async (taskId: string, currentUserId: string) => {
+    const task = await TaskModel.findOne({
+        _id: taskId,
+        provider: currentUserId,
+    });
+
+    if (!task) {
+        throw new AppError(
+            httpStatus.NOT_FOUND,
+            'Task not found or this is not your task'
+        );
+    }
+
+    task.provider = null;
+    task.status = ENUM_TASK_STATUS.OPEN_FOR_BID;
+    await task.save();
+    await Notification.create({
+        title: 'Offer rejected by Provider',
+        message: `Provider Rejected your offer, now your task is open for bid for other freelancers`,
+        receiver: task.customer,
+        type: ENUM_NOTIFICATION_TYPE.OFFER_REJECTED,
+        redirectLink: `${task._id}`,
+    });
+    sendSinglePushNotification(
+        task!.customer.toString(),
+        'Offer rejected by Provider',
+        `Provider Rejected your offer, now your task is open for bid for other freelancers`,
+        { taskId: task._id.toString() }
+    );
+    return task;
+};
+
+const acceptTaskByCustomerFromDB = async (
+    profileID: string,
+    bidID: string,
+    promoCode?: string
+) => {
+    let promo;
+    if (promoCode) {
+        promo = await PromoModel.findOne({ promoCode });
+
+        if (!promo) {
+            throw new AppError(httpStatus.NOT_FOUND, 'Promo code is not valid');
+        }
+
+        const now = new Date();
+
+        if (promo.startDate > now) {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                'Promo is not active yet'
+            );
+        }
+
+        if (promo.endDate < now) {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                'Promo code has expired'
+            );
+        }
+
+        if (promo.status !== 'ACTIVE') {
+            throw new AppError(httpStatus.BAD_REQUEST, 'Promo is not active');
+        }
+        const promoUse = await PromoUseModel.countDocuments({
+            promo: promo._id,
+        });
+        if (promoUse >= promo.limit) {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                'Promo uses limit reached,this code is not valid now'
+            );
+        }
+    }
+    if (promoCode && !promo) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Promo code is not valid');
+    }
     const bidData: any = await bidModel.findById(bidID);
     if (!bidData) {
         throw new AppError(httpStatus.NOT_FOUND, 'Bid not found');
@@ -604,7 +875,6 @@ const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
         path: 'customer',
         select: 'email',
     });
-    console.log('task', taskData, 'profileId', profileID);
 
     if (taskData?.customer?._id.toString() !== profileID.toString()) {
         throw new AppError(
@@ -612,12 +882,37 @@ const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
             'You are not authorized to accept this task'
         );
     }
-    const amount = bidData.price * 100; // in kobo
+    let discount = 0;
+
+    if (promo) {
+        if (promo?.discountType == ENUM_DISCOUNT_TYPE.FIXED) {
+            discount = promo.discountNum;
+        } else {
+            discount = (bidData.price * promo.discountNum) / 100;
+        }
+    }
+
+    //  HANDLE REFERRAL BONUS (Includes rollback)
+    const referralUse = await ReferralUseModel.findOne({
+        $or: [{ referred: profileID }, { referrer: profileID }],
+        status: ENUM_REFERRAL_USE_STATUS.ACTIVE,
+    });
+    let finalAmount = bidData.price - discount;
+    if (referralUse) {
+        finalAmount = finalAmount - referralUse.value;
+    }
+    const amount = finalAmount * 100; // in kobo
     // --- Initialize Pay-stack transaction ---
     const headers = {
         Authorization: `Bearer ${config.payStack.secretKey}`,
         'Content-Type': 'application/json',
     };
+    if (amount < 100) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'Amount is too low to process payment'
+        );
+    }
     const response: any = await axios.post(
         `${payStackBaseUrl}/transaction/initialize`,
         {
@@ -630,6 +925,8 @@ const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
                 customerId: profileID,
                 providerId: bidData.provider.toString(),
                 paymentPurpose: ENUM_PAYMENT_PURPOSE.BID_ACCEPT,
+                promoId: promo ? promo._id.toString() : null,
+                referralUseId: referralUse ? referralUse._id.toString() : null,
             },
             callback_url: `http://10.10.20.48:3000/success`,
         },
@@ -637,6 +934,7 @@ const acceptTaskByCustomerFromDB = async (profileID: string, bidID: string) => {
             headers,
         }
     );
+    console.log('nice2', response);
     const data = response.data.data;
     return {
         paymentLink: data.authorization_url,
@@ -669,7 +967,7 @@ const completeTaskByCustomer = async (
         //  HANDLE REFERRAL BONUS (Includes rollback)
         const referralUse = await ReferralUseModel.findOneAndUpdate(
             {
-                referred: task.provider,
+                $or: [{ referred: task.provider }, { referrer: task.provider }],
                 status: ENUM_REFERRAL_USE_STATUS.ACTIVE,
             },
             { status: ENUM_REFERRAL_USE_STATUS.USED },
@@ -771,5 +1069,6 @@ const TaskServices = {
     completeTaskByCustomer,
     acceptTaskByCustomerFromDB,
     updateTask,
+    rejectOfferByProvider,
 };
 export default TaskServices;

@@ -35,7 +35,7 @@ router.patch(
     validateRequest(taskValidations.updateTaskZodSchema),
     TaskController.updateTask
 );
-router.get('/all-task', TaskController.getAllTask);
+router.get('/all-task', simpleAuth, TaskController.getAllTask);
 router.get(
     '/my-task',
     auth(USER_ROLE.customer, USER_ROLE.provider),
@@ -61,6 +61,11 @@ router.patch(
     '/acceptOffer',
     auth(USER_ROLE.provider),
     TaskController.acceptOffer
+);
+router.patch(
+    '/reject-offer/:id',
+    auth(USER_ROLE.provider),
+    TaskController.rejectOfferByProvider
 );
 router.patch(
     '/accept-TaskBy-Customer',
