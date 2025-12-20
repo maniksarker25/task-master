@@ -63,6 +63,11 @@ router.patch(
     TaskController.acceptOffer
 );
 router.patch(
+    '/reject-offer/:id',
+    auth(USER_ROLE.provider),
+    TaskController.rejectOfferByProvider
+);
+router.patch(
     '/accept-TaskBy-Customer',
     auth(USER_ROLE.customer),
     TaskController.acceptTaskByCustomer
