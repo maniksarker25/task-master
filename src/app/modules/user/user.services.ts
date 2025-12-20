@@ -97,7 +97,7 @@ const registerCustomer = async (
         // The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
 
         const smsMessage = `Thank you for registering with Task Alley. Your verification code is ${verifyCode}. It expires in 5 minutes. Please verify in time to complete registration.`;
-        await sendSMS(userData.phone, smsMessage);
+        // await sendSMS(userData.phone, smsMessage);
 
         // If SMS sent successfully, commit transaction
         await session.commitTransaction();
@@ -524,8 +524,8 @@ const upgradeAccount = async (userData: JwtPayload) => {
                     refreshToken,
                     role: USER_ROLE.provider,
                     isAddressProvided: true,
-                    isIdentificationDocumentVerified: true,
-                    isBankNumberVerified: true,
+                    isIdentificationDocumentVerified: false,
+                    isBankNumberVerified: false,
                 },
                 message: 'Your account successfully upgrade to provider',
             };

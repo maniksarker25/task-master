@@ -22,7 +22,7 @@ export interface ITask {
     status: (typeof ENUM_TASK_STATUS)[keyof typeof ENUM_TASK_STATUS];
     isDeleted: boolean;
     paymentStatus: (typeof ENUM_PAYMENT_STATUS)[keyof typeof ENUM_PAYMENT_STATUS];
-    provider?: Types.ObjectId;
+    provider?: Types.ObjectId | null;
     customer: Types.ObjectId;
     payOn: string;
     doneBy: (typeof ENUM_DONE_BY)[keyof typeof ENUM_DONE_BY];

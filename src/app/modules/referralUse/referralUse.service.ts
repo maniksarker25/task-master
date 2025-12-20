@@ -23,10 +23,7 @@ const verifyReferralCodeFromDB = async (
         const referrer = await Customer.findOne({ referralCode: code });
 
         if (!referrer) {
-            throw new AppError(
-                httpStatus.NOT_FOUND,
-                'Invalid referral code or you use a provider code'
-            );
+            throw new AppError(httpStatus.NOT_FOUND, 'Invalid referral code');
         }
 
         if (referrer._id.toString() === profileId) {
@@ -41,7 +38,10 @@ const verifyReferralCodeFromDB = async (
             status: ENUM_REFERRAL_STATUS.ACTIVE,
         });
         if (!referral)
-            throw new AppError(httpStatus.NOT_FOUND, 'Referral  not found ');
+            throw new AppError(
+                httpStatus.NOT_FOUND,
+                'Referral program not active'
+            );
 
         // CHECK IF ALREADY REFERRED
         const alreadyReferred = await ReferralUseModel.findOne({
@@ -70,10 +70,7 @@ const verifyReferralCodeFromDB = async (
         const referrer = await Provider.findOne({ referralCode: code });
 
         if (!referrer) {
-            throw new AppError(
-                httpStatus.NOT_FOUND,
-                'Invalid referral code or you use a customer code'
-            );
+            throw new AppError(httpStatus.NOT_FOUND, 'Invalid referral code');
         }
 
         if (referrer._id.toString() === profileId) {
