@@ -804,6 +804,7 @@ const rejectOfferByProvider = async (taskId: string, currentUserId: string) => {
     }
 
     task.provider = null;
+    task.service = null;
     task.status = ENUM_TASK_STATUS.OPEN_FOR_BID;
     await task.save();
     await Notification.create({

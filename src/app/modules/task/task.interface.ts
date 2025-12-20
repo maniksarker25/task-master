@@ -14,7 +14,7 @@ export interface IStatusWithDate {
 export interface ITask {
     title: string;
     category: Types.ObjectId;
-    service: Types.ObjectId;
+    service: Types.ObjectId | null;
     budget: number;
     acceptedBidAmount: number;
     customerPayingAmount: number;
