@@ -109,6 +109,19 @@ const acceptOffer = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const rejectOfferByProvider = catchAsync(async (req, res) => {
+    const currentUserId = req.user.profileId;
+    const result = await TaskServices.rejectOfferByProvider(
+        req.params.id,
+        currentUserId
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Offer rejected successfully',
+        data: result,
+    });
+});
 const acceptTaskByCustomer = catchAsync(async (req, res) => {
     const { bidID, promoCode } = req.body;
     const currentUserId = req.user.profileId;
@@ -149,5 +162,6 @@ const TaskController = {
     completeTask,
     acceptTaskByCustomer,
     updateTask,
+    rejectOfferByProvider,
 };
 export default TaskController;
