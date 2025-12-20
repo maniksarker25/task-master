@@ -50,7 +50,7 @@ const updateTask = catchAsync(async (req, res) => {
 });
 
 const getAllTask = catchAsync(async (req, res) => {
-    const result = await TaskServices.getAllTaskFromDB(req.query);
+    const result = await TaskServices.getAllTaskFromDB(req?.user, req.query);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
