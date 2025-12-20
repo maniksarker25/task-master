@@ -109,157 +109,346 @@ const updateTask = async (profileId: string, id: string, payload: ITask) => {
     return result;
 };
 
-const getAllTaskFromDB = async (query: Record<string, any>) => {
-    const page = Number(query.page) || 1;
-    const limit = Number(query.limit) || 10;
-    const skip = (page - 1) * limit;
-    const searchTerm = query.searchTerm || '';
-    const maxDistance = Number(query.maxDistance) * 1000 || 5000;
-    const minPrice = Number(query.minPrice) || null;
-    const maxPrice = Number(query.maxPrice) || null;
-    const filters: Record<string, any> = {};
-    Object.keys(query).forEach((key) => {
-        if (
-            ![
-                'searchTerm',
-                'page',
-                'limit',
-                'sortBy',
-                'sortOrder',
-                'minPrice',
-                'maxPrice',
-            ].includes(key)
-        ) {
-            filters[key] = query[key];
+const getAllTaskFromDB = async (
+    userData: JwtPayload,
+    query: Record<string, any>
+) => {
+    if (
+        userData?.role &&
+        (userData.role == USER_ROLE.admin ||
+            userData.role == USER_ROLE.superAdmin)
+    ) {
+        const page = Number(query.page) || 1;
+        const limit = Number(query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const searchTerm = query.searchTerm || '';
+        const maxDistance = Number(query.maxDistance) * 1000 || 5000;
+        const minPrice = Number(query.minPrice) || null;
+        const maxPrice = Number(query.maxPrice) || null;
+        const filters: Record<string, any> = {};
+        Object.keys(query).forEach((key) => {
+            if (
+                ![
+                    'searchTerm',
+                    'page',
+                    'limit',
+                    'sortBy',
+                    'sortOrder',
+                    'minPrice',
+                    'maxPrice',
+                ].includes(key)
+            ) {
+                filters[key] = query[key];
+            }
+        });
+
+        if (query.category) {
+            filters.category = new mongoose.Types.ObjectId(query.category);
         }
-    });
 
-    if (query.category) {
-        filters.category = new mongoose.Types.ObjectId(query.category);
-    }
+        const searchMatchStage = searchTerm
+            ? {
+                  $or: [
+                      { title: { $regex: searchTerm, $options: 'i' } },
+                      { description: { $regex: searchTerm, $options: 'i' } },
+                  ],
+              }
+            : {};
 
-    const searchMatchStage = searchTerm
-        ? {
-              $or: [
-                  { title: { $regex: searchTerm, $options: 'i' } },
-                  { description: { $regex: searchTerm, $options: 'i' } },
-              ],
-          }
-        : {};
+        if (minPrice !== null || maxPrice !== null) {
+            filters.budget = {};
+            if (minPrice !== null) filters.budget.$gte = minPrice;
+            if (maxPrice !== null) filters.budget.$lte = maxPrice;
+        }
 
-    if (minPrice !== null || maxPrice !== null) {
-        filters.budget = {};
-        if (minPrice !== null) filters.budget.$gte = minPrice;
-        if (maxPrice !== null) filters.budget.$lte = maxPrice;
-    }
+        // Sorting
+        const sortBy = query.sortBy || 'createdAt';
+        const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
+        const sortStage = { [sortBy]: sortOrder };
 
-    // Sorting
-    const sortBy = query.sortBy || 'createdAt';
-    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
-    const sortStage = { [sortBy]: sortOrder };
-
-    const pipeline: any[] = [
-        { $match: { ...filters, ...searchMatchStage, isDeleted: false } },
-        {
-            $lookup: {
-                from: 'bids',
-                localField: '_id',
-                foreignField: 'task',
-                as: 'bids',
+        const pipeline: any[] = [
+            {
+                $match: {
+                    ...filters,
+                    ...searchMatchStage,
+                    isDeleted: false,
+                },
             },
-        },
-        {
-            $addFields: {
-                totalOffer: { $size: '$bids' },
+            {
+                $lookup: {
+                    from: 'bids',
+                    localField: '_id',
+                    foreignField: 'task',
+                    as: 'bids',
+                },
             },
-        },
+            {
+                $addFields: {
+                    totalOffer: { $size: '$bids' },
+                },
+            },
 
-        {
-            $lookup: {
-                from: 'customers',
-                localField: 'customer',
-                foreignField: '_id',
-                as: 'customer',
-                pipeline: [
-                    {
-                        $project: {
-                            _id: 1,
-                            name: 1,
-                            profile_image: 1,
+            {
+                $lookup: {
+                    from: 'customers',
+                    localField: 'customer',
+                    foreignField: '_id',
+                    as: 'customer',
+                    pipeline: [
+                        {
+                            $project: {
+                                _id: 1,
+                                name: 1,
+                                profile_image: 1,
+                            },
                         },
-                    },
-                ],
-            },
-        },
-        { $unwind: { path: '$customer', preserveNullAndEmptyArrays: true } },
-        {
-            $lookup: {
-                from: 'categories',
-                localField: 'category',
-                foreignField: '_id',
-                as: 'category',
-                pipeline: [
-                    {
-                        $project: {
-                            _id: 1,
-                            name: 1,
-                        },
-                    },
-                ],
-            },
-        },
-        {
-            $unwind: { path: '$category', preserveNullAndEmptyArrays: true },
-        },
-        {
-            $project: {
-                bids: 0,
-            },
-        },
-        { $sort: sortStage },
-        {
-            $facet: {
-                result: [{ $skip: skip }, { $limit: limit }],
-                totalCount: [{ $count: 'total' }],
-            },
-        },
-    ];
-
-    // 🗺️ Geo filter (if user sends coordinates)
-    if (query.latitude && query.longitude) {
-        pipeline.unshift({
-            $geoNear: {
-                near: {
-                    type: 'Point',
-                    coordinates: [
-                        parseFloat(query.longitude as string),
-                        parseFloat(query.latitude as string),
                     ],
                 },
-                distanceField: 'distance',
-                maxDistance: maxDistance,
-                spherical: true,
             },
+            {
+                $unwind: {
+                    path: '$customer',
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category',
+                    foreignField: '_id',
+                    as: 'category',
+                    pipeline: [
+                        {
+                            $project: {
+                                _id: 1,
+                                name: 1,
+                            },
+                        },
+                    ],
+                },
+            },
+            {
+                $unwind: {
+                    path: '$category',
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $project: {
+                    bids: 0,
+                },
+            },
+            { $sort: sortStage },
+            {
+                $facet: {
+                    result: [{ $skip: skip }, { $limit: limit }],
+                    totalCount: [{ $count: 'total' }],
+                },
+            },
+        ];
+
+        // 🗺️ Geo filter (if user sends coordinates)
+        if (query.latitude && query.longitude) {
+            pipeline.unshift({
+                $geoNear: {
+                    near: {
+                        type: 'Point',
+                        coordinates: [
+                            parseFloat(query.longitude as string),
+                            parseFloat(query.latitude as string),
+                        ],
+                    },
+                    distanceField: 'distance',
+                    maxDistance: maxDistance,
+                    spherical: true,
+                },
+            });
+            pipeline.push({
+                $sort: { distance: 1 },
+            });
+        }
+
+        const aggResult = await TaskModel.aggregate(pipeline);
+        const result = aggResult[0]?.result || [];
+        const total = aggResult[0]?.totalCount[0]?.total || 0;
+        const totalPage = Math.ceil(total / limit);
+
+        return {
+            meta: {
+                page,
+                limit,
+                total,
+                totalPage,
+            },
+            result,
+        };
+    } else {
+        const page = Number(query.page) || 1;
+        const limit = Number(query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const searchTerm = query.searchTerm || '';
+        const maxDistance = Number(query.maxDistance) * 1000 || 5000;
+        const minPrice = Number(query.minPrice) || null;
+        const maxPrice = Number(query.maxPrice) || null;
+        const filters: Record<string, any> = {};
+        Object.keys(query).forEach((key) => {
+            if (
+                ![
+                    'searchTerm',
+                    'page',
+                    'limit',
+                    'sortBy',
+                    'sortOrder',
+                    'minPrice',
+                    'maxPrice',
+                ].includes(key)
+            ) {
+                filters[key] = query[key];
+            }
         });
-        pipeline.push({
-            $sort: { distance: 1 },
-        });
+
+        if (query.category) {
+            filters.category = new mongoose.Types.ObjectId(query.category);
+        }
+
+        const searchMatchStage = searchTerm
+            ? {
+                  $or: [
+                      { title: { $regex: searchTerm, $options: 'i' } },
+                      { description: { $regex: searchTerm, $options: 'i' } },
+                  ],
+              }
+            : {};
+
+        if (minPrice !== null || maxPrice !== null) {
+            filters.budget = {};
+            if (minPrice !== null) filters.budget.$gte = minPrice;
+            if (maxPrice !== null) filters.budget.$lte = maxPrice;
+        }
+
+        // Sorting
+        const sortBy = query.sortBy || 'createdAt';
+        const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
+        const sortStage = { [sortBy]: sortOrder };
+
+        const pipeline: any[] = [
+            {
+                $match: {
+                    ...filters,
+                    ...searchMatchStage,
+                    isDeleted: false,
+                    provider: null,
+                },
+            },
+            {
+                $lookup: {
+                    from: 'bids',
+                    localField: '_id',
+                    foreignField: 'task',
+                    as: 'bids',
+                },
+            },
+            {
+                $addFields: {
+                    totalOffer: { $size: '$bids' },
+                },
+            },
+
+            {
+                $lookup: {
+                    from: 'customers',
+                    localField: 'customer',
+                    foreignField: '_id',
+                    as: 'customer',
+                    pipeline: [
+                        {
+                            $project: {
+                                _id: 1,
+                                name: 1,
+                                profile_image: 1,
+                            },
+                        },
+                    ],
+                },
+            },
+            {
+                $unwind: {
+                    path: '$customer',
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category',
+                    foreignField: '_id',
+                    as: 'category',
+                    pipeline: [
+                        {
+                            $project: {
+                                _id: 1,
+                                name: 1,
+                            },
+                        },
+                    ],
+                },
+            },
+            {
+                $unwind: {
+                    path: '$category',
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $project: {
+                    bids: 0,
+                },
+            },
+            { $sort: sortStage },
+            {
+                $facet: {
+                    result: [{ $skip: skip }, { $limit: limit }],
+                    totalCount: [{ $count: 'total' }],
+                },
+            },
+        ];
+
+        // 🗺️ Geo filter (if user sends coordinates)
+        if (query.latitude && query.longitude) {
+            pipeline.unshift({
+                $geoNear: {
+                    near: {
+                        type: 'Point',
+                        coordinates: [
+                            parseFloat(query.longitude as string),
+                            parseFloat(query.latitude as string),
+                        ],
+                    },
+                    distanceField: 'distance',
+                    maxDistance: maxDistance,
+                    spherical: true,
+                },
+            });
+            pipeline.push({
+                $sort: { distance: 1 },
+            });
+        }
+
+        const aggResult = await TaskModel.aggregate(pipeline);
+        const result = aggResult[0]?.result || [];
+        const total = aggResult[0]?.totalCount[0]?.total || 0;
+        const totalPage = Math.ceil(total / limit);
+
+        return {
+            meta: {
+                page,
+                limit,
+                total,
+                totalPage,
+            },
+            result,
+        };
     }
-
-    const aggResult = await TaskModel.aggregate(pipeline);
-    const result = aggResult[0]?.result || [];
-    const total = aggResult[0]?.totalCount[0]?.total || 0;
-    const totalPage = Math.ceil(total / limit);
-
-    return {
-        meta: {
-            page,
-            limit,
-            total,
-            totalPage,
-        },
-        result,
-    };
 };
 const getMyTaskFromDB = async (
     userData: JwtPayload,
@@ -683,6 +872,12 @@ const acceptTaskByCustomerFromDB = async (
         Authorization: `Bearer ${config.payStack.secretKey}`,
         'Content-Type': 'application/json',
     };
+    if (amount < 100) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'Amount is too low to process payment'
+        );
+    }
     const response: any = await axios.post(
         `${payStackBaseUrl}/transaction/initialize`,
         {
@@ -704,6 +899,7 @@ const acceptTaskByCustomerFromDB = async (
             headers,
         }
     );
+    console.log('nice2', response);
     const data = response.data.data;
     return {
         paymentLink: data.authorization_url,

@@ -1,97 +1,77 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// import jwt, { JwtPayload } from 'jsonwebtoken';
-// import config from '../config';
-// import AppError from '../error/appError';
-// import httpStatus from 'http-status';
-// import { USER_ROLE } from '../modules/user/user.constant';
-// import Customer from '../modules/Customer/Customer.model';
-// import Player from '../modules/player/player.model';
-// import Team from '../modules/team/team.model';
-// import SuperAdmin from '../modules/superAdmin/superAdmin.model';
-// import { NextFunction, Request, Response } from 'express';
-// const simpleAuth = async (req: Request, res: Response, next: NextFunction) => {
-//   try {
-//     const token = req.headers.authorization;
-
-//     if (!token) {
-//       return next();
-//     }
-
-//     if (token) {
-//       // Verify token
-//       let decoded;
-
-//       try {
-//         decoded = jwt.verify(
-//           token,
-//           config.jwt_access_secret as string,
-//         ) as JwtPayload;
-//       } catch (err) {
-//         throw new AppError(httpStatus.UNAUTHORIZED, 'Token is expired');
-//       }
-//       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-//       const { id, role } = decoded;
-
-//       let profileData;
-//       if (role === USER_ROLE.user) {
-//         profileData = await Customer.findOne({ user: id }).select('_id');
-//       } else if (role === USER_ROLE.player) {
-//         profileData = await Player.findOne({ user: id }).select('_id');
-//       } else if (role === USER_ROLE.team) {
-//         profileData = await Team.findOne({ user: id }).select('_id');
-//       } else if (role === USER_ROLE.superAdmin) {
-//         profileData = await SuperAdmin.findOne({ user: id }).select('_id');
-//       }
-//       decoded.profileId = profileData?._id;
-//       req.user = decoded as JwtPayload;
-//     }
-
-//     next();
-//   } catch (error) {
-//     console.log(error);
-//     next(error);
-//   }
-// };
-
-// export default simpleAuth;
-
 import { NextFunction, Request, Response } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import config from '../config';
+import { Customer } from '../modules/customer/customer.model';
+import { Provider } from '../modules/provider/provider.model';
+import SuperAdmin from '../modules/superAdmin/superAdmin.model';
+import { USER_ROLE } from '../modules/user/user.constant';
 
 const simpleAuth = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const token = req.headers.authorization;
+        let token = req.headers.authorization;
 
-        if (!token) {
-            return next(); // Continue if no token is provided
+        if (!token) return next(); // No token → optional
+
+        if (token.startsWith('Bearer ')) {
+            token = token.slice(7);
         }
 
         let decoded: JwtPayload | null = null;
 
         try {
-            // Verify token to check validity
             decoded = jwt.verify(
                 token,
                 config.jwt_access_secret as string
             ) as JwtPayload;
         } catch (err: any) {
-            // If token expired, decode without verifying
             if (err.name === 'TokenExpiredError') {
                 decoded = jwt.decode(token) as JwtPayload | null;
             } else {
-                return next(); // Ignore other errors
+                return next(); // ignore invalid token
             }
         }
 
-        if (decoded) {
-            req.user = decoded;
+        if (!decoded) return next(); // nothing to attach
+
+        let profileData: any;
+        const { id, role } = decoded;
+
+        if (role === USER_ROLE.customer) {
+            profileData = await Customer.findOne({ user: id })
+                .select('_id user')
+                .populate({
+                    path: 'user',
+                    select: '_id isDeleted isBlocked isVerified',
+                });
+        } else if (role === USER_ROLE.provider) {
+            profileData = await Provider.findOne({
+                user: new mongoose.Types.ObjectId(id),
+            })
+                .select('_id user')
+                .populate({
+                    path: 'user',
+                    select: '_id isDeleted isBlocked isVerified',
+                });
+        } else if (role === USER_ROLE.superAdmin) {
+            profileData = await SuperAdmin.findOne({ user: id })
+                .select('_id user')
+                .populate({
+                    path: 'user',
+                    select: '_id isDeleted isBlocked isVerified',
+                });
         }
 
-        next(); // Proceed to the next middleware
-    } catch (error) {
-        console.log(error);
-        next(); // Ignore errors and proceed
+        if (profileData && profileData.user) {
+            req.user = decoded;
+            req.user.profileId = profileData._id.toString();
+        }
+
+        next();
+    } catch (err) {
+        console.error(err);
+        next(); // ignore all errors for optional auth
     }
 };
 
