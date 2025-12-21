@@ -16,6 +16,7 @@ const getMyTransaction = catchAsync(async (req, res) => {
         data: result,
     });
 });
+
 const getAllTransaction = catchAsync(async (req, res) => {
     const result = await transactionServices.getAllTransaction(req.query);
     sendResponse(res, {
