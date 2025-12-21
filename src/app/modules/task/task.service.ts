@@ -496,6 +496,32 @@ const getAllTaskFromDB = async (
                                 profile_image: 1,
                             },
                         },
+                        // {
+                        //     // Populate the user reference
+                        //     $lookup: {
+                        //         from: 'users',
+                        //         localField: 'user',
+                        //         foreignField: '_id',
+                        //         as: 'user',
+                        //         pipeline: [
+                        //             {
+                        //                 $project: {
+                        //                     _id: 1,
+                        //                     email: 1,
+                        //                     phone: 1,
+                        //                     role: 1,
+
+                        //                 },
+                        //             },
+                        //         ],
+                        //     },
+                        // },
+                        {
+                            $unwind: {
+                                path: '$user',
+                                preserveNullAndEmptyArrays: true,
+                            },
+                        },
                     ],
                 },
             },
