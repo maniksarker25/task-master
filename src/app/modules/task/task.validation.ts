@@ -13,7 +13,7 @@ const locationSchema = z
     })
     .optional();
 
-// ✅ Regex for 24-hour time format (HH:mm)
+// Regex for 24-hour time format (HH:mm)
 const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 export const createTaskZodSchema = z.object({
@@ -34,7 +34,7 @@ export const createTaskZodSchema = z.object({
         doneBy: z.nativeEnum(ENUM_DONE_BY).optional(),
         location: locationSchema,
         scheduleType: z.nativeEnum(ENUM_SCHEDULE_TYPE).optional(),
-        preferredDeliveryDateTime: z.coerce.date(),
+        preferredDeliveryDateTime: z.coerce.date().optional(),
 
         description: z
             .string({ required_error: 'Description is required' })
@@ -43,7 +43,6 @@ export const createTaskZodSchema = z.object({
     }),
 });
 
-// ✅ Update Task Zod Schema
 export const updateTaskZodSchema = z.object({
     body: z.object({
         title: z.string().min(1).optional(),
@@ -60,7 +59,7 @@ export const updateTaskZodSchema = z.object({
         scheduleType: z.nativeEnum(ENUM_SCHEDULE_TYPE).optional(),
         preferredDate: z.coerce.date().optional(),
 
-        // ✅ Same 24-hour validation for update
+        //  Same 24-hour validation for update
         preferredTime: z
             .string()
             .regex(timeRegex, {
