@@ -1,4 +1,5 @@
 import httpStatus from 'http-status';
+import { Types } from 'mongoose';
 import AppError from '../../error/appError';
 import { ENUM_PAYMENT_STATUS } from '../../utilities/enum';
 import Payment from './payment.model';
@@ -118,6 +119,139 @@ const makePaidUnPaid = async (id: string) => {
     );
     return result;
 };
+// interface IEarningQuery {
+//     page?: string;
+//     limit?: string;
+//     type: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'lifetime';
+//     date?: string;
+//     year?: string;
+//     month?: string;
+//     week?: string;
+// }
+const buildDateRange = (query: any) => {
+    const { type, date, year, month, week } = query;
 
-const PaymentServices = { getAllPayments, makePaidUnPaid };
+    let start: Date | undefined;
+    let end: Date | undefined;
+
+    if (type === 'daily' && date) {
+        start = new Date(date);
+        start.setHours(0, 0, 0, 0);
+
+        end = new Date(date);
+        end.setHours(23, 59, 59, 999);
+    }
+
+    if (type === 'weekly' && year && week) {
+        const firstDayOfYear = new Date(Number(year), 0, 1);
+        const weekStart = new Date(firstDayOfYear);
+
+        weekStart.setDate(firstDayOfYear.getDate() + (Number(week) - 1) * 7);
+        weekStart.setHours(0, 0, 0, 0);
+
+        start = weekStart;
+
+        end = new Date(weekStart);
+        end.setDate(weekStart.getDate() + 6);
+        end.setHours(23, 59, 59, 999);
+    }
+
+    if (type === 'monthly' && year && month) {
+        start = new Date(Number(year), Number(month) - 1, 1);
+        start.setHours(0, 0, 0, 0);
+
+        end = new Date(Number(year), Number(month), 0);
+        end.setHours(23, 59, 59, 999);
+    }
+
+    if (type === 'yearly' && year) {
+        start = new Date(Number(year), 0, 1);
+        start.setHours(0, 0, 0, 0);
+
+        end = new Date(Number(year), 11, 31);
+        end.setHours(23, 59, 59, 999);
+    }
+
+    if (type === 'lifetime') {
+        return {};
+    }
+
+    return { start, end };
+};
+
+/**
+ * Get provider earnings with filters & pagination
+ */
+const getProviderEarnings = async (providerId: string, query: any) => {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const { start, end } = buildDateRange(query) as any;
+
+    const matchStage: any = {
+        provider: new Types.ObjectId(providerId),
+        status: ENUM_PAYMENT_STATUS.PAID,
+    };
+
+    // Filter by updatedAt (NOT createdAt)
+    if (start && end) {
+        matchStage.updatedAt = {
+            $gte: start,
+            $lte: end,
+        };
+    }
+
+    const pipeline: any = [
+        { $match: matchStage },
+
+        {
+            $facet: {
+                data: [
+                    { $sort: { updatedAt: -1 } },
+                    { $skip: skip },
+                    { $limit: limit },
+
+                    {
+                        $lookup: {
+                            from: 'tasks',
+                            localField: 'task',
+                            foreignField: '_id',
+                            as: 'task',
+                        },
+                    },
+                    { $unwind: '$task' },
+
+                    {
+                        $project: {
+                            _id: 1,
+                            amount: 1,
+                            updatedAt: 1,
+                            taskTitle: '$task.title',
+                        },
+                    },
+                ],
+
+                totalCount: [{ $count: 'total' }],
+            },
+        },
+    ];
+
+    const result = await Payment.aggregate(pipeline);
+
+    const total = result[0]?.totalCount[0]?.total || 0;
+    const totalPage = Math.ceil(total / limit);
+
+    return {
+        meta: {
+            page,
+            limit,
+            total,
+            totalPage,
+        },
+        data: result[0]?.data || [],
+    };
+};
+
+const PaymentServices = { getAllPayments, makePaidUnPaid, getProviderEarnings };
 export default PaymentServices;
