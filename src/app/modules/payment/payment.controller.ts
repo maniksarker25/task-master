@@ -25,6 +25,22 @@ const makePaidUnPaid = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const getProviderEarnings = catchAsync(async (req, res) => {
+    const result = await paymentServices.getProviderEarnings(
+        req.user.profileId,
+        req.query
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Provider earnings retrieved successfully',
+        data: result,
+    });
+});
 
-const PaymentController = { getAllPayments, makePaidUnPaid };
+const PaymentController = {
+    getAllPayments,
+    makePaidUnPaid,
+    getProviderEarnings,
+};
 export default PaymentController;
