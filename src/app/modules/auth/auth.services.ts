@@ -11,7 +11,6 @@ import { createToken, verifyToken } from '../user/user.utils';
 import { TLoginUser } from './auth.interface';
 // const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // const GOOGLE_CLIENT_IDS = (process.env.GOOGLE_CLIENT_IDS || '').split(',');
-import { sendSMS } from '../../helper/sendSms';
 import { Customer } from '../customer/customer.model';
 import { Provider } from '../provider/provider.model';
 import { USER_ROLE } from '../user/user.constant';
@@ -221,10 +220,10 @@ const forgetPassword = async (phone: string) => {
             codeExpireIn: new Date(Date.now() + 5 * 60000),
         }
     );
-    await sendSMS(
-        user.phone,
-        `Task Alley: Your password reset code is ${resetCode}. This code will expire in 5 minutes. If you didn’t request a password reset, please ignore this message.`
-    );
+    // await sendSMS(
+    //     user.phone,
+    //     `Task Alley: Your password reset code is ${resetCode}. This code will expire in 5 minutes. If you didn’t request a password reset, please ignore this message.`
+    // );
 
     return null;
 
@@ -367,10 +366,10 @@ const resendResetCode = async (phone: string) => {
             codeExpireIn: new Date(Date.now() + 5 * 60000),
         }
     );
-    sendSMS(
-        user.phone,
-        `Task Alley: Your password reset code is ${resetCode}. This code will expire in 5 minutes. If you didn’t request a password reset, please ignore this message.`
-    );
+    // sendSMS(
+    //     user.phone,
+    //     `Task Alley: Your password reset code is ${resetCode}. This code will expire in 5 minutes. If you didn’t request a password reset, please ignore this message.`
+    // );
 
     return null;
 };

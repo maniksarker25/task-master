@@ -14,7 +14,7 @@ export interface IStatusWithDate {
 export interface ITask {
     title: string;
     category: Types.ObjectId;
-    service: Types.ObjectId;
+    service: Types.ObjectId | null;
     budget: number;
     acceptedBidAmount: number;
     customerPayingAmount: number;
@@ -33,7 +33,7 @@ export interface ITask {
     address: string;
     city: string;
     scheduleType: (typeof ENUM_SCHEDULE_TYPE)[keyof typeof ENUM_SCHEDULE_TYPE];
-    preferredDeliveryDateTime?: Date;
+    preferredDeliveryDateTime?: Date | null;
     description: string;
     task_attachments: string[];
     statusWithDate: IStatusWithDate[];
