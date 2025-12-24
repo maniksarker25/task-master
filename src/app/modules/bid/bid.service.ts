@@ -124,6 +124,7 @@ const getBidsByTaskIDFromDB = async (
                 provider: {
                     _id: '$provider._id',
                     name: '$provider.name',
+                    email: '$provider.email',
                     profile_image: '$provider.profile_image',
                     totalRatingCount: '$provider.totalRatingCount',
                     avgRating: '$provider.avgRating',

@@ -23,7 +23,7 @@ const getMyQuestionsFromDB = async (providerId: string) => {
 const getQuestionsByTaskIDFromDB = async (taskId: string) => {
     const result = await QuestionModel.find({ task: taskId }).populate({
         path: 'provider',
-        select: 'name profile_image',
+        select: 'name profile_image email',
     });
     return result;
 };
