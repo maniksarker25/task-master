@@ -28,6 +28,50 @@ import { USER_ROLE } from '../user/user.constant';
 import { User } from '../user/user.model';
 import { ENUM_TASK_STATUS } from './task.enum';
 import TaskModel from './task.model';
+const ALL_STATUSES = ['OPEN_FOR_BID', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
+const getDateRanges = (dateFilter?: string) => {
+    const now = new Date();
+
+    let currentStart: Date;
+    let previousStart: Date;
+    let previousEnd: Date;
+
+    switch (dateFilter) {
+        case 'daily':
+            currentStart = new Date(new Date().setHours(0, 0, 0, 0));
+            previousStart = new Date(currentStart);
+            previousStart.setDate(previousStart.getDate() - 1);
+            previousEnd = new Date(currentStart);
+            break;
+
+        case 'weekly':
+            currentStart = new Date();
+            currentStart.setDate(currentStart.getDate() - 7);
+            previousStart = new Date(currentStart);
+            previousStart.setDate(previousStart.getDate() - 7);
+            previousEnd = new Date(currentStart);
+            break;
+
+        case 'monthly':
+            currentStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            previousStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            previousEnd = currentStart;
+            break;
+
+        case 'yearly':
+            currentStart = new Date(now.getFullYear(), 0, 1);
+            previousStart = new Date(now.getFullYear() - 1, 0, 1);
+            previousEnd = currentStart;
+            break;
+
+        default: // lifetime
+            currentStart = new Date(0);
+            previousStart = new Date(0);
+            previousEnd = new Date(0);
+    }
+
+    return { currentStart, previousStart, previousEnd };
+};
 
 const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
     try {
@@ -121,75 +165,82 @@ const getAllTaskFromDB = async (
         (userData.role == USER_ROLE.admin ||
             userData.role == USER_ROLE.superAdmin)
     ) {
-        const page = Number(query.page) || 1;
-        const limit = Number(query.limit) || 10;
-        const skip = (page - 1) * limit;
-        const searchTerm = query.searchTerm || '';
-        const maxDistance = Number(query.maxDistance) * 1000 || 5000;
-        const minPrice = Number(query.minPrice) || null;
-        const maxPrice = Number(query.maxPrice) || null;
-        const filters: Record<string, any> = {};
-        Object.keys(query).forEach((key) => {
-            if (
-                ![
-                    'searchTerm',
-                    'page',
-                    'limit',
-                    'sortBy',
-                    'sortOrder',
-                    'minPrice',
-                    'maxPrice',
-                ].includes(key)
-            ) {
-                filters[key] = query[key];
-            }
-        });
+        const {
+            page = 1,
+            limit = 10,
+            status,
+            category,
+            provider,
+            customer,
+            paymentStatus,
+            scheduleType,
+            doneBy,
+            search,
+            dateFilter,
+            startDate,
+            endDate,
+            sortBy = 'createdAt',
+            sortOrder = 'desc',
+        } = query;
 
-        if (query.category) {
-            filters.category = new mongoose.Types.ObjectId(query.category);
+        /* ------------------ MATCH STAGE ------------------ */
+
+        const matchStage: any = {
+            isDeleted: false,
+        };
+
+        if (status) matchStage.status = status;
+        if (paymentStatus) matchStage.paymentStatus = paymentStatus;
+        if (scheduleType) matchStage.scheduleType = scheduleType;
+        if (doneBy) matchStage.doneBy = doneBy;
+
+        if (category)
+            matchStage.category = new mongoose.Types.ObjectId(
+                category as string
+            );
+
+        if (provider)
+            matchStage.provider = new mongoose.Types.ObjectId(
+                provider as string
+            );
+
+        if (customer)
+            matchStage.customer = new mongoose.Types.ObjectId(
+                customer as string
+            );
+
+        /* ------------------ DATE FILTER ------------------ */
+
+        const { currentStart, previousStart, previousEnd } = getDateRanges(
+            dateFilter as string
+        );
+
+        if (dateFilter && dateFilter !== 'lifetime') {
+            matchStage.createdAt = { $gte: currentStart };
         }
 
-        const searchMatchStage = searchTerm
-            ? {
-                  $or: [
-                      { title: { $regex: searchTerm, $options: 'i' } },
-                      { description: { $regex: searchTerm, $options: 'i' } },
-                  ],
-              }
-            : {};
-
-        if (minPrice !== null || maxPrice !== null) {
-            filters.budget = {};
-            if (minPrice !== null) filters.budget.$gte = minPrice;
-            if (maxPrice !== null) filters.budget.$lte = maxPrice;
+        // custom date override
+        if (startDate && endDate) {
+            matchStage.createdAt = {
+                $gte: new Date(startDate as string),
+                $lte: new Date(endDate as string),
+            };
         }
 
-        // Sorting
-        const sortBy = query.sortBy || 'createdAt';
-        const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
-        const sortStage = { [sortBy]: sortOrder };
+        /* ------------------ PIPELINE ------------------ */
 
         const pipeline: any[] = [
-            {
-                $match: {
-                    ...filters,
-                    ...searchMatchStage,
-                    isDeleted: false,
-                },
-            },
+            { $match: matchStage },
+
             {
                 $lookup: {
-                    from: 'bids',
-                    localField: '_id',
-                    foreignField: 'task',
-                    as: 'bids',
+                    from: 'categories',
+                    localField: 'category',
+                    foreignField: '_id',
+                    as: 'category',
                 },
             },
-            {
-                $addFields: {
-                    totalOffer: { $size: '$bids' },
-                },
-            },
+            { $unwind: '$category' },
 
             {
                 $lookup: {
@@ -200,90 +251,164 @@ const getAllTaskFromDB = async (
                     pipeline: [
                         {
                             $project: {
-                                _id: 1,
                                 name: 1,
                                 profile_image: 1,
+                                email: 1,
                             },
                         },
                     ],
                 },
             },
-            {
-                $unwind: {
-                    path: '$customer',
-                    preserveNullAndEmptyArrays: true,
-                },
-            },
+            { $unwind: '$customer' },
+
             {
                 $lookup: {
-                    from: 'categories',
-                    localField: 'category',
+                    from: 'providers',
+                    localField: 'provider',
                     foreignField: '_id',
-                    as: 'category',
+                    as: 'provider',
                     pipeline: [
                         {
                             $project: {
-                                _id: 1,
                                 name: 1,
+                                profile_image: 1,
+                                email: 1,
                             },
                         },
                     ],
                 },
             },
-            {
-                $unwind: {
-                    path: '$category',
-                    preserveNullAndEmptyArrays: true,
-                },
-            },
-            {
-                $project: {
-                    bids: 0,
-                },
-            },
-            { $sort: sortStage },
+            { $unwind: '$provider' },
+
+            ...(search
+                ? [
+                      {
+                          $match: {
+                              $or: [
+                                  { title: { $regex: search, $options: 'i' } },
+                                  {
+                                      'customer.name': {
+                                          $regex: search,
+                                          $options: 'i',
+                                      },
+                                  },
+                              ],
+                          },
+                      },
+                  ]
+                : []),
+
             {
                 $facet: {
-                    result: [{ $skip: skip }, { $limit: limit }],
-                    totalCount: [{ $count: 'total' }],
+                    /* ---------- pagination ---------- */
+                    meta: [
+                        { $count: 'total' },
+                        {
+                            $addFields: {
+                                page: Number(page),
+                                limit: Number(limit),
+                            },
+                        },
+                    ],
+
+                    result: [
+                        {
+                            $sort: {
+                                [sortBy as string]:
+                                    sortOrder === 'asc' ? 1 : -1,
+                            },
+                        },
+                        { $skip: (Number(page) - 1) * Number(limit) },
+                        { $limit: Number(limit) },
+                    ],
+
+                    /* ---------- CURRENT STATS ---------- */
+                    currentStats: [
+                        {
+                            $group: {
+                                _id: '$status',
+                                count: { $sum: 1 },
+                            },
+                        },
+                    ],
+
+                    /* ---------- PREVIOUS STATS ---------- */
+                    previousStats: [
+                        {
+                            $match: {
+                                createdAt: {
+                                    $gte: previousStart,
+                                    $lt: previousEnd,
+                                },
+                            },
+                        },
+                        {
+                            $group: {
+                                _id: '$status',
+                                count: { $sum: 1 },
+                            },
+                        },
+                    ],
                 },
             },
         ];
 
-        // 🗺️ Geo filter (if user sends coordinates)
-        if (query.latitude && query.longitude) {
-            pipeline.unshift({
-                $geoNear: {
-                    near: {
-                        type: 'Point',
-                        coordinates: [
-                            parseFloat(query.longitude as string),
-                            parseFloat(query.latitude as string),
-                        ],
-                    },
-                    distanceField: 'distance',
-                    maxDistance: maxDistance,
-                    spherical: true,
-                },
-            });
-            pipeline.push({
-                $sort: { distance: 1 },
-            });
-        }
+        /* ------------------ EXECUTION ------------------ */
 
-        const aggResult = await TaskModel.aggregate(pipeline);
-        const result = aggResult[0]?.result || [];
-        const total = aggResult[0]?.totalCount[0]?.total || 0;
-        const totalPage = Math.ceil(total / limit);
+        const [data] = await TaskModel.aggregate(pipeline);
+
+        const meta = data.meta[0] || {
+            total: 0,
+            page: Number(page),
+            limit: Number(limit),
+        };
+
+        const totalPage = Math.ceil(meta.total / meta.limit);
+
+        /* ------------------ NORMALIZE STATS ------------------ */
+
+        const stats = ALL_STATUSES.map((status) => {
+            const current = data.currentStats.find(
+                (s: any) => s._id === status
+            );
+            const previous = data.previousStats.find(
+                (s: any) => s._id === status
+            );
+
+            const currentCount = current?.count || 0;
+            const previousCount = previous?.count || 0;
+
+            let percentage = 0;
+
+            if (previousCount === 0 && currentCount > 0) {
+                percentage = 100;
+            } else if (previousCount > 0) {
+                percentage =
+                    ((currentCount - previousCount) / previousCount) * 100;
+            }
+
+            return {
+                status,
+                count: currentCount,
+                changePercentage: Number(percentage.toFixed(2)),
+                trend:
+                    percentage > 0
+                        ? 'increase'
+                        : percentage < 0
+                          ? 'decrease'
+                          : 'no-change',
+            };
+        });
+
+        /* ------------------ FINAL RETURN ------------------ */
 
         return {
             meta: {
-                page,
-                limit,
-                total,
+                ...meta,
                 totalPage,
             },
-            result,
+            stats,
+            result: data.result,
         };
     } else {
         const page = Number(query.page) || 1;
@@ -369,6 +494,32 @@ const getAllTaskFromDB = async (
                                 _id: 1,
                                 name: 1,
                                 profile_image: 1,
+                            },
+                        },
+                        // {
+                        //     // Populate the user reference
+                        //     $lookup: {
+                        //         from: 'users',
+                        //         localField: 'user',
+                        //         foreignField: '_id',
+                        //         as: 'user',
+                        //         pipeline: [
+                        //             {
+                        //                 $project: {
+                        //                     _id: 1,
+                        //                     email: 1,
+                        //                     phone: 1,
+                        //                     role: 1,
+
+                        //                 },
+                        //             },
+                        //         ],
+                        //     },
+                        // },
+                        {
+                            $unwind: {
+                                path: '$user',
+                                preserveNullAndEmptyArrays: true,
                             },
                         },
                     ],
@@ -804,6 +955,7 @@ const rejectOfferByProvider = async (taskId: string, currentUserId: string) => {
     }
 
     task.provider = null;
+    task.service = null;
     task.status = ENUM_TASK_STATUS.OPEN_FOR_BID;
     await task.save();
     await Notification.create({

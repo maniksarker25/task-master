@@ -17,4 +17,10 @@ router.patch(
     paymentController.makePaidUnPaid
 );
 
+router.get(
+    '/provider-earnings',
+    auth(USER_ROLE.provider),
+    paymentController.getProviderEarnings
+);
+
 export const paymentRoutes = router;

@@ -89,7 +89,7 @@ const taskSchema = new Schema<ITask>(
             type: String,
             enum: Object.values(ENUM_SCHEDULE_TYPE),
         },
-        preferredDeliveryDateTime: { type: Date, required: true },
+        preferredDeliveryDateTime: { type: Date, default: null },
         description: { type: String, required: true },
         task_attachments: [{ type: String }],
         statusWithDate: {

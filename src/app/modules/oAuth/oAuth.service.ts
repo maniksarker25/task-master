@@ -22,11 +22,18 @@ const loginWithOAuth = async (
     provider: string,
     token: string,
     role: TUserRole,
+    deviceType?: string,
     playerId?: string
 ) => {
     let email, id, name, picture;
 
-    const clientId = process.env.WEB_CLIENT_ID;
+    let clientId = process.env.WEB_CLIENT_ID;
+    if (deviceType && deviceType == 'ios') {
+        clientId = process.env.IOS_CLIENT_ID;
+    } else if (deviceType && deviceType == 'android') {
+        clientId = process.env.ANDROID_CLIENT_ID;
+    }
+
     const googleClient = new OAuth2Client(clientId);
     try {
         if (provider === 'google') {

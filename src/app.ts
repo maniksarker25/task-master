@@ -87,8 +87,8 @@ app.post('/api/v1/nin-verify', async (req, res) => {
             dob: '1990-01-01',
             country: 'NG',
             id_number: '00000000004',
-            // id_type: 'NIN_V2',
-            id_type: 'DRIVERS_LICENSE_V2',
+            id_type: 'NIN_V2',
+            // id_type: 'DRIVERS_LICENSE_V2',
             partner_id: process.env.SMILE_PARTNER_ID,
             partner_params: {
                 job_id: '985c594e-7e67-4f2e-a6e0-3be127dbb6a0',
@@ -115,6 +115,7 @@ app.post('/api/v1/nin-verify', async (req, res) => {
         );
     }
 });
+
 // app.post('/api/v1/nin-verify', async (req, res) => {
 //     try {
 //         // const timestamp = getSmileTimestamp();
