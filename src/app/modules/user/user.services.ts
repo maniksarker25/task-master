@@ -239,6 +239,8 @@ const deleteUserAccount = async (user: JwtPayload, password: string) => {
 
 // update user
 const updateUserProfile = async (userData: JwtPayload, payload: any) => {
+    console.log('Updating user profile', payload);
+    console.log('User data:', userData);
     if (payload.email || payload.phone) {
         throw new AppError(
             httpStatus.BAD_REQUEST,

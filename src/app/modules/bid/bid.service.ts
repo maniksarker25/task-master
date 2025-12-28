@@ -1,25 +1,42 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
+import { JwtPayload } from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import AppError from '../../error/appError';
 import { sendSinglePushNotification } from '../../helper/sendPushNotification';
 import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
 import Notification from '../notification/notification.model';
+import { ENUM_TASK_STATUS } from '../task/task.enum';
 import TaskModel from '../task/task.model';
 import { IBid } from './bid.interface';
 import BidModel from './bid.model';
 
-const createBidIntoDB = async (userId: string, payload: IBid) => {
-    const task = await TaskModel.findById(payload.task);
+const createBidIntoDB = async (userData: JwtPayload, payload: IBid) => {
+    const userId = userData.profileId;
+    const task: any = await TaskModel.findById(payload.task).populate({
+        path: 'customer',
+        select: 'name email phone user',
+        populate: {
+            path: 'user',
+            select: '_id',
+        },
+    });
     if (!task) {
         throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
     }
-    // if (task.provider) {
-    //     throw new AppError(
-    //         httpStatus.BAD_REQUEST,
-    //         'Freelancer already selected , you are not able to place bid'
-    //     );
-    // }
+
+    if (task.status !== ENUM_TASK_STATUS.OPEN_FOR_BID) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'Bidding is closed for this task'
+        );
+    }
+    if (task.customer.user._id.toString() === userData.id) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'You cannot place bid on your own task'
+        );
+    }
 
     const result = (
         await BidModel.create({ ...payload, provider: userId })
