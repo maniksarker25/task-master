@@ -1080,7 +1080,7 @@ const acceptTaskByCustomerFromDB = async (
                 promoId: promo ? promo._id.toString() : null,
                 referralUseId: referralUse ? referralUse._id.toString() : null,
             },
-            callback_url: `http://10.10.20.48:3000/success`,
+            callback_url: `https://taskalley-deploy-5lzv.vercel.app/success`,
         },
         {
             headers,
