@@ -10,6 +10,8 @@ import crypto from 'crypto';
 import express, { Application } from 'express';
 import sendContactUsEmail from './app/helper/sendContactUsEmail';
 
+import httpStatus from 'http-status';
+import AppError from './app/error/appError';
 import globalErrorHandler from './app/middlewares/globalErrorHandler';
 import notFound from './app/middlewares/notFound';
 import router from './app/routes';
@@ -87,8 +89,8 @@ app.post('/api/v1/nin-verify', async (req, res) => {
             dob: '1990-01-01',
             country: 'NG',
             id_number: '00000000004',
-            id_type: 'NIN_V2',
-            // id_type: 'DRIVERS_LICENSE_V2',
+            // id_type: 'NIN_V2',
+            id_type: 'DRIVERS_LICENSE',
             partner_id: process.env.SMILE_PARTNER_ID,
             partner_params: {
                 job_id: '985c594e-7e67-4f2e-a6e0-3be127dbb6a0',
@@ -106,7 +108,23 @@ app.post('/api/v1/nin-verify', async (req, res) => {
             { headers: { 'Content-Type': 'application/json' } }
         );
         console.log('response', response);
+        const result = response.data;
 
+        if (result.Actions?.Verify_ID_Number !== 'Verified') {
+            throw new AppError(httpStatus.BAD_REQUEST, 'Invalid NIN format');
+        }
+
+        if (result.ResultCode === '1022') {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                'NIN is valid but personal details do not match'
+            );
+        }
+
+        if (result.ResultCode === '1000' || result.ResultCode === '1020') {
+            res.json({ message: 'NIN verified successfully', data: result });
+            return;
+        }
         res.json(response.data);
     } catch (error: any) {
         console.log(error.response?.data || error.message);

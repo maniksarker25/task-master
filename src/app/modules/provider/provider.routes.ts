@@ -42,7 +42,7 @@ router.post(
         }
         next();
     },
-    validateRequest(ProviderValidations.completeIdentityVerificationZodSchema),
+    // validateRequest(ProviderValidations.completeIdentityVerificationZodSchema),
     ProviderController.completeIdentityVerification
 );
 router.post(
