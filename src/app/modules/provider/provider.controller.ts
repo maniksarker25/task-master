@@ -61,7 +61,10 @@ const completeIdentityVerification = catchAsync(async (req, res) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: 'Identity verification completed successfully',
+        message:
+            req.body.identificationDocumentType === 'BVN'
+                ? 'Bank Verification Number verified successfully'
+                : 'Identity verification completed successfully',
         data: result,
     });
 });
