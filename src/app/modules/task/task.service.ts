@@ -1396,6 +1396,7 @@ const completeTaskByCustomer = async (
             [
                 {
                     provider: task.provider,
+                    customer: task.customer,
                     task: task._id,
                     amount: providerEarning,
                     customerPayingAmount: task.customerPayingAmount,
