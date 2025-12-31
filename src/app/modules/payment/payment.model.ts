@@ -23,6 +23,14 @@ const paymentSchema = new Schema<IPayment>(
             enum: Object.values(ENUM_PAYMENT_STATUS),
             default: ENUM_PAYMENT_STATUS.UNPAID,
         },
+        customerPayingAmount: {
+            type: Number,
+            required: true,
+        },
+        platformEarningAmount: {
+            type: Number,
+            required: true,
+        },
     },
     { timestamps: true }
 );

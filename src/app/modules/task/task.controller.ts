@@ -36,8 +36,9 @@ const updateTask = catchAsync(async (req, res) => {
         );
     }
 
-    const result = await TaskServices.createTaskIntoDB(
+    const result = await TaskServices.updateTask(
         req.user.profileId,
+        req.params.id,
         req?.body
     );
 

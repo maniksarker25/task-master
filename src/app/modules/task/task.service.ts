@@ -123,10 +123,10 @@ const updateTask = async (profileId: string, id: string, payload: ITask) => {
     }
 
     const bid = await BidModel.findOne({ task: id });
-    if (!bid) {
+    if (bid) {
         throw new AppError(
             httpStatus.BAD_REQUEST,
-            'Freelancer already bid for that task so you are '
+            'Freelancer already bid for that task so you are not able to update it'
         );
     }
     if (payload.task_attachments) {
@@ -1398,6 +1398,9 @@ const completeTaskByCustomer = async (
                     provider: task.provider,
                     task: task._id,
                     amount: providerEarning,
+                    customerPayingAmount: task.customerPayingAmount,
+                    platformEarningAmount:
+                        task.customerPayingAmount! - providerEarning,
                 },
             ],
             { session }
