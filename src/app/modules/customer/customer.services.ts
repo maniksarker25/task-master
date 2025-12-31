@@ -77,11 +77,20 @@ const getAllCustomerFromDB = async (query: Record<string, unknown>) => {
     const skip = (page - 1) * limit;
     const searchTerm = query.searchTerm || '';
     const filters: any = {};
+    const isBlocked =
+        query.isBlocked !== undefined
+            ? JSON.parse(query.isBlocked as string)
+            : undefined;
     Object.keys(query).forEach((key) => {
         if (
-            !['searchTerm', 'page', 'limit', 'sortBy', 'sortOrder'].includes(
-                key
-            )
+            ![
+                'searchTerm',
+                'page',
+                'limit',
+                'sortBy',
+                'sortOrder',
+                'isBlocked',
+            ].includes(key)
         ) {
             filters[key] = query[key];
         }
@@ -117,6 +126,15 @@ const getAllCustomerFromDB = async (query: Record<string, unknown>) => {
                 user: { $arrayElemAt: ['$user', 0] },
             },
         },
+        ...(isBlocked !== undefined
+            ? [
+                  {
+                      $match: {
+                          'user.isBlocked': isBlocked,
+                      },
+                  },
+              ]
+            : []),
         {
             $lookup: {
                 from: 'tasks',
