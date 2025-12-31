@@ -9,6 +9,11 @@ const paymentSchema = new Schema<IPayment>(
             ref: 'Provider',
             required: true,
         },
+        customer: {
+            type: Schema.Types.ObjectId,
+            ref: 'Customer',
+            required: true,
+        },
         task: {
             type: Schema.Types.ObjectId,
             ref: 'Task',

@@ -77,6 +77,25 @@ const getAllPayments = async (query: Record<string, unknown>) => {
             },
         },
         { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
+        {
+            $lookup: {
+                from: 'customers',
+                localField: 'customer',
+                foreignField: '_id',
+                as: 'customer',
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            name: 1,
+                            profile_image: 1,
+                            email: 1,
+                        },
+                    },
+                ],
+            },
+        },
+        { $unwind: { path: '$customer', preserveNullAndEmptyArrays: true } },
         { $sort: sortStage },
         {
             $facet: {
