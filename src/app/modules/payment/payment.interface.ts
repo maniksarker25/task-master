@@ -6,4 +6,6 @@ export interface IPayment {
     status: (typeof ENUM_PAYMENT_STATUS)[keyof typeof ENUM_PAYMENT_STATUS];
     task: Types.ObjectId;
     amount: number;
+    customerPayingAmount?: number;
+    platformEarningAmount?: number;
 }
