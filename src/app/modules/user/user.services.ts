@@ -7,7 +7,6 @@ import mongoose from 'mongoose';
 import cron from 'node-cron';
 import config from '../../config';
 import AppError from '../../error/appError';
-
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 import { sendSMS } from '../../helper/sendSms';
 import Admin from '../admin/admin.model';
@@ -97,7 +96,7 @@ const registerCustomer = async (
         // The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
 
         const smsMessage = `Thank you for registering with Task Alley. Your verification code is ${verifyCode}. It expires in 5 minutes. Please verify in time to complete registration.`;
-        // await sendSMS(userData.phone, smsMessage);
+        await sendSMS(userData.phone, smsMessage);
 
         // If SMS sent successfully, commit transaction
         await session.commitTransaction();
