@@ -74,7 +74,22 @@ const ALL_STATUSES = ['OPEN_FOR_BID', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
 //     return { currentStart, previousStart, previousEnd };
 // };
 
-const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
+const createTaskIntoDB = async (
+    userData: JwtPayload,
+    payload: Partial<ITask>
+) => {
+    const profileId = userData.profileId;
+
+    const user = await User.findById(userData.id);
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+    }
+    if (!user.isAdminVerified) {
+        throw new AppError(
+            httpStatus.FORBIDDEN,
+            'Your account is not verified by admin yet'
+        );
+    }
     try {
         const createdTask = await TaskModel.create({
             ...payload,
