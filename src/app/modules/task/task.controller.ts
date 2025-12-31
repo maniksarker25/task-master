@@ -15,10 +15,7 @@ const createTask = catchAsync(async (req, res) => {
         );
     }
 
-    const result = await TaskServices.createTaskIntoDB(
-        req.user.profileId,
-        req?.body
-    );
+    const result = await TaskServices.createTaskIntoDB(req.user, req?.body);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,

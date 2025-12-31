@@ -8,10 +8,21 @@ import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
 import Notification from '../notification/notification.model';
 import { ENUM_TASK_STATUS } from '../task/task.enum';
 import TaskModel from '../task/task.model';
+import { User } from '../user/user.model';
 import { IBid } from './bid.interface';
 import BidModel from './bid.model';
 
 const createBidIntoDB = async (userData: JwtPayload, payload: IBid) => {
+    const user = await User.findById(userData.id);
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+    }
+    if (!user.isAdminVerified) {
+        throw new AppError(
+            httpStatus.FORBIDDEN,
+            'Your account is not verified by admin yet'
+        );
+    }
     const userId = userData.profileId;
     const task: any = await TaskModel.findById(payload.task).populate({
         path: 'customer',
