@@ -21,5 +21,10 @@ router.get(
     auth(USER_ROLE.superAdmin, USER_ROLE.admin),
     MetaController.getProviderChartData
 );
+router.get(
+    '/earning-chart-data',
+    auth(USER_ROLE.superAdmin, USER_ROLE.admin),
+    MetaController.getEarningChartData
+);
 
 export const metaRoutes = router;

@@ -35,11 +35,23 @@ const getProviderChartData = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const getEarningChartData = catchAsync(async (req, res) => {
+    const result = await MetaService.getEarningChartData(
+        Number(req?.query.year)
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Earning chart data retrieved successfully',
+        data: result,
+    });
+});
 
 const MetaController = {
     getDashboardMetaData,
     getCustomerChartData,
     getProviderChartData,
+    getEarningChartData,
 };
 
 export default MetaController;
