@@ -82,6 +82,22 @@ const createTaskIntoDB = async (
             });
         }
 
+        if (payload.provider) {
+            await Notification.create({
+                title: 'New Offer Alert!',
+                message: `Hey! A fresh offer just landed in your service. Check it out!`,
+                receiver: payload.provider,
+                type: ENUM_NOTIFICATION_TYPE.TASK_OFFERED,
+                redirectLink: `${createdTask?._id}`,
+            });
+            sendSinglePushNotification(
+                payload.provider.toString(),
+                'New Offer Alert!',
+                `Hey! A fresh offer just landed in your service. Check it out!"`,
+                { taskId: createdTask._id.toString() }
+            );
+        }
+
         return result;
     } catch (err) {
         console.error('Failed to send task create admin notification:', err);
@@ -1294,8 +1310,24 @@ const acceptTaskByCustomerFromDB = async (
             headers,
         }
     );
-    console.log('nice2', response);
     const data = response.data.data;
+    const notificationData = [
+        {
+            title: 'Bid Accepted by Tasker',
+            message: `Bid for "${taskData.title}" has been accepted by the tasker. Task is now in progress.`,
+            receiver: taskData.provider,
+            type: ENUM_NOTIFICATION_TYPE.BID_ACCEPTED,
+            redirectLink: `${taskData._id}`,
+        },
+        {
+            title: 'Bid Accepted Successfully',
+            message: `Bid for your task "${taskData.title}" has been accepted successfully. Task is now in progress.`,
+            receiver: taskData.customer._id,
+            type: ENUM_NOTIFICATION_TYPE.BID_ACCEPTED,
+            redirectLink: `${taskData._id}`,
+        },
+    ];
+    Notification.insertMany(notificationData);
     return {
         paymentLink: data.authorization_url,
         accessCode: data.access_code,
