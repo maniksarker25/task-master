@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import axios from 'axios';
 import httpStatus from 'http-status';
 import mongoose, { Types } from 'mongoose';
 import AppError from '../../error/appError';
-import { buildVerificationPayload } from '../../utilities/verification';
 import BidModel from '../bid/bid.model';
 import { ENUM_TASK_STATUS } from '../task/task.enum';
 import TaskModel from '../task/task.model';
@@ -226,92 +224,117 @@ const completeIdentityVerificationFromDB = async (
         throw new AppError(httpStatus.NOT_FOUND, 'Provider not found');
     }
 
-    const data = buildVerificationPayload(
-        profileId,
-        payload.identificationDocumentType,
-        payload
-    );
-
-    try {
-        const response = await axios.post(
-            `${process.env.SMILE_BASE_URL}/v2/verify`,
-            data,
+    if (payload.identificationDocumentType !== 'BVN') {
+        const updatedProvider = await Provider.findByIdAndUpdate(
+            profileId,
             {
-                headers: { 'Content-Type': 'application/json' },
-            }
+                isIdentificationDocumentApproved: true,
+                identificationDocumentType: payload.identificationDocumentType,
+                identificationDocumentNumber: payload.id_number,
+                identificationDocument: payload.identification_document,
+            },
+            { new: true }
         );
-
-        console.log('response =>>>>>>>>', response);
-        console.log('response data =>>>>>>>>', response.data);
-
-        const result = response.data;
-
-        if (result.Actions?.Verify_ID_Number !== 'Verified') {
-            throw new AppError(
-                httpStatus.BAD_REQUEST,
-                `Invalid ${payload.identificationDocumentType} format`
-            );
-        } else if (result.ResultCode === '1022') {
-            throw new AppError(
-                httpStatus.BAD_REQUEST,
-                `${payload.identificationDocumentType} is valid but personal details do not match`
-            );
-        } else if (
-            result.ResultCode === '1000' ||
-            result.ResultCode === '1020'
-        ) {
-            if (payload.identificationDocumentType !== 'BVN') {
-                const updatedProvider = await Provider.findByIdAndUpdate(
-                    profileId,
-                    {
-                        isIdentificationDocumentApproved: true,
-                        identificationDocumentType:
-                            payload.identificationDocumentType,
-                        identificationDocumentNumber: payload.id_number,
-                        identificationDocument: payload.identification_document,
-                    },
-                    { new: true }
-                );
-                return updatedProvider;
-            } else {
-                const updatedProvider = await Provider.findByIdAndUpdate(
-                    profileId,
-                    {
-                        isBankVerificationNumberApproved: true,
-                        bankVerificationNumber: payload.id_number,
-                        bankAccountNumber: payload.id_number,
-                    },
-                    { new: true }
-                );
-                return updatedProvider;
-            }
-        } else {
-            throw new AppError(httpStatus.BAD_REQUEST, 'Verification failed');
-        }
-    } catch (error: any) {
-        // Axios error logging
-        if (error.response) {
-            // Server responded with a status outside 2xx
-            console.error('Axios response error:', error.response.data);
-            console.error('Status:', error.response.status);
-        } else if (error.request) {
-            // Request was made but no response received
-            console.error('Axios request error:', error.request);
-        } else {
-            // Something else happened
-            console.error('Error message:', error.message);
-            throw new AppError(
-                httpStatus.INTERNAL_SERVER_ERROR,
-                error.message
-                    ? error.message
-                    : 'Failed to verify identification'
-            );
-        }
-        throw new AppError(
-            httpStatus.INTERNAL_SERVER_ERROR,
-            'Failed to verify identification'
+        return updatedProvider;
+    } else {
+        const updatedProvider = await Provider.findByIdAndUpdate(
+            profileId,
+            {
+                isBankVerificationNumberApproved: true,
+                bankVerificationNumber: payload.id_number,
+                bankAccountNumber: payload.id_number,
+            },
+            { new: true }
         );
+        return updatedProvider;
     }
+
+    // const data = buildVerificationPayload(
+    //     profileId,
+    //     payload.identificationDocumentType,
+    //     payload
+    // );
+
+    // try {
+    //     const response = await axios.post(
+    //         `${process.env.SMILE_BASE_URL}/v2/verify`,
+    //         data,
+    //         {
+    //             headers: { 'Content-Type': 'application/json' },
+    //         }
+    //     );
+
+    //     console.log('response =>>>>>>>>', response);
+    //     console.log('response data =>>>>>>>>', response.data);
+
+    //     const result = response.data;
+
+    //     if (result.Actions?.Verify_ID_Number !== 'Verified') {
+    //         throw new AppError(
+    //             httpStatus.BAD_REQUEST,
+    //             `Invalid ${payload.identificationDocumentType} format`
+    //         );
+    //     } else if (result.ResultCode === '1022') {
+    //         throw new AppError(
+    //             httpStatus.BAD_REQUEST,
+    //             `${payload.identificationDocumentType} is valid but personal details do not match`
+    //         );
+    //     } else if (
+    //         result.ResultCode === '1000' ||
+    //         result.ResultCode === '1020'
+    //     ) {
+    //         if (payload.identificationDocumentType !== 'BVN') {
+    //             const updatedProvider = await Provider.findByIdAndUpdate(
+    //                 profileId,
+    //                 {
+    //                     isIdentificationDocumentApproved: true,
+    //                     identificationDocumentType:
+    //                         payload.identificationDocumentType,
+    //                     identificationDocumentNumber: payload.id_number,
+    //                     identificationDocument: payload.identification_document,
+    //                 },
+    //                 { new: true }
+    //             );
+    //             return updatedProvider;
+    //         } else {
+    //             const updatedProvider = await Provider.findByIdAndUpdate(
+    //                 profileId,
+    //                 {
+    //                     isBankVerificationNumberApproved: true,
+    //                     bankVerificationNumber: payload.id_number,
+    //                     bankAccountNumber: payload.id_number,
+    //                 },
+    //                 { new: true }
+    //             );
+    //             return updatedProvider;
+    //         }
+    //     } else {
+    //         throw new AppError(httpStatus.BAD_REQUEST, 'Verification failed');
+    //     }
+    // } catch (error: any) {
+    //     // Axios error logging
+    //     if (error.response) {
+    //         // Server responded with a status outside 2xx
+    //         console.error('Axios response error:', error.response.data);
+    //         console.error('Status:', error.response.status);
+    //     } else if (error.request) {
+    //         // Request was made but no response received
+    //         console.error('Axios request error:', error.request);
+    //     } else {
+    //         // Something else happened
+    //         console.error('Error message:', error.message);
+    //         throw new AppError(
+    //             httpStatus.INTERNAL_SERVER_ERROR,
+    //             error.message
+    //                 ? error.message
+    //                 : 'Failed to verify identification'
+    //         );
+    //     }
+    //     throw new AppError(
+    //         httpStatus.INTERNAL_SERVER_ERROR,
+    //         'Failed to verify identification'
+    //     );
+    // }
 };
 
 const verifyBVN = async (profileId: string, bvn: string) => {
