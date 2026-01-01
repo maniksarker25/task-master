@@ -182,8 +182,12 @@ const getProviderChartData = async (year: number) => {
 };
 
 const getEarningChartData = async (year: number) => {
-    const startOfYear = new Date(year, 0, 1);
-    const endOfYear = new Date(year + 1, 0, 1);
+    // const startOfYear = new Date(year, 0, 1);
+    // const endOfYear = new Date(year + 1, 0, 1);
+    const selectedYear = year ?? new Date().getFullYear();
+
+    const startOfYear = new Date(selectedYear, 0, 1);
+    const endOfYear = new Date(selectedYear + 1, 0, 1);
 
     // Aggregate transaction amounts per month
     const chartData = await Payment.aggregate([
