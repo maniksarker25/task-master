@@ -30,49 +30,6 @@ import { User } from '../user/user.model';
 import { ENUM_TASK_STATUS } from './task.enum';
 import TaskModel from './task.model';
 const ALL_STATUSES = ['OPEN_FOR_BID', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
-// const getDateRanges = (dateFilter?: string) => {
-//     const now = new Date();
-
-//     let currentStart: Date;
-//     let previousStart: Date;
-//     let previousEnd: Date;
-
-//     switch (dateFilter) {
-//         case 'daily':
-//             currentStart = new Date(new Date().setHours(0, 0, 0, 0));
-//             previousStart = new Date(currentStart);
-//             previousStart.setDate(previousStart.getDate() - 1);
-//             previousEnd = new Date(currentStart);
-//             break;
-
-//         case 'weekly':
-//             currentStart = new Date();
-//             currentStart.setDate(currentStart.getDate() - 7);
-//             previousStart = new Date(currentStart);
-//             previousStart.setDate(previousStart.getDate() - 7);
-//             previousEnd = new Date(currentStart);
-//             break;
-
-//         case 'monthly':
-//             currentStart = new Date(now.getFullYear(), now.getMonth(), 1);
-//             previousStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-//             previousEnd = currentStart;
-//             break;
-
-//         case 'yearly':
-//             currentStart = new Date(now.getFullYear(), 0, 1);
-//             previousStart = new Date(now.getFullYear() - 1, 0, 1);
-//             previousEnd = currentStart;
-//             break;
-
-//         default: // lifetime
-//             currentStart = new Date(0);
-//             previousStart = new Date(0);
-//             previousEnd = new Date(0);
-//     }
-
-//     return { currentStart, previousStart, previousEnd };
-// };
 
 const createTaskIntoDB = async (
     userData: JwtPayload,
@@ -84,12 +41,14 @@ const createTaskIntoDB = async (
     if (!user) {
         throw new AppError(httpStatus.NOT_FOUND, 'User not found');
     }
-    if (!user.isAdminVerified) {
-        throw new AppError(
-            httpStatus.FORBIDDEN,
-            'Your account is not verified by admin yet'
-        );
-    }
+    //!TODO: enable after admin verification feature
+
+    // if (!user.isAdminVerified) {
+    //     throw new AppError(
+    //         httpStatus.FORBIDDEN,
+    //         'Your account is not verified by admin yet'
+    //     );
+    // }
     try {
         const createdTask = await TaskModel.create({
             ...payload,
