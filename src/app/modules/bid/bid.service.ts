@@ -17,13 +17,12 @@ const createBidIntoDB = async (userData: JwtPayload, payload: IBid) => {
     if (!user) {
         throw new AppError(httpStatus.NOT_FOUND, 'User not found');
     }
-    //!TODO: enable after admin verification feature
-    // if (!user.isAdminVerified) {
-    //     throw new AppError(
-    //         httpStatus.FORBIDDEN,
-    //         'Your account is not verified by admin yet'
-    //     );
-    // }
+    if (!user.isAdminVerified) {
+        throw new AppError(
+            httpStatus.FORBIDDEN,
+            'Your account is not verified by admin yet'
+        );
+    }
     const userId = userData.profileId;
     const task: any = await TaskModel.findById(payload.task).populate({
         path: 'customer',
