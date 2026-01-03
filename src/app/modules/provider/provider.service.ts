@@ -258,7 +258,9 @@ const completeIdentityVerificationFromDB = async (
             );
         } else if (
             result.ResultCode === '1000' ||
-            result.ResultCode === '1020'
+            result.ResultCode === '1020' ||
+            result.ResultCode === '1021' ||
+            result.ResultCode === '1012'
         ) {
             if (payload.identificationDocumentType !== 'BVN') {
                 const updatedProvider = await Provider.findByIdAndUpdate(
