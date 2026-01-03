@@ -5,11 +5,12 @@ import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 import { ICategory } from './category.interface';
 import Category from './category.model';
 
-// create category into db
+// create category into db----------------
 const createCategoryIntoDB = async (payload: ICategory) => {
     const result = await Category.create(payload);
     return result;
 };
+
 const updateCategoryIntoDB = async (
     id: string,
     payload: Partial<ICategory>
