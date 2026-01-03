@@ -29,10 +29,7 @@ const getAllCategories = async (query: Record<string, unknown>) => {
 
     const searchMatchStage = searchTerm
         ? {
-              $or: [
-                  { title: { $regex: searchTerm, $options: 'i' } },
-                  { description: { $regex: searchTerm, $options: 'i' } },
-              ],
+              $or: [{ name: { $regex: searchTerm, $options: 'i' } }],
           }
         : {};
 
