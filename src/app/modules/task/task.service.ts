@@ -41,14 +41,13 @@ const createTaskIntoDB = async (
     if (!user) {
         throw new AppError(httpStatus.NOT_FOUND, 'User not found');
     }
-    //!TODO: enable after admin verification feature
 
-    // if (!user.isAdminVerified) {
-    //     throw new AppError(
-    //         httpStatus.FORBIDDEN,
-    //         'Your account is not verified by admin yet'
-    //     );
-    // }
+    if (!user.isAdminVerified) {
+        throw new AppError(
+            httpStatus.FORBIDDEN,
+            'Your account is not verified by admin yet'
+        );
+    }
     try {
         const createdTask = await TaskModel.create({
             ...payload,
