@@ -51,7 +51,10 @@ const deletePromo = catchAsync(async (req, res) => {
     });
 });
 const verifyPromo = catchAsync(async (req, res) => {
-    const result = await promoServices.verifyPromoFromDB(req.body.promoCode);
+    const result = await promoServices.verifyPromoFromDB(
+        req.user.profileId,
+        req.body.promoCode
+    );
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,

@@ -1,9 +1,9 @@
 import express from 'express';
 import auth from '../../middlewares/auth';
-import { USER_ROLE } from '../user/user.constant';
 import validateRequest from '../../middlewares/validateRequest';
-import promoValidations from './promo.validation';
+import { USER_ROLE } from '../user/user.constant';
 import promoController from './promo.controller';
+import promoValidations from './promo.validation';
 
 const router = express.Router();
 
@@ -36,7 +36,7 @@ router.delete(
     promoController.deletePromo
 );
 
-router.get(
+router.post(
     '/verify-promo',
     auth(USER_ROLE.customer),
     validateRequest(promoValidations.verifyPromoZodSchema),
