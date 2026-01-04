@@ -1,10 +1,23 @@
 import httpStatus from 'http-status';
+import cron from 'node-cron';
 import AppError from '../../error/appError';
 import PromoUseModel from '../promoUse/promoUse.model';
 import { IPromo } from './promo.interface';
 import PromoModel from './promo.model';
 
+import { ENUM_PROMO_STATUS } from './promo.enum';
+
 const createPromoIntoDB = async (payload: IPromo) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const startDate = new Date(payload.startDate);
+    startDate.setHours(0, 0, 0, 0);
+
+    if (startDate <= today) {
+        payload.status = ENUM_PROMO_STATUS.ACTIVE;
+    }
+
     const result = await PromoModel.create(payload);
     return result;
 };
@@ -88,6 +101,39 @@ const verifyPromoFromDB = async (promoCode: string) => {
     }
     return promo;
 };
+
+// Runs at 12:00 AM and 12:00 PM every day
+cron.schedule('0 0,12 * * *', async () => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        await PromoModel.updateMany(
+            {
+                status: ENUM_PROMO_STATUS.UPCOMING,
+                startDate: { $lte: today },
+                endDate: { $gte: today },
+            },
+            {
+                $set: { status: ENUM_PROMO_STATUS.ACTIVE },
+            }
+        );
+
+        await PromoModel.updateMany(
+            {
+                endDate: { $lt: today },
+                status: { $ne: ENUM_PROMO_STATUS.EXPIRED },
+            },
+            {
+                $set: { status: ENUM_PROMO_STATUS.EXPIRED },
+            }
+        );
+
+        console.log('✅ Promo status cron executed successfully');
+    } catch (error) {
+        console.error('❌ Promo status cron failed:', error);
+    }
+});
 
 const PromoServices = {
     createPromoIntoDB,

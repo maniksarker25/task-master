@@ -25,6 +25,7 @@ app.use(
             'http://localhost:3007',
             'http://localhost:3008',
             'http://localhost:3000',
+            'http://10.10.20.60:3008',
             'https://taskalley-deploy.vercel.app',
             'https://taskalley-landing-page.vercel.app',
             'https://taskalley.com',
