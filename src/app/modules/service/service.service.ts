@@ -18,24 +18,30 @@ const createServiceIntoDB = async (userId: string, payload: IService) => {
     const result = await serviceModel.create({ ...payload, provider: userId });
     return result;
 };
-
 const getAllServiceFromDB = async (query: Record<string, unknown>) => {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
     const searchTerm = query.searchTerm || '';
+    const isPopular = query.popular === 'true';
 
     const filters: any = {};
 
     Object.keys(query).forEach((key) => {
         if (
-            !['searchTerm', 'page', 'limit', 'sortBy', 'sortOrder'].includes(
-                key
-            )
+            ![
+                'searchTerm',
+                'page',
+                'limit',
+                'sortBy',
+                'sortOrder',
+                'popular',
+            ].includes(key)
         ) {
             filters[key] = query[key];
         }
     });
+
     if (query.category) {
         filters.category = new mongoose.Types.ObjectId(
             query.category as string
@@ -51,9 +57,14 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
           }
         : {};
 
+    const sortStage = isPopular ? { popularityScore: -1 } : { createdAt: -1 };
+
     const pipeline: any[] = [
         {
-            $match: { ...filters, ...searchMatchStage },
+            $match: {
+                ...filters,
+                ...searchMatchStage,
+            },
         },
         {
             $lookup: {
@@ -69,7 +80,6 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
                 preserveNullAndEmptyArrays: true,
             },
         },
-
         {
             $lookup: {
                 from: 'providers',
@@ -84,6 +94,7 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
                             name: 1,
                             email: 1,
                             phone: 1,
+                            address: 1,
                         },
                     },
                 ],
@@ -103,7 +114,6 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
                 as: 'feedbacks',
             },
         },
-
         {
             $addFields: {
                 averageRating: {
@@ -117,11 +127,21 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
             },
         },
         {
+            $addFields: {
+                popularityScore: {
+                    $add: [
+                        { $multiply: ['$averageRating', 2] },
+                        '$totalRating',
+                    ],
+                },
+            },
+        },
+        {
             $project: {
                 feedbacks: 0,
             },
         },
-        { $sort: { createdAt: -1 } },
+        { $sort: sortStage },
         {
             $facet: {
                 result: [{ $skip: skip }, { $limit: limit }],
@@ -131,6 +151,7 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
     ];
 
     const aggResult = await ServiceModel.aggregate(pipeline);
+
     const result = aggResult[0]?.result || [];
     const total = aggResult[0]?.totalCount[0]?.total || 0;
     const totalPage = Math.ceil(total / limit);
@@ -145,6 +166,134 @@ const getAllServiceFromDB = async (query: Record<string, unknown>) => {
         result,
     };
 };
+
+// const getAllServiceFromDB = async (query: Record<string, unknown>) => {
+//     const page = Number(query.page) || 1;
+//     const limit = Number(query.limit) || 10;
+//     const skip = (page - 1) * limit;
+//     const searchTerm = query.searchTerm || '';
+
+//     const filters: any = {};
+
+//     Object.keys(query).forEach((key) => {
+//         if (
+//             !['searchTerm', 'page', 'limit', 'sortBy', 'sortOrder'].includes(
+//                 key
+//             )
+//         ) {
+//             filters[key] = query[key];
+//         }
+//     });
+//     if (query.category) {
+//         filters.category = new mongoose.Types.ObjectId(
+//             query.category as string
+//         );
+//     }
+
+//     const searchMatchStage = searchTerm
+//         ? {
+//               $or: [
+//                   { title: { $regex: searchTerm, $options: 'i' } },
+//                   { description: { $regex: searchTerm, $options: 'i' } },
+//               ],
+//           }
+//         : {};
+
+//     const pipeline: any[] = [
+//         {
+//             $match: { ...filters, ...searchMatchStage },
+//         },
+//         {
+//             $lookup: {
+//                 from: 'categories',
+//                 localField: 'category',
+//                 foreignField: '_id',
+//                 as: 'category',
+//             },
+//         },
+//         {
+//             $unwind: {
+//                 path: '$category',
+//                 preserveNullAndEmptyArrays: true,
+//             },
+//         },
+
+//         {
+//             $lookup: {
+//                 from: 'providers',
+//                 localField: 'provider',
+//                 foreignField: '_id',
+//                 as: 'provider',
+//                 pipeline: [
+//                     {
+//                         $project: {
+//                             _id: 1,
+//                             user: 1,
+//                             name: 1,
+//                             email: 1,
+//                             phone: 1,
+//                             address: 1,
+//                         },
+//                     },
+//                 ],
+//             },
+//         },
+//         {
+//             $unwind: {
+//                 path: '$provider',
+//                 preserveNullAndEmptyArrays: true,
+//             },
+//         },
+//         {
+//             $lookup: {
+//                 from: 'feedbacks',
+//                 localField: '_id',
+//                 foreignField: 'service',
+//                 as: 'feedbacks',
+//             },
+//         },
+
+//         {
+//             $addFields: {
+//                 averageRating: {
+//                     $cond: {
+//                         if: { $gt: [{ $size: '$feedbacks' }, 0] },
+//                         then: { $avg: '$feedbacks.rating' },
+//                         else: 0,
+//                     },
+//                 },
+//                 totalRating: { $size: '$feedbacks' },
+//             },
+//         },
+//         {
+//             $project: {
+//                 feedbacks: 0,
+//             },
+//         },
+//         { $sort: { createdAt: -1 } },
+//         {
+//             $facet: {
+//                 result: [{ $skip: skip }, { $limit: limit }],
+//                 totalCount: [{ $count: 'total' }],
+//             },
+//         },
+//     ];
+
+//     const aggResult = await ServiceModel.aggregate(pipeline);
+//     const result = aggResult[0]?.result || [];
+//     const total = aggResult[0]?.totalCount[0]?.total || 0;
+//     const totalPage = Math.ceil(total / limit);
+
+//     return {
+//         meta: {
+//             page,
+//             limit,
+//             total,
+//             totalPage,
+//         },
+//         result,
+//     };
+// };
 
 const getMyService = async (userId: string, query: Record<string, unknown>) => {
     const page = Number(query.page) || 1;
@@ -216,6 +365,7 @@ const getMyService = async (userId: string, query: Record<string, unknown>) => {
                             name: 1,
                             email: 1,
                             phone: 1,
+                            address: 1,
                         },
                     },
                 ],
@@ -357,6 +507,7 @@ const getSingleServiceFromDB = async (serviceId: string) => {
                             name: 1,
                             profile_image: 1,
                             email: 1,
+                            address: 1,
                         },
                     },
                 ],

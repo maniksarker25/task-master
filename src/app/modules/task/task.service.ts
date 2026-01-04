@@ -13,6 +13,7 @@ import {
     sendBatchPushNotification,
     sendSinglePushNotification,
 } from '../../helper/sendPushNotification';
+import { buildDateRangesByType } from '../../utilities/buildDateRangeByType';
 import { ENUM_PAYMENT_PURPOSE } from '../../utilities/enum';
 import { default as bidModel, default as BidModel } from '../bid/bid.model';
 import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
@@ -29,51 +30,24 @@ import { User } from '../user/user.model';
 import { ENUM_TASK_STATUS } from './task.enum';
 import TaskModel from './task.model';
 const ALL_STATUSES = ['OPEN_FOR_BID', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
-const getDateRanges = (dateFilter?: string) => {
-    const now = new Date();
 
-    let currentStart: Date;
-    let previousStart: Date;
-    let previousEnd: Date;
+const createTaskIntoDB = async (
+    userData: JwtPayload,
+    payload: Partial<ITask>
+) => {
+    const profileId = userData.profileId;
 
-    switch (dateFilter) {
-        case 'daily':
-            currentStart = new Date(new Date().setHours(0, 0, 0, 0));
-            previousStart = new Date(currentStart);
-            previousStart.setDate(previousStart.getDate() - 1);
-            previousEnd = new Date(currentStart);
-            break;
-
-        case 'weekly':
-            currentStart = new Date();
-            currentStart.setDate(currentStart.getDate() - 7);
-            previousStart = new Date(currentStart);
-            previousStart.setDate(previousStart.getDate() - 7);
-            previousEnd = new Date(currentStart);
-            break;
-
-        case 'monthly':
-            currentStart = new Date(now.getFullYear(), now.getMonth(), 1);
-            previousStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-            previousEnd = currentStart;
-            break;
-
-        case 'yearly':
-            currentStart = new Date(now.getFullYear(), 0, 1);
-            previousStart = new Date(now.getFullYear() - 1, 0, 1);
-            previousEnd = currentStart;
-            break;
-
-        default: // lifetime
-            currentStart = new Date(0);
-            previousStart = new Date(0);
-            previousEnd = new Date(0);
+    const user = await User.findById(userData.id);
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found');
     }
 
-    return { currentStart, previousStart, previousEnd };
-};
-
-const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
+    if (!user.isAdminVerified) {
+        throw new AppError(
+            httpStatus.FORBIDDEN,
+            'Your account is not verified by admin yet'
+        );
+    }
     try {
         const createdTask = await TaskModel.create({
             ...payload,
@@ -107,6 +81,22 @@ const createTaskIntoDB = async (profileId: string, payload: Partial<ITask>) => {
             });
         }
 
+        if (payload.provider) {
+            await Notification.create({
+                title: 'New Offer Alert!',
+                message: `Hey! A fresh offer just landed in your service. Check it out!`,
+                receiver: payload.provider,
+                type: ENUM_NOTIFICATION_TYPE.TASK_OFFERED,
+                redirectLink: `${createdTask?._id}`,
+            });
+            sendSinglePushNotification(
+                payload.provider.toString(),
+                'New Offer Alert!',
+                `Hey! A fresh offer just landed in your service. Check it out!"`,
+                { taskId: createdTask._id.toString() }
+            );
+        }
+
         return result;
     } catch (err) {
         console.error('Failed to send task create admin notification:', err);
@@ -122,10 +112,10 @@ const updateTask = async (profileId: string, id: string, payload: ITask) => {
     }
 
     const bid = await BidModel.findOne({ task: id });
-    if (!bid) {
+    if (bid) {
         throw new AppError(
             httpStatus.BAD_REQUEST,
-            'Freelancer already bid for that task so you are '
+            'Freelancer already bid for that task so you are not able to update it'
         );
     }
     if (payload.task_attachments) {
@@ -176,7 +166,6 @@ const getAllTaskFromDB = async (
             scheduleType,
             doneBy,
             search,
-            dateFilter,
             startDate,
             endDate,
             sortBy = 'createdAt',
@@ -195,35 +184,31 @@ const getAllTaskFromDB = async (
         if (doneBy) matchStage.doneBy = doneBy;
 
         if (category)
-            matchStage.category = new mongoose.Types.ObjectId(
-                category as string
-            );
+            matchStage.category = new mongoose.Types.ObjectId(category);
 
         if (provider)
-            matchStage.provider = new mongoose.Types.ObjectId(
-                provider as string
-            );
+            matchStage.provider = new mongoose.Types.ObjectId(provider);
 
         if (customer)
-            matchStage.customer = new mongoose.Types.ObjectId(
-                customer as string
-            );
+            matchStage.customer = new mongoose.Types.ObjectId(customer);
 
         /* ------------------ DATE FILTER ------------------ */
 
-        const { currentStart, previousStart, previousEnd } = getDateRanges(
-            dateFilter as string
-        );
+        const { currentStart, currentEnd, previousStart, previousEnd } =
+            buildDateRangesByType(query);
 
-        if (dateFilter && dateFilter !== 'lifetime') {
-            matchStage.createdAt = { $gte: currentStart };
+        if (currentStart && currentEnd) {
+            matchStage.createdAt = {
+                $gte: currentStart,
+                $lte: currentEnd,
+            };
         }
 
-        // custom date override
+        // Custom override
         if (startDate && endDate) {
             matchStage.createdAt = {
-                $gte: new Date(startDate as string),
-                $lte: new Date(endDate as string),
+                $gte: new Date(startDate),
+                $lte: new Date(endDate),
             };
         }
 
@@ -231,6 +216,8 @@ const getAllTaskFromDB = async (
 
         const pipeline: any[] = [
             { $match: matchStage },
+
+            /* ---------- LOOKUPS ---------- */
 
             {
                 $lookup: {
@@ -249,13 +236,7 @@ const getAllTaskFromDB = async (
                     foreignField: '_id',
                     as: 'customer',
                     pipeline: [
-                        {
-                            $project: {
-                                name: 1,
-                                profile_image: 1,
-                                email: 1,
-                            },
-                        },
+                        { $project: { name: 1, profile_image: 1, email: 1 } },
                     ],
                 },
             },
@@ -268,13 +249,7 @@ const getAllTaskFromDB = async (
                     foreignField: '_id',
                     as: 'provider',
                     pipeline: [
-                        {
-                            $project: {
-                                name: 1,
-                                profile_image: 1,
-                                email: 1,
-                            },
-                        },
+                        { $project: { name: 1, profile_image: 1, email: 1 } },
                     ],
                 },
             },
@@ -300,7 +275,7 @@ const getAllTaskFromDB = async (
 
             {
                 $facet: {
-                    /* ---------- pagination ---------- */
+                    /* ---------- PAGINATION ---------- */
                     meta: [
                         { $count: 'total' },
                         {
@@ -314,8 +289,7 @@ const getAllTaskFromDB = async (
                     result: [
                         {
                             $sort: {
-                                [sortBy as string]:
-                                    sortOrder === 'asc' ? 1 : -1,
+                                [sortBy]: sortOrder === 'asc' ? 1 : -1,
                             },
                         },
                         { $skip: (Number(page) - 1) * Number(limit) },
@@ -333,22 +307,25 @@ const getAllTaskFromDB = async (
                     ],
 
                     /* ---------- PREVIOUS STATS ---------- */
-                    previousStats: [
-                        {
-                            $match: {
-                                createdAt: {
-                                    $gte: previousStart,
-                                    $lt: previousEnd,
-                                },
-                            },
-                        },
-                        {
-                            $group: {
-                                _id: '$status',
-                                count: { $sum: 1 },
-                            },
-                        },
-                    ],
+                    previousStats:
+                        previousStart && previousEnd
+                            ? [
+                                  {
+                                      $match: {
+                                          createdAt: {
+                                              $gte: previousStart,
+                                              $lte: previousEnd,
+                                          },
+                                      },
+                                  },
+                                  {
+                                      $group: {
+                                          _id: '$status',
+                                          count: { $sum: 1 },
+                                      },
+                                  },
+                              ]
+                            : [],
                 },
             },
         ];
@@ -367,7 +344,7 @@ const getAllTaskFromDB = async (
 
         /* ------------------ NORMALIZE STATS ------------------ */
 
-        const stats = ALL_STATUSES.map((status) => {
+        const stats = ALL_STATUSES.map((status: string) => {
             const current = data.currentStats.find(
                 (s: any) => s._id === status
             );
@@ -400,7 +377,7 @@ const getAllTaskFromDB = async (
             };
         });
 
-        /* ------------------ FINAL RETURN ------------------ */
+        /* ------------------ FINAL RESPONSE ------------------ */
 
         return {
             meta: {
@@ -419,6 +396,7 @@ const getAllTaskFromDB = async (
         const minPrice = Number(query.minPrice) || null;
         const maxPrice = Number(query.maxPrice) || null;
         const filters: Record<string, any> = {};
+        const isPopular = query.popular === 'true';
         Object.keys(query).forEach((key) => {
             if (
                 ![
@@ -429,6 +407,7 @@ const getAllTaskFromDB = async (
                     'sortOrder',
                     'minPrice',
                     'maxPrice',
+                    'popular',
                 ].includes(key)
             ) {
                 filters[key] = query[key];
@@ -457,7 +436,10 @@ const getAllTaskFromDB = async (
         // Sorting
         const sortBy = query.sortBy || 'createdAt';
         const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
-        const sortStage = { [sortBy]: sortOrder };
+        // const sortStage = { [sortBy]: sortOrder };
+        const sortStage = isPopular
+            ? { totalOffer: -1 }
+            : { [sortBy]: sortOrder };
 
         const pipeline: any[] = [
             {
@@ -1080,14 +1062,14 @@ const acceptTaskByCustomerFromDB = async (
                 promoId: promo ? promo._id.toString() : null,
                 referralUseId: referralUse ? referralUse._id.toString() : null,
             },
-            callback_url: `http://10.10.20.48:3000/success`,
+            callback_url: `https://taskalley-deploy-5lzv.vercel.app/success`,
         },
         {
             headers,
         }
     );
-    console.log('nice2', response);
     const data = response.data.data;
+
     return {
         paymentLink: data.authorization_url,
         accessCode: data.access_code,
@@ -1162,8 +1144,12 @@ const completeTaskByCustomer = async (
             [
                 {
                     provider: task.provider,
+                    customer: task.customer,
                     task: task._id,
                     amount: providerEarning,
+                    customerPayingAmount: task.customerPayingAmount,
+                    platformEarningAmount:
+                        task.customerPayingAmount! - providerEarning,
                 },
             ],
             { session }

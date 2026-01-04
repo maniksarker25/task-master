@@ -72,10 +72,14 @@ const taskSchema = new Schema<ITask>(
             type: {
                 type: String,
                 enum: ['Point'],
-                required: true,
+                // required: true,
                 default: 'Point',
             },
-            coordinates: { type: [Number], required: true, index: '2dsphere' },
+            coordinates: {
+                type: [Number],
+                //  required: true,
+                index: '2dsphere',
+            },
         },
         address: {
             type: String,

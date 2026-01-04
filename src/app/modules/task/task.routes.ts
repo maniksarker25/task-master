@@ -23,7 +23,7 @@ router.post(
     TaskController.createTask
 );
 router.patch(
-    '/update-task',
+    '/update-task/:id',
     auth(USER_ROLE.customer),
     uploadFile(),
     (req, res, next) => {

@@ -38,10 +38,22 @@ const getAllReferral = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const getReferralAndPlatformCharge = catchAsync(async (req, res) => {
+    const result = await referralUseServices.getReferralAndPlatformCharge(
+        req.user.profileId
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Referral and Platform Charge fetched successfully',
+        data: result,
+    });
+});
 
 const ReferralUseController = {
     verifyReferralCode,
     getMyReferral,
     getAllReferral,
+    getReferralAndPlatformCharge,
 };
 export default ReferralUseController;

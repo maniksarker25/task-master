@@ -60,7 +60,7 @@ const auth = (...requiredRoles: TUserRole[]) => {
                     .select('_id user')
                     .populate({
                         path: 'user',
-                        select: '_id isDeleted isBlocked isVerified passwordChangedAt',
+                        select: '_id isDeleted isBlocked isVerified passwordChangedAt isActive',
                     });
             } else if (role == USER_ROLE.provider) {
                 profileData = await Provider.findOne({
@@ -69,14 +69,14 @@ const auth = (...requiredRoles: TUserRole[]) => {
                     .select('user _id')
                     .populate({
                         path: 'user',
-                        select: '_id isDeleted isBlocked isVerified passwordChangedAt',
+                        select: '_id isDeleted isBlocked isVerified passwordChangedAt isActive',
                     });
             } else if (USER_ROLE.superAdmin) {
                 profileData = await SuperAdmin.findOne({ user: id })
                     .select('_id user')
                     .populate({
                         path: 'user',
-                        select: '_id isDeleted isBlocked isVerified passwordChangedAt',
+                        select: '_id isDeleted isBlocked isVerified passwordChangedAt isActive',
                     });
             }
             if (!profileData) {
@@ -105,6 +105,12 @@ const auth = (...requiredRoles: TUserRole[]) => {
                 throw new AppError(
                     httpStatus.BAD_REQUEST,
                     'You are not verified user'
+                );
+            }
+            if (!user.isActive) {
+                throw new AppError(
+                    httpStatus.FORBIDDEN,
+                    'Your account  is inactivated , please contact support'
                 );
             }
 
