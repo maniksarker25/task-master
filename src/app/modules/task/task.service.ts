@@ -396,6 +396,7 @@ const getAllTaskFromDB = async (
         const minPrice = Number(query.minPrice) || null;
         const maxPrice = Number(query.maxPrice) || null;
         const filters: Record<string, any> = {};
+        const isPopular = query.popular === 'true';
         Object.keys(query).forEach((key) => {
             if (
                 ![
@@ -406,6 +407,7 @@ const getAllTaskFromDB = async (
                     'sortOrder',
                     'minPrice',
                     'maxPrice',
+                    'popular',
                 ].includes(key)
             ) {
                 filters[key] = query[key];
@@ -434,7 +436,10 @@ const getAllTaskFromDB = async (
         // Sorting
         const sortBy = query.sortBy || 'createdAt';
         const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
-        const sortStage = { [sortBy]: sortOrder };
+        // const sortStage = { [sortBy]: sortOrder };
+        const sortStage = isPopular
+            ? { totalOffer: -1 }
+            : { [sortBy]: sortOrder };
 
         const pipeline: any[] = [
             {
