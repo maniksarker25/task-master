@@ -5,11 +5,13 @@ import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 import { ICategory } from './category.interface';
 import Category from './category.model';
 
-// create category into db
+// create category into db----------------
 const createCategoryIntoDB = async (payload: ICategory) => {
+    console.log('category payload:', payload);
     const result = await Category.create(payload);
     return result;
 };
+
 const updateCategoryIntoDB = async (
     id: string,
     payload: Partial<ICategory>
@@ -29,10 +31,7 @@ const getAllCategories = async (query: Record<string, unknown>) => {
 
     const searchMatchStage = searchTerm
         ? {
-              $or: [
-                  { title: { $regex: searchTerm, $options: 'i' } },
-                  { description: { $regex: searchTerm, $options: 'i' } },
-              ],
+              $or: [{ name: { $regex: searchTerm, $options: 'i' } }],
           }
         : {};
 

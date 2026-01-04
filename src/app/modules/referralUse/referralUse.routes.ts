@@ -25,4 +25,10 @@ router.get(
     referralUseController.getAllReferral
 );
 
+router.get(
+    '/referral-and-platform-charge',
+    auth(USER_ROLE.customer, USER_ROLE.provider),
+    referralUseController.getReferralAndPlatformCharge
+);
+
 export const referralUseRoutes = router;

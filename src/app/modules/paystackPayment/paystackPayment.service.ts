@@ -131,13 +131,23 @@ const handleBidAcceptPayment = async (
 
     const taskTitle = task?.title || 'Your task';
 
-    await Notification.create({
-        title: 'Task Accepted',
-        message: `Your bid has been accepted for task "${taskTitle}"`,
-        receiver: bid.provider._id.toString(),
-        type: ENUM_NOTIFICATION_TYPE.TASK_ACCEPTED,
-        redirectLink: `${bid?.task}`,
-    });
+    const notificationData = [
+        {
+            title: 'Bid Accepted by Tasker',
+            message: `Bid for "${taskTitle}" has been accepted by the tasker. Task is now in progress.`,
+            receiver: bid.provider._id.toString(),
+            type: ENUM_NOTIFICATION_TYPE.BID_ACCEPTED,
+            redirectLink: `${task._id}`,
+        },
+        {
+            title: 'Bid Accepted Successfully',
+            message: `Bid for your task "${taskTitle}" has been accepted successfully. Task is now in progress.`,
+            receiver: task.customer._id,
+            type: ENUM_NOTIFICATION_TYPE.BID_ACCEPTED,
+            redirectLink: `${task._id}`,
+        },
+    ];
+    Notification.insertMany(notificationData);
 
     if (bid.provider.user) {
         await sendSinglePushNotification(
