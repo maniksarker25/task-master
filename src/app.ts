@@ -51,7 +51,7 @@ app.get('/', async (req, res) => {
 //     try {
 //         const result = await User.updateMany(
 //             {}, // all users
-//             { $set: { isAdminVerified: true } }
+//             { $set: { isBlocked: false } }
 //         );
 
 //         console.log(`✅ Users activated: ${result.modifiedCount}`);

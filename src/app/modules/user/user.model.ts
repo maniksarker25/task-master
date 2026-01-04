@@ -40,7 +40,7 @@ const userSchema = new Schema<TUser>(
         },
         isBlocked: {
             type: Boolean,
-            default: true,
+            default: false,
         },
         isActive: {
             type: Boolean,
