@@ -15,7 +15,7 @@ const createQuestion = catchAsync(async (req, res) => {
     console.log('req.body:', req.body);
 
     const result = await QuestionServices.createQuestionIntoDB(
-        req.user.profileId,
+        req.user,
         req.body
     );
 

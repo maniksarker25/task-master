@@ -1,13 +1,32 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
+import { JwtPayload } from 'jsonwebtoken';
 import AppError from '../../error/appError';
 import TaskModel from '../task/task.model';
 import { IQuestion } from './question.interface';
 import QuestionModel from './question.model';
 
-const createQuestionIntoDB = async (providerId: string, payload: IQuestion) => {
-    const task = await TaskModel.findById(payload.task);
+const createQuestionIntoDB = async (
+    userData: JwtPayload,
+    payload: IQuestion
+) => {
+    const providerId = userData.id;
+    const task: any = await TaskModel.findById(payload.task).populate({
+        path: 'customer',
+        select: 'name email phone user',
+        populate: {
+            path: 'user',
+            select: '_id',
+        },
+    });
     if (!task) {
         throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+    }
+    if (task.customer.user._id.toString() === userData.id) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'You cannot ask question on your own task'
+        );
     }
     const result = await QuestionModel.create({
         ...payload,
