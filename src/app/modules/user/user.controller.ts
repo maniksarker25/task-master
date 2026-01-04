@@ -76,7 +76,7 @@ const changeUserStatus = catchAsync(async (req, res) => {
         statusCode: httpStatus.OK,
         success: true,
         message: `${
-            result?.role == USER_ROLE.customer ? 'Customer' : 'Provider'
+            result?.role == USER_ROLE.customer ? 'Tasker' : 'Freelancer'
         } is ${result?.isBlocked ? 'Blocked' : 'Unblocked'}`,
         data: result,
     });
