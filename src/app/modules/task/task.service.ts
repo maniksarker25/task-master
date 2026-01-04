@@ -991,12 +991,23 @@ const acceptTaskByCustomerFromDB = async (
         const promoUse = await PromoUseModel.countDocuments({
             promo: promo._id,
         });
-        if (promoUse >= promo.limit) {
+        const promoUseExist = await PromoUseModel.findOne({
+            customer: profileID,
+            promo: promo._id,
+        });
+        if (promoUseExist) {
             throw new AppError(
                 httpStatus.BAD_REQUEST,
-                'Promo uses limit reached,this code is not valid now'
+                'You have already used this promo code'
             );
         }
+        if (promoUse)
+            if (promoUse >= promo.limit) {
+                throw new AppError(
+                    httpStatus.BAD_REQUEST,
+                    'Promo uses limit reached,this code is not valid now'
+                );
+            }
     }
     if (promoCode && !promo) {
         throw new AppError(httpStatus.NOT_FOUND, 'Promo code is not valid');
