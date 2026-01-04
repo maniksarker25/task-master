@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
 import mongoose from 'mongoose';
+import { platformChargePercentage } from '../../constant';
 import AppError from '../../error/appError';
 import { Customer } from '../customer/customer.model';
 import { Provider } from '../provider/provider.model';
@@ -203,9 +204,21 @@ const getAllReferralUseFromDB = async (query: Record<string, unknown>) => {
     };
 };
 
+const getReferralAndPlatformCharge = async (profileId: string) => {
+    const referral = await ReferralUseModel.findOne({
+        $or: [{ referred: profileId }, { referrer: profileId }],
+        status: ENUM_REFERRAL_STATUS.ACTIVE,
+    }).sort({ createdAt: 1 });
+
+    return {
+        referralDiscount: referral ? referral.value : 0,
+        platformCharge: platformChargePercentage * 100,
+    };
+};
 const ReferralUseServices = {
     verifyReferralCodeFromDB,
     getMyReferralFromDB,
     getAllReferralUseFromDB,
+    getReferralAndPlatformCharge,
 };
 export default ReferralUseServices;
