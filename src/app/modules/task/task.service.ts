@@ -1064,23 +1064,7 @@ const acceptTaskByCustomerFromDB = async (
         }
     );
     const data = response.data.data;
-    const notificationData = [
-        {
-            title: 'Bid Accepted by Tasker',
-            message: `Bid for "${taskData.title}" has been accepted by the tasker. Task is now in progress.`,
-            receiver: taskData.provider,
-            type: ENUM_NOTIFICATION_TYPE.BID_ACCEPTED,
-            redirectLink: `${taskData._id}`,
-        },
-        {
-            title: 'Bid Accepted Successfully',
-            message: `Bid for your task "${taskData.title}" has been accepted successfully. Task is now in progress.`,
-            receiver: taskData.customer._id,
-            type: ENUM_NOTIFICATION_TYPE.BID_ACCEPTED,
-            redirectLink: `${taskData._id}`,
-        },
-    ];
-    Notification.insertMany(notificationData);
+
     return {
         paymentLink: data.authorization_url,
         accessCode: data.access_code,

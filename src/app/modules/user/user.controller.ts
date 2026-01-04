@@ -3,6 +3,7 @@ import httpStatus from 'http-status';
 import { getCloudFrontUrl } from '../../helper/multer-s3-uploader';
 import catchAsync from '../../utilities/catchasync';
 import sendResponse from '../../utilities/sendResponse';
+import { USER_ROLE } from './user.constant';
 import userServices from './user.services';
 
 const registerUser = catchAsync(async (req, res) => {
@@ -74,7 +75,9 @@ const changeUserStatus = catchAsync(async (req, res) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: `User is ${result?.isBlocked ? 'Blocked' : 'Unblocked'}`,
+        message: `${
+            result?.role == USER_ROLE.customer ? 'Tasker' : 'Freelancer'
+        } is ${result?.isBlocked ? 'Blocked' : 'Unblocked'}`,
         data: result,
     });
 });

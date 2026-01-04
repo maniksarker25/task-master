@@ -47,6 +47,21 @@ app.get('/', async (req, res) => {
     res.send({ message: 'nice to meet you 2' });
 });
 
+// const activateAllUsers = async () => {
+//     try {
+//         const result = await User.updateMany(
+//             {}, // all users
+//             { $set: { isBlocked: false } }
+//         );
+
+//         console.log(`✅ Users activated: ${result.modifiedCount}`);
+//     } catch (error) {
+//         console.error('❌ Failed to activate users:', error);
+//     }
+// };
+
+// // call it once
+// activateAllUsers();
 function getSmileTimestamp() {
     const date = new Date();
 

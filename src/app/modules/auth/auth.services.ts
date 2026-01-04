@@ -33,6 +33,13 @@ const loginUserIntoDB = async (payload: TLoginUser) => {
     if (user.isBlocked) {
         throw new AppError(httpStatus.FORBIDDEN, 'This user is blocked');
     }
+    if (!user.isActive) {
+        throw new AppError(
+            httpStatus.FORBIDDEN,
+            'Your account  is inactivated , please contact support'
+        );
+    }
+
     if (!user.isVerified) {
         throw new AppError(
             httpStatus.FORBIDDEN,
