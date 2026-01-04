@@ -10,7 +10,7 @@ const createQuestionIntoDB = async (
     userData: JwtPayload,
     payload: IQuestion
 ) => {
-    const providerId = userData.id;
+    const providerId = userData.profileId;
     const task: any = await TaskModel.findById(payload.task).populate({
         path: 'customer',
         select: 'name email phone user',
