@@ -10,6 +10,8 @@ import crypto from 'crypto';
 import express, { Application } from 'express';
 import sendContactUsEmail from './app/helper/sendContactUsEmail';
 
+import httpStatus from 'http-status';
+import AppError from './app/error/appError';
 import globalErrorHandler from './app/middlewares/globalErrorHandler';
 import notFound from './app/middlewares/notFound';
 import router from './app/routes';
@@ -23,6 +25,7 @@ app.use(
             'http://localhost:3007',
             'http://localhost:3008',
             'http://localhost:3000',
+            'http://10.10.20.60:3008',
             'https://taskalley-deploy.vercel.app',
             'https://taskalley-landing-page.vercel.app',
             'https://taskalley.com',
@@ -44,6 +47,21 @@ app.get('/', async (req, res) => {
     res.send({ message: 'nice to meet you 2' });
 });
 
+// const activateAllUsers = async () => {
+//     try {
+//         const result = await User.updateMany(
+//             {}, // all users
+//             { $set: { isBlocked: false } }
+//         );
+
+//         console.log(`✅ Users activated: ${result.modifiedCount}`);
+//     } catch (error) {
+//         console.error('❌ Failed to activate users:', error);
+//     }
+// };
+
+// // call it once
+// activateAllUsers();
 function getSmileTimestamp() {
     const date = new Date();
 
@@ -87,8 +105,8 @@ app.post('/api/v1/nin-verify', async (req, res) => {
             dob: '1990-01-01',
             country: 'NG',
             id_number: '00000000004',
-            id_type: 'NIN_V2',
-            // id_type: 'DRIVERS_LICENSE_V2',
+            // id_type: 'NIN_V2',
+            id_type: 'DRIVERS_LICENSE',
             partner_id: process.env.SMILE_PARTNER_ID,
             partner_params: {
                 job_id: '985c594e-7e67-4f2e-a6e0-3be127dbb6a0',
@@ -106,7 +124,23 @@ app.post('/api/v1/nin-verify', async (req, res) => {
             { headers: { 'Content-Type': 'application/json' } }
         );
         console.log('response', response);
+        const result = response.data;
 
+        if (result.Actions?.Verify_ID_Number !== 'Verified') {
+            throw new AppError(httpStatus.BAD_REQUEST, 'Invalid NIN format');
+        }
+
+        if (result.ResultCode === '1022') {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                'NIN is valid but personal details do not match'
+            );
+        }
+
+        if (result.ResultCode === '1000' || result.ResultCode === '1020') {
+            res.json({ message: 'NIN verified successfully', data: result });
+            return;
+        }
         res.json(response.data);
     } catch (error: any) {
         console.log(error.response?.data || error.message);

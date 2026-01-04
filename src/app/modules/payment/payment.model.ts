@@ -9,6 +9,11 @@ const paymentSchema = new Schema<IPayment>(
             ref: 'Provider',
             required: true,
         },
+        customer: {
+            type: Schema.Types.ObjectId,
+            ref: 'Customer',
+            required: true,
+        },
         task: {
             type: Schema.Types.ObjectId,
             ref: 'Task',
@@ -22,6 +27,14 @@ const paymentSchema = new Schema<IPayment>(
             type: String,
             enum: Object.values(ENUM_PAYMENT_STATUS),
             default: ENUM_PAYMENT_STATUS.UNPAID,
+        },
+        customerPayingAmount: {
+            type: Number,
+            required: true,
+        },
+        platformEarningAmount: {
+            type: Number,
+            required: true,
         },
     },
     { timestamps: true }

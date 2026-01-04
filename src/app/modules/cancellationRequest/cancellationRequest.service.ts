@@ -558,8 +558,12 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
                     [
                         {
                             provider: task.provider,
+                            customer: task.customer,
                             task: task._id,
                             amount,
+                            customerPayingAmount: task.customerPayingAmount,
+                            platformEarningAmount:
+                                task.customerPayingAmount - amount,
                         },
                     ],
                     { session }
