@@ -1,4 +1,4 @@
-const registrationSuccessEmailBody = (name: string, activationCode: number) => `
+const registrationSuccessEmail = (name: string, activationCode: number) => `
   <html>
     <head>
       <style>
@@ -120,4 +120,4 @@ const registrationSuccessEmailBody = (name: string, activationCode: number) => `
   </html>
 `;
 
-export default registrationSuccessEmailBody;
+export default registrationSuccessEmail;

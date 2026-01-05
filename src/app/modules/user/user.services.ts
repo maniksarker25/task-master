@@ -9,6 +9,8 @@ import config from '../../config';
 import AppError from '../../error/appError';
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 import { sendSMS } from '../../helper/sendSms';
+import registrationSuccessEmailBody from '../../mailTemplate/registrationSuccessEmailBody';
+import sendEmail from '../../utilities/sendEmail';
 import Admin from '../admin/admin.model';
 import { ICustomer } from '../customer/customer.interface';
 import { Customer } from '../customer/customer.model';
@@ -165,6 +167,13 @@ const verifyCode = async (email: string, verifyCode: number) => {
         const customer = await Customer.findById(user.profileId);
         obj.isAddressProvided = customer?.isAddressProvided;
     }
+    // After tokens and user info are created
+    const name = user.role == USER_ROLE.provider ? 'Freelancer' : 'Tasker';
+    sendEmail({
+        email: user.email,
+        subject: 'Welcome to Task Alley!',
+        html: registrationSuccessEmailBody(name),
+    });
 
     return {
         accessToken,
