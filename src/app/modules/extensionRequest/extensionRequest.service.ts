@@ -572,6 +572,17 @@ const cancelTaskByAdmin = async (extensionId: string, payload: any) => {
                 { session }
             );
 
+            await Payment.create(
+                {
+                    customer: task.customer,
+                    task: task._id,
+                    customerPayingAmount:
+                        task.customerPayingAmount - platformCharge,
+                    platformEarningAmount: platformCharge,
+                },
+                { session }
+            );
+
             await session.commitTransaction();
             return { updatedTask, refundResponse: response.data };
         }
