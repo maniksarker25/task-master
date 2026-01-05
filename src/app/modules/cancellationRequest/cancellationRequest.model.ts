@@ -55,6 +55,7 @@ const extensionRequestSchema = new Schema<ICancellationRequest>(
             type: String,
             default: 'extension',
         },
+        reasonForDecision: { type: String, default: '' },
     },
     { timestamps: true }
 );
