@@ -230,6 +230,20 @@ const extensionRequestAcceptReject = async (
                 { session }
             );
 
+            await Notification.create({
+                title: 'Extension Request Accepted',
+                message: `You extension request has been accepted for the task "${task.title}"`,
+                receiver: updatedExtension?.requestFrom.toString(),
+                type: ENUM_NOTIFICATION_TYPE.EXTENSION_REQUEST_ACCEPTED,
+                redirectLink: `${task._id}`,
+            });
+            sendSinglePushNotification(
+                updatedExtension?.requestFrom.toString(),
+                'Extension Request Rejected',
+                `You extension request has been rejected for the task "${task.title}"`,
+                { taskId: task._id.toString() }
+            );
+
             await session.commitTransaction();
             session.endSession();
 
@@ -261,6 +275,20 @@ const extensionRequestAcceptReject = async (
                 'Failed to reject request'
             );
         }
+
+        await Notification.create({
+            title: 'Extension Request Rejected',
+            message: `You extension request has been rejected for the task "${task.title}"`,
+            receiver: result?.requestFrom.toString(),
+            type: ENUM_NOTIFICATION_TYPE.EXTENSION_REQUEST_REJECTED,
+            redirectLink: `${task._id}`,
+        });
+        sendSinglePushNotification(
+            result.requestFrom.toString(),
+            'Extension Request Rejected',
+            `You extension request has been rejected for the task "${task.title}"`,
+            { taskId: task._id.toString() }
+        );
 
         return result;
     }
@@ -372,7 +400,7 @@ const resolveByAdmin = async (
 const makeDisputeForAdmin = async (profileId: string, extensionID: string) => {
     const extensionRequest: any = await ExtensionRequestModel.findOne({
         _id: extensionID,
-        requestTo: profileId,
+        requestFrom: profileId,
     });
     if (!extensionRequest) {
         throw new AppError(httpStatus.NOT_FOUND, 'Extension Request not found');
