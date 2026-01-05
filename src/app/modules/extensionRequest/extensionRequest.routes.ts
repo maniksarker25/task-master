@@ -70,4 +70,10 @@ router.get(
     extensionRequestController.getSingleExtensionRequest
 );
 
+router.patch(
+    '/cancel-task-by-admin/:id',
+    auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+    extensionRequestController.cancelTaskByAdmin
+);
+
 export const extensionRequestRoutes = router;

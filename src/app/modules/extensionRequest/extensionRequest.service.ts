@@ -1,10 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import axios from 'axios';
 import httpStatus from 'http-status';
 import mongoose from 'mongoose';
+import config from '../../config';
+import { payStackBaseUrl, platformChargePercentage } from '../../constant';
 import AppError from '../../error/appError';
 import { sendSinglePushNotification } from '../../helper/sendPushNotification';
+import { ENUM_PAYMENT_STATUS } from '../../utilities/enum';
 import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
 import Notification from '../notification/notification.model';
+import Payment from '../payment/payment.model';
+import { ENUM_REFERRAL_USE_STATUS } from '../referralUse/referralUse.enum';
+import ReferralUseModel from '../referralUse/referralUse.model';
 import { ENUM_TASK_STATUS } from '../task/task.enum';
 import TaskModel from '../task/task.model';
 import { User } from '../user/user.model';
@@ -134,6 +141,7 @@ const getExtensionRequestByTaskFromDB = async (
 
     return result;
 };
+
 const cancelExtensionRequestByTaskFromDB = async (
     profileId: string,
     extensionID: string
@@ -414,7 +422,6 @@ const makeDisputeForAdmin = async (profileId: string, extensionID: string) => {
     );
     return result;
 };
-
 // ------------------------
 const getAllExtensionRequestFromDB = async (query: Record<string, unknown>) => {
     const page = Number(query.page) || 1;
@@ -493,6 +500,156 @@ const getSingleExtensionRequest = async (id: string) => {
     return result;
 };
 
+const cancelTaskByAdmin = async (extensionId: string, payload: any) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        if (!['Customer', 'Provider'].includes(payload.payTo)) {
+            throw new AppError(httpStatus.BAD_REQUEST, 'Invalid payTo value');
+        }
+
+        const extensionRequest =
+            await ExtensionRequestModel.findById(extensionId).session(session);
+
+        if (!extensionRequest) {
+            throw new AppError(
+                httpStatus.NOT_FOUND,
+                'Extension Request not found'
+            );
+        }
+
+        const task = await TaskModel.findById(extensionRequest.task).session(
+            session
+        );
+
+        if (!task) {
+            throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+        }
+
+        /** ---------------- CUSTOMER REFUND ---------------- */
+        if (payload.payTo === 'Customer') {
+            const platformCharge =
+                task.customerPayingAmount * platformChargePercentage;
+
+            const refundableAmount = Math.max(
+                task.customerPayingAmount - platformCharge,
+                0
+            );
+
+            const updatedTask = await TaskModel.findByIdAndUpdate(
+                task._id,
+                {
+                    status: ENUM_TASK_STATUS.CANCELLED,
+                    paymentStatus: ENUM_PAYMENT_STATUS.REFUNDED,
+                    $push: {
+                        statusWithDate: {
+                            status: ENUM_TASK_STATUS.CANCELLED,
+                            date: new Date(),
+                        },
+                    },
+                },
+                { new: true, runValidators: true, session }
+            );
+
+            const response = await axios.post(
+                `${payStackBaseUrl}/refund`,
+                {
+                    transaction: task.transactionId,
+                    amount: Math.round(refundableAmount * 100),
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${config.payStack.secretKey}`,
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+
+            await ExtensionRequestModel.findByIdAndUpdate(
+                extensionId,
+                { status: ENUM_EXTENSION_REQUEST_STATUS.RESOLVED },
+                { session }
+            );
+
+            await session.commitTransaction();
+            return { updatedTask, refundResponse: response.data };
+        }
+
+        /** ---------------- PROVIDER PAYMENT ---------------- */
+        const referralUse = await ReferralUseModel.findOneAndUpdate(
+            {
+                referred: task.provider,
+                status: ENUM_REFERRAL_USE_STATUS.ACTIVE,
+            },
+            { status: ENUM_REFERRAL_USE_STATUS.USED },
+            {
+                new: true,
+                sort: { createdAt: 1 },
+                session,
+            }
+        );
+
+        const acceptedAmount = task.acceptedBidAmount ?? 0;
+        const referralBonus = referralUse?.value ?? 0;
+
+        const platformCharge = acceptedAmount * platformChargePercentage;
+
+        const providerAmount = Math.max(
+            acceptedAmount + referralBonus - platformCharge,
+            0
+        );
+
+        const updatedTask = await TaskModel.findByIdAndUpdate(
+            task._id,
+            {
+                status: ENUM_TASK_STATUS.CANCELLED,
+                paymentStatus: ENUM_PAYMENT_STATUS.PAID_TO_PROVIDER,
+                providerEarningAmount: providerAmount,
+                $push: {
+                    statusWithDate: {
+                        status: ENUM_TASK_STATUS.CANCELLED,
+                        date: new Date(),
+                    },
+                },
+            },
+            { new: true, runValidators: true, session }
+        );
+
+        await Payment.create(
+            [
+                {
+                    provider: task.provider,
+                    customer: task.customer,
+                    task: task._id,
+                    amount: providerAmount,
+                    customerPayingAmount: task.customerPayingAmount,
+                    platformEarningAmount:
+                        task.customerPayingAmount - providerAmount,
+                },
+            ],
+            { session }
+        );
+
+        await ExtensionRequestModel.findByIdAndUpdate(
+            extensionId,
+            { status: ENUM_EXTENSION_REQUEST_STATUS.RESOLVED },
+            { session }
+        );
+
+        await session.commitTransaction();
+        return {
+            updatedTask,
+            message: 'Provider payment processed successfully',
+        };
+    } catch (error) {
+        await session.abortTransaction();
+        throw error;
+    } finally {
+        session.endSession();
+    }
+};
+
 const ExtensionRequestServices = {
     extensionRequestIntoDb,
     getExtensionRequestByTaskFromDB,
@@ -502,5 +659,6 @@ const ExtensionRequestServices = {
     resolveByAdmin,
     getAllExtensionRequestFromDB,
     getSingleExtensionRequest,
+    cancelTaskByAdmin,
 };
 export default ExtensionRequestServices;

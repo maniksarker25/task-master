@@ -59,6 +59,7 @@ const extensionRequestSchema = new Schema<IExtensionRequest>(
             type: String,
             default: 'extension',
         },
+        reasonForDecision: { type: String, default: '' },
     },
     { timestamps: true }
 );

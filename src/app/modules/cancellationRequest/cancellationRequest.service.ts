@@ -394,7 +394,10 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
         if (payload.status === ENUM_CANCELLATION_REQUEST_STATUS.REJECTED) {
             const result = await CancellationRequestModel.findByIdAndUpdate(
                 cancelRequestId,
-                { status: ENUM_CANCELLATION_REQUEST_STATUS.RESOLVED },
+                {
+                    status: ENUM_CANCELLATION_REQUEST_STATUS.RESOLVED,
+                    rejectDetails: payload?.rejectDetails,
+                },
                 { new: true, runValidators: true, session }
             );
 
@@ -413,7 +416,10 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
 
             await CancellationRequestModel.findByIdAndUpdate(
                 cancelRequestId,
-                { status: ENUM_CANCELLATION_REQUEST_STATUS.RESOLVED },
+                {
+                    status: ENUM_CANCELLATION_REQUEST_STATUS.RESOLVED,
+                    reasonForDecision: payload.reasonForDecision,
+                },
                 { new: true, runValidators: true, session }
             );
 
