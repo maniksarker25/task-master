@@ -5,7 +5,10 @@ import mongoose from 'mongoose';
 import config from '../../config';
 import { payStackBaseUrl, platformChargePercentage } from '../../constant';
 import AppError from '../../error/appError';
+import { sendSinglePushNotification } from '../../helper/sendPushNotification';
 import { ENUM_PAYMENT_STATUS } from '../../utilities/enum';
+import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
+import Notification from '../notification/notification.model';
 import Payment from '../payment/payment.model';
 import { ENUM_REFERRAL_USE_STATUS } from '../referralUse/referralUse.enum';
 import ReferralUseModel from '../referralUse/referralUse.model';
@@ -68,9 +71,22 @@ const createCancellationRequestIntoDb = async (
         requestTo: requestTo,
         requestedFromModel: currentUserRole,
         requestToModel: requestToUserRole,
-        currentDate: task.preferredDeliveryDateTime,
+        // currentDate: task.preferredDeliveryDateTime,
         reason: payload.reason,
     };
+    await Notification.create({
+        title: 'New Cancellation Request',
+        message: `A new cancellation request has been received for the task "${task.title}"`,
+        receiver: requestTo,
+        type: ENUM_NOTIFICATION_TYPE.CANCELLATION_REQUESTED,
+        redirectLink: `${task._id}`,
+    });
+    sendSinglePushNotification(
+        requestTo.toString(),
+        'New Cancellation Request',
+        `A new cancellation request has been received for the task "${task.title}"`,
+        { taskId: task._id.toString() }
+    );
     const result = await CancellationRequestModel.create(extensionRequestData);
     return result;
 };
@@ -187,84 +203,6 @@ const acceptRejectCancellationRequest = async (
 
         let updatedCancellation: any = null;
         const updatedTask: any = null;
-
-        // -------------------------
-        // ACCEPT LOGIC
-        // -------------------------
-        // if (payload.status === ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED) {
-        //     updatedCancellation =
-        //         await CancellationRequestModel.findByIdAndUpdate(
-        //             cancellationId,
-        //             { status: ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED },
-        //             { new: true, runValidators: true, session }
-        //         );
-
-        //     updatedTask = await TaskModel.findByIdAndUpdate(
-        //         task._id,
-        //         {
-        //             status: ENUM_TASK_STATUS.CANCELLED,
-        //             paymentStatus: ENUM_PAYMENT_STATUS.REFUNDED,
-        //             $push: {
-        //                 statusWithDate: {
-        //                     status: ENUM_TASK_STATUS.CANCELLED,
-        //                     date: new Date(),
-        //                 },
-        //             },
-        //         },
-        //         { new: true, runValidators: true, session }
-        //     );
-        //     const platformCharge =
-        //         task.customerPayingAmount * platformChargePercentage;
-        //     const refundableAmount = task.customerPayingAmount - platformCharge;
-        //     try {
-        //         console.log(
-        //             'coollllllllllllll',
-        //             task.transactionId,
-        //             refundableAmount
-        //         );
-
-        //         const response = await axios.post(
-        //             `${payStackBaseUrl}/refund`,
-        //             {
-        //                 // Use reference here, NOT id
-        //                 reference: task.transactionId,
-        //                 amount: refundableAmount * 100, // in kobo
-        //             },
-        //             {
-        //                 headers: {
-        //                     Authorization: `Bearer ${config.payStack.secretKey}`,
-        //                     'Content-Type': 'application/json',
-        //                 },
-        //             }
-        //         );
-
-        //         console.log(
-        //             'Refund Response====================>>>:',
-        //             response.data
-        //         );
-        //         return {
-        //             updatedTask: updatedTask,
-        //             refundResponse: response.data,
-        //         };
-        //     } catch (error: any) {
-        //         if (error.response) {
-        //             // Paystack returned an error
-        //             console.error(
-        //                 '❌ Paystack Refund Error:',
-        //                 error.response.data
-        //             );
-        //         } else if (error.request) {
-        //             // Request was made but no response
-        //             console.error(
-        //                 '❌ No response from Paystack:',
-        //                 error.request
-        //             );
-        //         } else {
-        //             // Something else went wrong
-        //             console.error('❌ Refund Error:', error.message);
-        //         }
-        //     }
-        // }
 
         if (payload.status === ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED) {
             const platformCharge =

@@ -82,6 +82,7 @@ const createTaskIntoDB = async (
         }
 
         if (payload.provider) {
+            console.log('Payload provider:', payload.provider);
             await Notification.create({
                 title: 'New Offer Alert!',
                 message: `Hey! A fresh offer just landed in your service. Check it out!`,
