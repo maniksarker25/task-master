@@ -53,7 +53,7 @@ router.post(
     extensionRequestController.makeDisputeForAdmin
 );
 router.patch(
-    'resolve-by-admin/:id',
+    '/resolve-by-admin/:id',
     auth(USER_ROLE.superAdmin, USER_ROLE.admin),
     validateRequest(CancellationRequestValidations.resolveByAdminZodSchema),
 

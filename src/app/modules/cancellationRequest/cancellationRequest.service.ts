@@ -263,6 +263,16 @@ const acceptRejectCancellationRequest = async (
                             },
                             { new: true, runValidators: true, session }
                         );
+                        await Payment.create(
+                            {
+                                customer: task.customer,
+                                task: task._id,
+                                customerPayingAmount:
+                                    task.customerPayingAmount - platformCharge,
+                                platformEarningAmount: platformCharge,
+                            },
+                            { session }
+                        );
 
                         await session.commitTransaction();
                         session.endSession();
@@ -455,6 +465,16 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
                             'Content-Type': 'application/json',
                         },
                     }
+                );
+                await Payment.create(
+                    {
+                        customer: task.customer,
+                        task: task._id,
+                        customerPayingAmount:
+                            task.customerPayingAmount - platformCharge,
+                        platformEarningAmount: platformCharge,
+                    },
+                    { session }
                 );
 
                 await session.commitTransaction();
