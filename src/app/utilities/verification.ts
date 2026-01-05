@@ -3,7 +3,7 @@ import crypto from 'crypto';
 
 // types/verification.ts
 export type IDTypeFrontend =
-    | 'PASSPORT'
+    | 'PASSPORT_NGA'
     | 'NATIONAL_ID'
     | 'DRIVER_LICENSE'
     | 'VOTER_ID'
