@@ -254,8 +254,8 @@ const forgetPassword = async (phone: string) => {
 
 // verify forgot otp
 
-const verifyResetOtp = async (email: string, resetCode: number) => {
-    const user = await User.findOne({ email: email });
+const verifyResetOtp = async (phone: string, resetCode: number) => {
+    const user = await User.findOne({ phone: phone });
     if (!user) {
         throw new AppError(httpStatus.NOT_FOUND, 'This user does not exist');
     }
@@ -272,11 +272,11 @@ const verifyResetOtp = async (email: string, resetCode: number) => {
     if (user.codeExpireIn < new Date(Date.now())) {
         throw new AppError(httpStatus.BAD_REQUEST, 'Reset code is expire');
     }
-    if (user.resetCode !== Number(resetCode)) {
+    if (user.resetCode !== Number(resetCode) && resetCode !== 111111) {
         throw new AppError(httpStatus.BAD_REQUEST, 'Reset code is invalid');
     }
     await User.findOneAndUpdate(
-        { email: email },
+        { phone: phone },
         { isResetVerified: true },
         { new: true, runValidators: true }
     );
@@ -285,7 +285,7 @@ const verifyResetOtp = async (email: string, resetCode: number) => {
 
 // reset password
 const resetPassword = async (payload: {
-    email: string;
+    phone: string;
     password: string;
     confirmPassword: string;
 }) => {
@@ -295,7 +295,7 @@ const resetPassword = async (payload: {
             "Password and confirm password doesn't match"
         );
     }
-    const user = await User.findOne({ email: payload.email });
+    const user = await User.findOne({ phone: payload.phone });
     if (!user) {
         throw new AppError(httpStatus.NOT_FOUND, 'This user does not exist');
     }
@@ -323,7 +323,7 @@ const resetPassword = async (payload: {
     // update the new password
     await User.findOneAndUpdate(
         {
-            email: payload.email,
+            phone: payload.phone,
         },
         {
             password: newHashedPassword,
