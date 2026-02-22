@@ -25,7 +25,7 @@ const generateVerifyCode = (): number => {
     return Math.floor(100000 + Math.random() * 900000);
 };
 
-const registerCustomer = async (
+const registerUser = async (
     payload: ICustomer & {
         password: string;
         confirmPassword: string;
@@ -595,7 +595,7 @@ const upgradeAccount = async (userData: JwtPayload) => {
 };
 
 const userServices = {
-    registerCustomer,
+     registerUser,
     verifyCode,
     resendVerifyCode,
     getMyProfile,
