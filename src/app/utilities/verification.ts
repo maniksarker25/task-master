@@ -3,14 +3,14 @@ import crypto from 'crypto';
 
 // types/verification.ts
 export type IDTypeFrontend =
-    | 'PASSPORT_NGA'
+    | 'PASSPORT'
     | 'NATIONAL_ID'
     | 'DRIVER_LICENSE'
     | 'VOTER_ID'
     | 'BVN';
 
 export const frontendToSmileIdType: any = {
-    PASSPORT: 'PASSPORT',
+    PASSPORT: 'PASSPORT_NGA',
     NATIONAL_ID: 'NIN_V2',
     DRIVER_LICENSE: 'DRIVERS_LICENSE',
     VOTER_ID: 'VOTER_ID',
