@@ -266,9 +266,6 @@ const completeIdentityVerificationFromDB = async (
             }
         );
 
-        console.log('response =>>>>>>>>', response);
-        console.log('response data =>>>>>>>>', response.data);
-
         const result = response.data;
 
         if (result.Actions?.Verify_ID_Number !== 'Verified') {

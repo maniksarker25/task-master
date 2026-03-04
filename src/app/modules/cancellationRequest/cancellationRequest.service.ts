@@ -223,7 +223,7 @@ const acceptRejectCancellationRequest = async (
                 const response = await axios.post(
                     `${payStackBaseUrl}/refund`,
                     {
-                        transaction: task.transactionId, // Ensure this is the Paystack reference
+                        transaction: task.transactionId,
                         amount: refundableAmount * 100, // in kobo
                     },
                     {
@@ -234,10 +234,7 @@ const acceptRejectCancellationRequest = async (
                     }
                 );
 
-                console.log('Refund Response:', response.data);
-
                 if (response.data.status) {
-                    // Refund successful -> now update the DB
                     const session = await mongoose.startSession();
                     session.startTransaction();
                     try {
@@ -291,32 +288,25 @@ const acceptRejectCancellationRequest = async (
                         throw dbError;
                     }
                 } else {
-                    // Refund failed
-                    console.error('❌ Refund failed:', response.data);
+                    console.error('Refund failed:', response.data);
                     throw new Error('Refund failed, DB not updated');
                 }
             } catch (error: any) {
-                // Axios error or refund failure
                 if (error.response) {
                     console.error(
-                        '❌ Paystack Refund Error:',
+                        'Paystack Refund Error:',
                         error.response.data
                     );
                 } else if (error.request) {
-                    console.error(
-                        '❌ No response from Paystack:',
-                        error.request
-                    );
+                    console.error('No response from Paystack:', error.request);
                 } else {
                     console.error('❌ Refund Error:', error.message);
                 }
-                throw error; // Re-throw if you want upper-level handling
+                throw error;
             }
         }
 
-        // -------------------------
         // REJECT LOGIC
-        // -------------------------
         else if (payload.status === ENUM_CANCELLATION_REQUEST_STATUS.REJECTED) {
             updatedCancellation =
                 await CancellationRequestModel.findByIdAndUpdate(
@@ -330,7 +320,6 @@ const acceptRejectCancellationRequest = async (
                 );
         }
 
-        // Commit transaction only in ACCEPT case (because it updates task also)
         await session.commitTransaction();
         return { cancellationRequest: updatedCancellation, task: updatedTask };
     } catch (error) {
@@ -550,7 +539,6 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
     }
 };
 
-// get all cancelRequest
 const getAllCancelRequestFromDB = async (query: Record<string, unknown>) => {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
