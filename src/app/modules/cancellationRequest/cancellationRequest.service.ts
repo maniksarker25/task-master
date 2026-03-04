@@ -5,7 +5,10 @@ import mongoose from 'mongoose';
 import config from '../../config';
 import { payStackBaseUrl, platformChargePercentage } from '../../constant';
 import AppError from '../../error/appError';
+import { sendSinglePushNotification } from '../../helper/sendPushNotification';
 import { ENUM_PAYMENT_STATUS } from '../../utilities/enum';
+import { ENUM_NOTIFICATION_TYPE } from '../notification/notification.enum';
+import Notification from '../notification/notification.model';
 import Payment from '../payment/payment.model';
 import { ENUM_REFERRAL_USE_STATUS } from '../referralUse/referralUse.enum';
 import ReferralUseModel from '../referralUse/referralUse.model';
@@ -68,9 +71,22 @@ const createCancellationRequestIntoDb = async (
         requestTo: requestTo,
         requestedFromModel: currentUserRole,
         requestToModel: requestToUserRole,
-        currentDate: task.preferredDeliveryDateTime,
+        // currentDate: task.preferredDeliveryDateTime,
         reason: payload.reason,
     };
+    await Notification.create({
+        title: 'New Cancellation Request',
+        message: `A new cancellation request has been received for the task "${task.title}"`,
+        receiver: requestTo,
+        type: ENUM_NOTIFICATION_TYPE.CANCELLATION_REQUESTED,
+        redirectLink: `${task._id}`,
+    });
+    sendSinglePushNotification(
+        requestTo.toString(),
+        'New Cancellation Request',
+        `A new cancellation request has been received for the task "${task.title}"`,
+        { taskId: task._id.toString() }
+    );
     const result = await CancellationRequestModel.create(extensionRequestData);
     return result;
 };
@@ -188,84 +204,6 @@ const acceptRejectCancellationRequest = async (
         let updatedCancellation: any = null;
         const updatedTask: any = null;
 
-        // -------------------------
-        // ACCEPT LOGIC
-        // -------------------------
-        // if (payload.status === ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED) {
-        //     updatedCancellation =
-        //         await CancellationRequestModel.findByIdAndUpdate(
-        //             cancellationId,
-        //             { status: ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED },
-        //             { new: true, runValidators: true, session }
-        //         );
-
-        //     updatedTask = await TaskModel.findByIdAndUpdate(
-        //         task._id,
-        //         {
-        //             status: ENUM_TASK_STATUS.CANCELLED,
-        //             paymentStatus: ENUM_PAYMENT_STATUS.REFUNDED,
-        //             $push: {
-        //                 statusWithDate: {
-        //                     status: ENUM_TASK_STATUS.CANCELLED,
-        //                     date: new Date(),
-        //                 },
-        //             },
-        //         },
-        //         { new: true, runValidators: true, session }
-        //     );
-        //     const platformCharge =
-        //         task.customerPayingAmount * platformChargePercentage;
-        //     const refundableAmount = task.customerPayingAmount - platformCharge;
-        //     try {
-        //         console.log(
-        //             'coollllllllllllll',
-        //             task.transactionId,
-        //             refundableAmount
-        //         );
-
-        //         const response = await axios.post(
-        //             `${payStackBaseUrl}/refund`,
-        //             {
-        //                 // Use reference here, NOT id
-        //                 reference: task.transactionId,
-        //                 amount: refundableAmount * 100, // in kobo
-        //             },
-        //             {
-        //                 headers: {
-        //                     Authorization: `Bearer ${config.payStack.secretKey}`,
-        //                     'Content-Type': 'application/json',
-        //                 },
-        //             }
-        //         );
-
-        //         console.log(
-        //             'Refund Response====================>>>:',
-        //             response.data
-        //         );
-        //         return {
-        //             updatedTask: updatedTask,
-        //             refundResponse: response.data,
-        //         };
-        //     } catch (error: any) {
-        //         if (error.response) {
-        //             // Paystack returned an error
-        //             console.error(
-        //                 '❌ Paystack Refund Error:',
-        //                 error.response.data
-        //             );
-        //         } else if (error.request) {
-        //             // Request was made but no response
-        //             console.error(
-        //                 '❌ No response from Paystack:',
-        //                 error.request
-        //             );
-        //         } else {
-        //             // Something else went wrong
-        //             console.error('❌ Refund Error:', error.message);
-        //         }
-        //     }
-        // }
-
         if (payload.status === ENUM_CANCELLATION_REQUEST_STATUS.ACCEPTED) {
             const platformCharge =
                 task.customerPayingAmount * platformChargePercentage;
@@ -285,7 +223,7 @@ const acceptRejectCancellationRequest = async (
                 const response = await axios.post(
                     `${payStackBaseUrl}/refund`,
                     {
-                        transaction: task.transactionId, // Ensure this is the Paystack reference
+                        transaction: task.transactionId,
                         amount: refundableAmount * 100, // in kobo
                     },
                     {
@@ -296,10 +234,7 @@ const acceptRejectCancellationRequest = async (
                     }
                 );
 
-                console.log('Refund Response:', response.data);
-
                 if (response.data.status) {
-                    // Refund successful -> now update the DB
                     const session = await mongoose.startSession();
                     session.startTransaction();
                     try {
@@ -325,6 +260,16 @@ const acceptRejectCancellationRequest = async (
                             },
                             { new: true, runValidators: true, session }
                         );
+                        await Payment.create(
+                            {
+                                customer: task.customer,
+                                task: task._id,
+                                customerPayingAmount:
+                                    task.customerPayingAmount - platformCharge,
+                                platformEarningAmount: platformCharge,
+                            },
+                            { session }
+                        );
 
                         await session.commitTransaction();
                         session.endSession();
@@ -343,32 +288,25 @@ const acceptRejectCancellationRequest = async (
                         throw dbError;
                     }
                 } else {
-                    // Refund failed
-                    console.error('❌ Refund failed:', response.data);
+                    console.error('Refund failed:', response.data);
                     throw new Error('Refund failed, DB not updated');
                 }
             } catch (error: any) {
-                // Axios error or refund failure
                 if (error.response) {
                     console.error(
-                        '❌ Paystack Refund Error:',
+                        'Paystack Refund Error:',
                         error.response.data
                     );
                 } else if (error.request) {
-                    console.error(
-                        '❌ No response from Paystack:',
-                        error.request
-                    );
+                    console.error('No response from Paystack:', error.request);
                 } else {
                     console.error('❌ Refund Error:', error.message);
                 }
-                throw error; // Re-throw if you want upper-level handling
+                throw error;
             }
         }
 
-        // -------------------------
         // REJECT LOGIC
-        // -------------------------
         else if (payload.status === ENUM_CANCELLATION_REQUEST_STATUS.REJECTED) {
             updatedCancellation =
                 await CancellationRequestModel.findByIdAndUpdate(
@@ -382,7 +320,6 @@ const acceptRejectCancellationRequest = async (
                 );
         }
 
-        // Commit transaction only in ACCEPT case (because it updates task also)
         await session.commitTransaction();
         return { cancellationRequest: updatedCancellation, task: updatedTask };
     } catch (error) {
@@ -456,7 +393,10 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
         if (payload.status === ENUM_CANCELLATION_REQUEST_STATUS.REJECTED) {
             const result = await CancellationRequestModel.findByIdAndUpdate(
                 cancelRequestId,
-                { status: ENUM_CANCELLATION_REQUEST_STATUS.RESOLVED },
+                {
+                    status: ENUM_CANCELLATION_REQUEST_STATUS.RESOLVED,
+                    rejectDetails: payload?.rejectDetails,
+                },
                 { new: true, runValidators: true, session }
             );
 
@@ -475,7 +415,10 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
 
             await CancellationRequestModel.findByIdAndUpdate(
                 cancelRequestId,
-                { status: ENUM_CANCELLATION_REQUEST_STATUS.RESOLVED },
+                {
+                    status: ENUM_CANCELLATION_REQUEST_STATUS.RESOLVED,
+                    reasonForDecision: payload.reasonForDecision,
+                },
                 { new: true, runValidators: true, session }
             );
 
@@ -511,6 +454,16 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
                             'Content-Type': 'application/json',
                         },
                     }
+                );
+                await Payment.create(
+                    {
+                        customer: task.customer,
+                        task: task._id,
+                        customerPayingAmount:
+                            task.customerPayingAmount - platformCharge,
+                        platformEarningAmount: platformCharge,
+                    },
+                    { session }
                 );
 
                 await session.commitTransaction();
@@ -586,7 +539,6 @@ const resolveByAdmin = async (cancelRequestId: string, payload: any) => {
     }
 };
 
-// get all cancelRequest
 const getAllCancelRequestFromDB = async (query: Record<string, unknown>) => {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;

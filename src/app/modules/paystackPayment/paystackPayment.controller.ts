@@ -4,7 +4,6 @@ import sendResponse from '../../utilities/sendResponse';
 import PaystackPaymentService from './paystackPayment.service';
 
 const payStackHandleWebhook = catchAsync(async (req, res) => {
-    console.log('Received Paystack webhook:', req);
     const result = await PaystackPaymentService.handlePaystackWebhook(req);
 
     sendResponse(res, {

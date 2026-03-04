@@ -68,7 +68,7 @@ const deletePromoFromDB = async (id: string) => {
     }
     return result;
 };
-const verifyPromoFromDB = async (promoCode: string) => {
+const verifyPromoFromDB = async (customerId: string, promoCode: string) => {
     const promo = await PromoModel.findOne({ promoCode });
 
     // Promo Not Found
@@ -97,6 +97,16 @@ const verifyPromoFromDB = async (promoCode: string) => {
         throw new AppError(
             httpStatus.BAD_REQUEST,
             'Promo uses limit reached,this code is not valid now'
+        );
+    }
+    const promoUseExist = await PromoUseModel.findOne({
+        customer: customerId,
+        promo: promo._id,
+    });
+    if (promoUseExist) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'You have already used this promo code'
         );
     }
     return promo;

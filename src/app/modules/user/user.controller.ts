@@ -7,7 +7,7 @@ import { USER_ROLE } from './user.constant';
 import userServices from './user.services';
 
 const registerUser = catchAsync(async (req, res) => {
-    const result = await userServices.registerCustomer(req.body);
+    const result = await userServices.registerUser(req.body);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,

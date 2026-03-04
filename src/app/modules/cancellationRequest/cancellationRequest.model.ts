@@ -29,11 +29,6 @@ const extensionRequestSchema = new Schema<ICancellationRequest>(
             required: true,
             enum: ['Customer', 'Provider'],
         },
-        currentDate: {
-            type: Date,
-            required: true,
-        },
-
         reason: {
             type: String,
             required: true,
@@ -56,6 +51,7 @@ const extensionRequestSchema = new Schema<ICancellationRequest>(
             type: String,
             default: 'extension',
         },
+        reasonForDecision: { type: String, default: '' },
     },
     { timestamps: true }
 );

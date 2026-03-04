@@ -32,6 +32,7 @@ const createBidIntoDB = async (userData: JwtPayload, payload: IBid) => {
             select: '_id',
         },
     });
+
     if (!task) {
         throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
     }
@@ -52,15 +53,16 @@ const createBidIntoDB = async (userData: JwtPayload, payload: IBid) => {
     const result = (
         await BidModel.create({ ...payload, provider: userId })
     ).populate('provider task');
+
     await Notification.create({
         title: 'New Bid Placed',
         message: `A new bid has been placed for the task "${task.title}"`,
-        receiver: task.customer,
+        receiver: task.customer._id,
         type: ENUM_NOTIFICATION_TYPE.BID_PLACED,
         redirectLink: `${task._id}`,
     });
     sendSinglePushNotification(
-        task!.customer.toString(),
+        task!.customer._id.toString(),
         'New Bid Placed',
         `A new bid has been placed for the task "${task.title}"`,
         { taskId: task._id.toString() }

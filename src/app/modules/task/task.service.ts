@@ -82,6 +82,7 @@ const createTaskIntoDB = async (
         }
 
         if (payload.provider) {
+            console.log('Payload provider:', payload.provider);
             await Notification.create({
                 title: 'New Offer Alert!',
                 message: `Hey! A fresh offer just landed in your service. Check it out!`,
@@ -991,12 +992,23 @@ const acceptTaskByCustomerFromDB = async (
         const promoUse = await PromoUseModel.countDocuments({
             promo: promo._id,
         });
-        if (promoUse >= promo.limit) {
+        const promoUseExist = await PromoUseModel.findOne({
+            customer: profileID,
+            promo: promo._id,
+        });
+        if (promoUseExist) {
             throw new AppError(
                 httpStatus.BAD_REQUEST,
-                'Promo uses limit reached,this code is not valid now'
+                'You have already used this promo code'
             );
         }
+        if (promoUse)
+            if (promoUse >= promo.limit) {
+                throw new AppError(
+                    httpStatus.BAD_REQUEST,
+                    'Promo uses limit reached,this code is not valid now'
+                );
+            }
     }
     if (promoCode && !promo) {
         throw new AppError(httpStatus.NOT_FOUND, 'Promo code is not valid');

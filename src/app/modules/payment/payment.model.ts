@@ -7,12 +7,14 @@ const paymentSchema = new Schema<IPayment>(
         provider: {
             type: Schema.Types.ObjectId,
             ref: 'Provider',
-            required: true,
+            // required: true,
+            default: null,
         },
         customer: {
             type: Schema.Types.ObjectId,
             ref: 'Customer',
-            required: true,
+            // required: true,
+            default: null,
         },
         task: {
             type: Schema.Types.ObjectId,
@@ -21,7 +23,8 @@ const paymentSchema = new Schema<IPayment>(
         },
         amount: {
             type: Number,
-            required: true,
+            // required: true,
+            default: 0,
         },
         status: {
             type: String,

@@ -17,4 +17,5 @@ export interface IExtensionRequest {
     extensionReason?: string;
     extensionEvidence?: string[];
     type: string;
+    reasonForDecision?: string;
 }

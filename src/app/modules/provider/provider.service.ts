@@ -266,9 +266,6 @@ const completeIdentityVerificationFromDB = async (
             }
         );
 
-        console.log('response =>>>>>>>>', response);
-        console.log('response data =>>>>>>>>', response.data);
-
         const result = response.data;
 
         if (result.Actions?.Verify_ID_Number !== 'Verified') {
@@ -294,7 +291,8 @@ const completeIdentityVerificationFromDB = async (
                         identificationDocumentType:
                             payload.identificationDocumentType,
                         identificationDocumentNumber: payload.id_number,
-                        identificationDocument: payload.identification_document,
+                        identification_document:
+                            payload.identification_document,
                     },
                     { new: true }
                 );
