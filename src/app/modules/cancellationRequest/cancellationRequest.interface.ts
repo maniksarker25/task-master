@@ -16,4 +16,5 @@ export interface ICancellationRequest {
     cancellationReason?: string;
     cancellationEvidence?: string[];
     type: string;
+    reasonForDecision?: string;
 }

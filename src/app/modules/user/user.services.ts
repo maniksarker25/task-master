@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-unused-vars */
 
@@ -8,7 +9,8 @@ import cron from 'node-cron';
 import config from '../../config';
 import AppError from '../../error/appError';
 import { deleteFileFromS3 } from '../../helper/deleteFromS3';
-import { sendSMS } from '../../helper/sendSms';
+import registrationSuccessEmailBody from '../../mailTemplate/registrationSuccessEmailBody';
+import sendEmail from '../../utilities/sendEmail';
 import Admin from '../admin/admin.model';
 import { ICustomer } from '../customer/customer.interface';
 import { Customer } from '../customer/customer.model';
@@ -23,7 +25,7 @@ const generateVerifyCode = (): number => {
     return Math.floor(100000 + Math.random() * 900000);
 };
 
-const registerCustomer = async (
+const registerUser = async (
     payload: ICustomer & {
         password: string;
         confirmPassword: string;
@@ -58,7 +60,7 @@ const registerCustomer = async (
             role,
             roles: [role],
             verifyCode,
-            codeExpireIn: new Date(Date.now() + 5 * 60000), // 5 minutes expiry
+            codeExpireIn: new Date(Date.now() + 5 * 60000), 
         };
 
         if (playerId) {
@@ -68,7 +70,6 @@ const registerCustomer = async (
         // Create user
         const [user] = await User.create([userDataPayload], { session });
 
-        // Create profile (customer or provider)
         let profile;
         if (role === 'customer') {
             const customerPayload = {
@@ -84,19 +85,14 @@ const registerCustomer = async (
             [profile] = await Provider.create([providerPayload], { session });
         }
 
-        // Link profile to user
         await User.findByIdAndUpdate(
             user._id,
             { profileId: profile._id },
             { session }
         );
 
-        // Prepare SMS
-        //         const smsMessage = `Thank you for registering with Task Alley! Please verify your phone using this code: ${verifyCode}.
-        // The code will expire in 5 minutes. If not verified within this time, you’ll need to register again.`;
-
         const smsMessage = `Thank you for registering with Task Alley. Your verification code is ${verifyCode}. It expires in 5 minutes. Please verify in time to complete registration.`;
-        await sendSMS(userData.phone, smsMessage);
+        // await sendSMS(userData.phone, smsMessage);
 
         // If SMS sent successfully, commit transaction
         await session.commitTransaction();
@@ -165,6 +161,12 @@ const verifyCode = async (email: string, verifyCode: number) => {
         const customer = await Customer.findById(user.profileId);
         obj.isAddressProvided = customer?.isAddressProvided;
     }
+    const name = user.role == USER_ROLE.provider ? 'Freelancer' : 'Tasker';
+    sendEmail({
+        email: user.email,
+        subject: 'Welcome to Task Alley!',
+        html: registrationSuccessEmailBody(name),
+    });
 
     return {
         accessToken,
@@ -195,7 +197,8 @@ const resendVerifyCode = async (email: string) => {
         );
     }
     const smsMessage = `Thank you for registering with Task Alley. Your verification code is ${verifyCode}. It expires in 5 minutes. Please verify in time to complete registration.`;
-    await sendSMS(user.phone, smsMessage);
+    //TODO: need to enable sendSMS after testing
+    // await sendSMS(user.phone, smsMessage);
     return null;
 };
 
@@ -238,8 +241,6 @@ const deleteUserAccount = async (user: JwtPayload, password: string) => {
 
 // update user
 const updateUserProfile = async (userData: JwtPayload, payload: any) => {
-    console.log('Updating user profile', payload);
-    console.log('User data:', userData);
     if (payload.email || payload.phone) {
         throw new AppError(
             httpStatus.BAD_REQUEST,
@@ -592,7 +593,7 @@ const upgradeAccount = async (userData: JwtPayload) => {
 };
 
 const userServices = {
-    registerCustomer,
+     registerUser,
     verifyCode,
     resendVerifyCode,
     getMyProfile,

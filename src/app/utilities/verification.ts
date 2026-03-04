@@ -10,7 +10,7 @@ export type IDTypeFrontend =
     | 'BVN';
 
 export const frontendToSmileIdType: any = {
-    PASSPORT: 'PASSPORT',
+    PASSPORT: 'PASSPORT_NGA',
     NATIONAL_ID: 'NIN_V2',
     DRIVER_LICENSE: 'DRIVERS_LICENSE',
     VOTER_ID: 'VOTER_ID',

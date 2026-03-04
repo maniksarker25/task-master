@@ -53,7 +53,7 @@ router.post(
     extensionRequestController.makeDisputeForAdmin
 );
 router.patch(
-    'resolve-by-admin/:id',
+    '/resolve-by-admin/:id',
     auth(USER_ROLE.superAdmin, USER_ROLE.admin),
     validateRequest(CancellationRequestValidations.resolveByAdminZodSchema),
 
@@ -68,6 +68,12 @@ router.get(
     '/get-single/:id',
     auth(USER_ROLE.admin, USER_ROLE.superAdmin),
     extensionRequestController.getSingleExtensionRequest
+);
+
+router.patch(
+    '/cancel-task-by-admin/:id',
+    auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+    extensionRequestController.cancelTaskByAdmin
 );
 
 export const extensionRequestRoutes = router;

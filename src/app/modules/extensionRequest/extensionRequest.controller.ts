@@ -134,6 +134,18 @@ const getSingleExtensionRequest = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const cancelTaskByAdmin = catchAsync(async (req, res) => {
+    const result = await extensionRequestServices.cancelTaskByAdmin(
+        req.params.id,
+        req.body
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Task cancelled by admin successfully',
+        data: result,
+    });
+});
 
 const ExtensionRequestController = {
     createExtensionRequest,
@@ -144,5 +156,6 @@ const ExtensionRequestController = {
     resolveByAdmin,
     getAllExtensionRequest,
     getSingleExtensionRequest,
+    cancelTaskByAdmin,
 };
 export default ExtensionRequestController;

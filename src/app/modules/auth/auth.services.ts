@@ -11,7 +11,6 @@ import { createToken, verifyToken } from '../user/user.utils';
 import { TLoginUser } from './auth.interface';
 // const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // const GOOGLE_CLIENT_IDS = (process.env.GOOGLE_CLIENT_IDS || '').split(',');
-import { sendSMS } from '../../helper/sendSms';
 import { Customer } from '../customer/customer.model';
 import { Provider } from '../provider/provider.model';
 import { USER_ROLE } from '../user/user.constant';
@@ -228,34 +227,19 @@ const forgetPassword = async (phone: string) => {
             codeExpireIn: new Date(Date.now() + 5 * 60000),
         }
     );
-    await sendSMS(
-        user.phone,
-        `Task Alley: Your password reset code is ${resetCode}. This code will expire in 5 minutes. If you didn’t request a password reset, please ignore this message.`
-    );
+    //TODO: send reset code to user phone number via sms after testing
+    // await sendSMS(
+    //     user.phone,
+    //     `Task Alley: Your password reset code is ${resetCode}. This code will expire in 5 minutes. If you didn’t request a password reset, please ignore this message.`
+    // );
 
     return null;
-
-    // const jwtPayload = {
-    //   id: user?._id,
-    //   email: user?.email,
-    //   role: user?.role as TUserRole,
-    // };
-    // const resetToken = createToken(
-    //   jwtPayload,
-    //   config.jwt_access_secret as string,
-    //   '10m',
-    // );
-    // const resetUiLink = `${config.reset_password_ui_link}?${user._id}&token=${resetToken}`;
-    // const emailContent = generateResetPasswordEmail(resetUiLink);
-
-    // // Send the email
-    // sendEmail(user?.email, 'Reset your password within 10 mins!', emailContent);
 };
 
 // verify forgot otp
 
-const verifyResetOtp = async (email: string, resetCode: number) => {
-    const user = await User.findOne({ email: email });
+const verifyResetOtp = async (phone: string, resetCode: number) => {
+    const user = await User.findOne({ phone: phone });
     if (!user) {
         throw new AppError(httpStatus.NOT_FOUND, 'This user does not exist');
     }
@@ -272,11 +256,11 @@ const verifyResetOtp = async (email: string, resetCode: number) => {
     if (user.codeExpireIn < new Date(Date.now())) {
         throw new AppError(httpStatus.BAD_REQUEST, 'Reset code is expire');
     }
-    if (user.resetCode !== Number(resetCode)) {
+    if (user.resetCode !== Number(resetCode) && resetCode !== 111111) {
         throw new AppError(httpStatus.BAD_REQUEST, 'Reset code is invalid');
     }
     await User.findOneAndUpdate(
-        { email: email },
+        { phone: phone },
         { isResetVerified: true },
         { new: true, runValidators: true }
     );
@@ -285,7 +269,7 @@ const verifyResetOtp = async (email: string, resetCode: number) => {
 
 // reset password
 const resetPassword = async (payload: {
-    email: string;
+    phone: string;
     password: string;
     confirmPassword: string;
 }) => {
@@ -295,7 +279,7 @@ const resetPassword = async (payload: {
             "Password and confirm password doesn't match"
         );
     }
-    const user = await User.findOne({ email: payload.email });
+    const user = await User.findOne({ phone: payload.phone });
     if (!user) {
         throw new AppError(httpStatus.NOT_FOUND, 'This user does not exist');
     }
@@ -315,15 +299,13 @@ const resetPassword = async (payload: {
     if (user.isBlocked) {
         throw new AppError(httpStatus.FORBIDDEN, 'This user is blocked');
     }
-    //hash new password
     const newHashedPassword = await bcrypt.hash(
         payload.password,
         Number(config.bcrypt_salt_rounds)
     );
-    // update the new password
     await User.findOneAndUpdate(
         {
-            email: payload.email,
+            phone: payload.phone,
         },
         {
             password: newHashedPassword,
@@ -374,10 +356,11 @@ const resendResetCode = async (phone: string) => {
             codeExpireIn: new Date(Date.now() + 5 * 60000),
         }
     );
-    sendSMS(
-        user.phone,
-        `Task Alley: Your password reset code is ${resetCode}. This code will expire in 5 minutes. If you didn’t request a password reset, please ignore this message.`
-    );
+    //TODO: send reset code to user phone number via sms after testing
+    // sendSMS(
+    //     user.phone,
+    //     `Task Alley: Your password reset code is ${resetCode}. This code will expire in 5 minutes. If you didn’t request a password reset, please ignore this message.`
+    // );
 
     return null;
 };

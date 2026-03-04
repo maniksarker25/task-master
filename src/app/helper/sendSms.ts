@@ -31,7 +31,6 @@ export const sendSMS = async (
             'mocean-text': smsMessage,
         });
 
-        console.log('SMS sent successfully:', response);
         return response;
     } catch (error: any) {
         console.error('Failed to send SMS:', error.message || error);
