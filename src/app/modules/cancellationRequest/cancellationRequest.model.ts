@@ -29,10 +29,6 @@ const extensionRequestSchema = new Schema<ICancellationRequest>(
             required: true,
             enum: ['Customer', 'Provider'],
         },
-        // currentDate: {
-        //     type: Date,
-        //     required: true,
-        // },
         reason: {
             type: String,
             required: true,

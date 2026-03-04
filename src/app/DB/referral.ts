@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
-import ReferralModel from '../modules/referral/referral.model';
 import {
     ENUM_REFERRAL_FOR,
     ENUM_REFERRAL_STATUS,
 } from '../modules/referral/referral.enum';
+import ReferralModel from '../modules/referral/referral.model';
 
 const seedReferral = async () => {
     const existingReferrals = await ReferralModel.find({
@@ -22,10 +22,6 @@ const seedReferral = async () => {
         console.log('Both referrals exist — skipping.');
         return;
     }
-
-    console.log('Existing referrals:', existingReferrals);
-    console.log('Found CUSTOMER:', hasCustomerReferral);
-    console.log('Found PROVIDER:', hasProviderReferral);
 
     const session = await mongoose.startSession();
     session.startTransaction();
