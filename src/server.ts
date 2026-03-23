@@ -5,9 +5,9 @@ import mongoose from 'mongoose';
 import server from './app';
 import config from './app/config';
 import seedSuperAdmin from './app/DB';
+import seedReferral from './app/DB/referral';
 import { errorLogger, logger } from './app/shared/logger';
 import { initializeSocket } from './app/socket/socket';
-import seedReferral from './app/DB/referral';
 
 let myServer: HTTPServer | undefined;
 

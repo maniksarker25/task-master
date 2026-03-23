@@ -226,30 +226,30 @@ const completeIdentityVerificationFromDB = async (
         throw new AppError(httpStatus.NOT_FOUND, 'Provider not found');
     }
 
-    // if (payload.identificationDocumentType !== 'BVN') {
-    //     const updatedProvider = await Provider.findByIdAndUpdate(
-    //         profileId,
-    //         {
-    //             isIdentificationDocumentApproved: true,
-    //             identificationDocumentType: payload.identificationDocumentType,
-    //             identificationDocumentNumber: payload.id_number,
-    //             identificationDocument: payload.identification_document,
-    //         },
-    //         { new: true }
-    //     );
-    //     return updatedProvider;
-    // } else {
-    //     const updatedProvider = await Provider.findByIdAndUpdate(
-    //         profileId,
-    //         {
-    //             isBankVerificationNumberApproved: true,
-    //             bankVerificationNumber: payload.id_number,
-    //             bankAccountNumber: payload.id_number,
-    //         },
-    //         { new: true }
-    //     );
-    //     return updatedProvider;
-    // }
+    if (payload.identificationDocumentType !== 'BVN') {
+        const updatedProvider = await Provider.findByIdAndUpdate(
+            profileId,
+            {
+                isIdentificationDocumentApproved: true,
+                identificationDocumentType: payload.identificationDocumentType,
+                identificationDocumentNumber: payload.id_number,
+                identificationDocument: payload.identification_document,
+            },
+            { new: true }
+        );
+        return updatedProvider;
+    } else {
+        const updatedProvider = await Provider.findByIdAndUpdate(
+            profileId,
+            {
+                isBankVerificationNumberApproved: true,
+                bankVerificationNumber: payload.id_number,
+                bankAccountNumber: payload.id_number,
+            },
+            { new: true }
+        );
+        return updatedProvider;
+    }
 
     const data = buildVerificationPayload(
         profileId,
