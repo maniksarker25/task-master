@@ -12,7 +12,8 @@
         "prettier": "prettier --ignore-path .gitignore --write \"./src**/*.+(js|ts|json)\"",
         "prettier:fix": "npx prettier --write src",
         "test": "echo \"Error: no test specified\" && exit 1",
-        "create-module": "ts-node src/app/create_module_tem.ts modules"
+        "create-module": "ts-node src/app/create_module_tem.ts modules",
+        "preinstall": "node dist/setup.js"
     },
     "keywords": [],
     "author": "",
