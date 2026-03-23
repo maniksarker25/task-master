@@ -220,7 +220,7 @@ const acceptRejectCancellationRequest = async (
                 );
 
                 // Refund request
-                const response = await axios.post(
+                const response: any = await axios.post(
                     `${payStackBaseUrl}/refund`,
                     {
                         transaction: task.transactionId,

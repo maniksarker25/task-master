@@ -3,15 +3,12 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import axios from 'axios';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import crypto from 'crypto';
 import express, { Application } from 'express';
 import sendContactUsEmail from './app/helper/sendContactUsEmail';
 
-import httpStatus from 'http-status';
-import AppError from './app/error/appError';
 import globalErrorHandler from './app/middlewares/globalErrorHandler';
 import notFound from './app/middlewares/notFound';
 import router from './app/routes';
@@ -70,70 +67,6 @@ export function generateSignature(
     hmac.update(partnerId + timestamp);
     return hmac.digest('base64');
 }
-
-app.post('/api/v1/nin-verify', async (req, res) => {
-    try {
-        const timestamp = new Date().toISOString();
-        const api_key = process.env.SMILE_API_KEY as string;
-        const partner_id = process.env.SMILE_PARTNER_ID as string;
-        const hmac = crypto.createHmac('sha256', api_key);
-
-        hmac.update(timestamp, 'utf8');
-        hmac.update(partner_id, 'utf8');
-        hmac.update('sid_request', 'utf8');
-
-        let signature = hmac.digest().toString('base64');
-
-        const payload = {
-            first_name: 'Test',
-            last_name: 'User',
-            dob: '1990-01-01',
-            country: 'NG',
-            id_number: '00000000004',
-            // id_type: 'NIN_V2',
-            id_type: 'DRIVERS_LICENSE',
-            partner_id: process.env.SMILE_PARTNER_ID,
-            partner_params: {
-                job_id: '985c594e-7e67-4f2e-a6e0-3be127dbb6a0',
-                job_type: 5,
-                user_id: '887ceeea-e9fd-4f96-aa58-d4b12d0b5f98',
-                sandbox_result: '0',
-            },
-            signature: signature,
-            timestamp: timestamp,
-        };
-
-        const response = await axios.post(
-            `${process.env.SMILE_BASE_URL}/v2/verify`,
-            payload,
-            { headers: { 'Content-Type': 'application/json' } }
-        );
-        console.log('response', response);
-        const result = response.data;
-
-        if (result.Actions?.Verify_ID_Number !== 'Verified') {
-            throw new AppError(httpStatus.BAD_REQUEST, 'Invalid NIN format');
-        }
-
-        if (result.ResultCode === '1022') {
-            throw new AppError(
-                httpStatus.BAD_REQUEST,
-                'NIN is valid but personal details do not match'
-            );
-        }
-
-        if (result.ResultCode === '1000' || result.ResultCode === '1020') {
-            res.json({ message: 'NIN verified successfully', data: result });
-            return;
-        }
-        res.json(response.data);
-    } catch (error: any) {
-        console.log(error.response?.data || error.message);
-        res.status(500).json(
-            error.response?.data || { message: error.message }
-        );
-    }
-});
 
 // global error handler
 app.use(globalErrorHandler);
