@@ -28,6 +28,7 @@ const initializeSocket = (server: HTTPServer) => {
                     'http://192.168.0.100:3000',
                     'http://10.10.20.48:3000',
                     'https://taskora-website-beryl.vercel.app',
+                    'https://task-master-dashboard-two.vercel.app',
                 ],
             },
         });
